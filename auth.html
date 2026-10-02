@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Log in or join | NaijaSinglesConnect</title>
+<meta name="description" content="Create your NaijaSinglesConnect account or log in to see your matches.">
+<link rel="canonical" href="https://naijasinglesconnect.com/auth">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#07764B">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="NaijaSinglesConnect">
+<meta property="og:title" content="Log in or join | NaijaSinglesConnect">
+<meta property="og:description" content="Create your NaijaSinglesConnect account or log in to see your matches.">
+<meta property="og:url" content="https://naijasinglesconnect.com/auth">
+<meta property="og:image" content="https://naijasinglesconnect.com/assets/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_NG">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Log in or join | NaijaSinglesConnect">
+<meta name="twitter:description" content="Create your NaijaSinglesConnect account or log in to see your matches.">
+<meta name="twitter:image" content="https://naijasinglesconnect.com/assets/og-image.jpg">
+<meta name="robots" content="noindex, follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: split screen. Left: arched photo panel on deep green (emotional). Right: white form column (functional), 460px measure. */
+:root{
+  --bg:#FFFFFF;
+  --paper:#F8F5F0;
+  --paper-2:#EFEAE0;
+  --ink:#13261D;
+  --ink-2:#4A5B52;
+  --line:#E2DBCD;
+  --field:#FFFFFF;
+  --green:#07764B;
+  --green-deep:#05442C;
+  --on-green:#F8F5F0;
+  --gold:#E4A637;
+  --gold-ink:#946410;
+  --gold-soft:#F7E6C2;
+  --err:#B42318;
+  --ok:#07764B;
+  --display:"Cormorant", "Cormorant Garamond", Georgia, serif;
+  --body:"Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+/* outline icons stay unfilled even if a browser extension injects fill rules */
+svg[fill="none"],svg[fill="none"] *{fill:none!important}
+html,body{height:100%}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{color:inherit}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
+.logo{height:34px;width:auto}
+.logo-on-dark{display:none}
+
+.shell{min-height:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+
+/* left panel */
+.side{position:relative;background:var(--green-deep);color:#F8F5F0;display:grid;grid-template-rows:auto 1fr auto;padding:40px clamp(28px,4vw,64px);overflow:hidden;gap:32px}
+.side::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(228,166,55,.18),transparent 55%)}
+.side > *{position:relative}
+.side .art{align-self:center;justify-self:center;width:min(380px,80%);position:relative}
+.side .arch{border-radius:999px 999px 26px 26px;overflow:hidden;aspect-ratio:4/5;max-width:100%;box-shadow:0 40px 80px -40px rgba(0,0,0,.6)}
+.side .arch img{width:100%;height:100%;object-fit:cover}
+.side .ring{position:absolute;inset:-14px -14px auto auto;width:60%;height:60%;border:1.5px solid var(--gold);border-radius:999px 999px 0 0;pointer-events:none}
+.side .chip{position:absolute;left:-18%;bottom:12%;background:#FFFFFF;color:#13261D;border-radius:16px;padding:12px 14px;display:flex;gap:10px;align-items:center;font-size:.85rem;box-shadow:0 20px 40px -18px rgba(0,0,0,.5);max-width:240px}
+.side .chip i{width:34px;height:34px;border-radius:50%;background:#F7E6C2;color:#946410;display:grid;place-items:center;flex:none}
+.side .chip svg{width:16px;height:16px}
+.side .chip b{display:block;font-size:.9rem}
+.side h2{font-family:var(--display);font-weight:600;font-size:clamp(2rem,3.2vw,2.8rem);line-height:1.05;margin:0;text-wrap:balance;max-width:16ch}
+.side h2 em{color:var(--gold);font-weight:500}
+.side ul{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:10px;font-size:.98rem;color:rgba(248,245,240,.85)}
+.side li{display:flex;gap:10px;align-items:center}
+.side li svg{width:18px;height:18px;color:var(--gold);flex:none}
+
+/* right column */
+.main{display:grid;grid-template-rows:auto 1fr auto;padding:28px clamp(16px,5vw,72px);min-width:0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.top .mobile-logo{display:none}
+.back{font-size:.95rem;font-weight:700;text-decoration:none;color:var(--ink-2);display:inline-flex;gap:8px;align-items:center}
+.back:hover{color:var(--green)}
+.back svg{width:18px;height:18px}
+.pane{width:100%;max-width:460px;margin:0 auto;align-self:center;padding-block:40px;display:grid;gap:28px}
+
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--paper-2);border-radius:999px;padding:5px}
+.tabs button{font:700 .98rem var(--body);border:0;background:transparent;color:var(--ink-2);padding:13px;border-radius:999px;cursor:pointer;transition:background .2s,color .2s}
+.tabs button[aria-selected="true"]{background:var(--bg);color:var(--ink);box-shadow:0 6px 16px -10px rgba(5,68,44,.5)}
+
+.head h1{font-family:var(--display);font-weight:600;font-size:clamp(2.3rem,4vw,2.9rem);line-height:1.02;margin:0 0 10px;letter-spacing:-.01em;text-wrap:balance}
+.head p{margin:0;color:var(--ink-2)}
+
+form{display:grid;gap:18px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{display:grid;gap:7px;min-width:0}
+.field label{font-size:.88rem;font-weight:700}
+.field .wrapin{position:relative;display:flex;align-items:center}
+.field input{width:100%;font:500 1rem var(--body);color:var(--ink);background:var(--field);border:1.5px solid var(--line);border-radius:14px;padding:15px 16px;transition:border-color .2s, box-shadow .2s}
+.field input::placeholder{color:color-mix(in srgb,var(--ink-2) 70%,transparent)}
+.field input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 4px color-mix(in srgb,var(--green) 16%,transparent)}
+.field.bad input{border-color:var(--err)}
+.field .err{font-size:.84rem;color:var(--err);font-weight:600}
+.field .hint{font-size:.84rem;color:var(--ink-2)}
+.phone input{padding-left:92px}
+.phone .cc{position:absolute;left:6px;top:6px;bottom:6px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:10px;background:var(--paper-2);font-weight:700;font-size:.95rem}
+.eye{position:absolute;right:8px;border:0;background:transparent;color:var(--ink-2);cursor:pointer;padding:8px;border-radius:10px;display:grid;place-items:center}
+.eye svg{width:20px;height:20px}
+.pw input{padding-right:52px}
+.meter{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:2px}
+.meter i{height:5px;border-radius:5px;background:var(--line);transition:background .25s}
+.meter[data-s="1"] i:nth-child(-n+1){background:var(--err)}
+.meter[data-s="2"] i:nth-child(-n+2){background:var(--gold)}
+.meter[data-s="3"] i:nth-child(-n+3){background:var(--ok)}
+.meter[data-s="4"] i{background:var(--ok)}
+.check{display:flex;gap:12px;align-items:flex-start;font-size:.92rem;color:var(--ink-2);cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--green);margin-top:2px;flex:none}
+.check a{color:var(--ink);font-weight:700}
+.between{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.textbtn{border:0;background:transparent;font:700 .92rem var(--body);color:var(--green);cursor:pointer;padding:6px 0}
+.textbtn:hover{text-decoration:underline}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:12px;width:100%;font:800 1.05rem/1 var(--body);padding:19px 28px;border-radius:999px;border:0;cursor:pointer;background:var(--green);color:var(--on-green);box-shadow:0 14px 30px -14px rgba(7,118,75,.7);transition:transform .2s, background .2s}
+.btn:hover{background:var(--green-deep);transform:translateY(-1px)}
+.btn svg{width:18px;height:18px}
+.btn[disabled]{opacity:.6;cursor:progress;transform:none}
+.spin{width:18px;height:18px;border-radius:50%;border:2.5px solid rgba(248,245,240,.35);border-top-color:#F8F5F0;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.alt{text-align:center;font-size:.95rem;color:var(--ink-2)}
+.privacy{display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:14px;background:var(--paper);font-size:.9rem;color:var(--ink-2)}
+.privacy svg{width:20px;height:20px;color:var(--green);flex:none;margin-top:2px}
+
+/* otp */
+.otp{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.otp input{width:100%;aspect-ratio:1/1.12;max-width:100%;text-align:center;font:800 1.5rem var(--body);color:var(--ink);background:var(--field);border:1.5px solid var(--line);border-radius:14px;font-variant-numeric:tabular-nums}
+.otp input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 4px color-mix(in srgb,var(--green) 16%,transparent)}
+.sent{display:flex;gap:12px;align-items:center;padding:14px 16px;border-radius:14px;background:var(--gold-soft);color:var(--ink);font-size:.92rem}
+.sent svg{width:20px;height:20px;color:var(--gold-ink);flex:none}
+
+.done{text-align:center;display:grid;gap:18px;justify-items:center}
+.done .badge{width:84px;height:84px;border-radius:50%;background:color-mix(in srgb,var(--green) 14%,transparent);color:var(--green);display:grid;place-items:center}
+.done .badge svg{width:40px;height:40px}
+.next{display:grid;gap:10px;text-align:left;width:100%;margin:0;padding:0;list-style:none}
+.next li{display:flex;gap:14px;align-items:center;padding:14px 16px;border:1px solid var(--line);border-radius:14px;font-weight:600}
+.next li span{width:30px;height:30px;border-radius:50%;background:var(--paper-2);display:grid;place-items:center;font-weight:800;font-size:.9rem;flex:none}
+.next li.now span{background:var(--green);color:var(--on-green)}
+
+.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.85rem;color:var(--ink-2)}
+.foot a{text-decoration:none}
+
+.demo{font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-ink);background:var(--gold-soft);padding:5px 10px;border-radius:999px}
+
+@media (max-width:920px){
+  .shell{grid-template-columns:1fr}
+  .side{display:none}
+  .top .mobile-logo{display:block}
+}
+@media (max-width:440px){.row{grid-template-columns:1fr}.otp{gap:6px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.pane > *{animation:in .5s cubic-bezier(.2,.7,.2,1) both}
+@keyframes in{from{transform:translateY(10px)}to{transform:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" aria-hidden="true">
+    <div>
+      <img class="logo" src="/assets/nsc-logo-light.png" alt="">
+    </div>
+    <div class="art">
+      <span class="ring"></span>
+      <div class="arch"><img src="/assets/img/hero-couple.jpg" alt=""></div>
+      <div class="chip"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></i><div><b>Every profile reviewed</b>by a real person</div></div>
+    </div>
+    <div>
+      <h2>Your future doesn't have to start <em>with a swipe.</em></h2>
+      <ul>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>Only approved members can see profiles</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>Your phone and email are never shown</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg>Support on WhatsApp, Monday to Saturday</li>
+      </ul>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <a class="mobile-logo" href="/" aria-label="NaijaSinglesConnect home">
+        <img class="logo logo-on-light" src="/assets/nsc-logo.png" alt="NSC">
+        <img class="logo logo-on-dark" src="/assets/nsc-logo-light.png" alt="NSC">
+      </a>
+      <a class="back" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg>Back to home</a>
+      
+    </div>
+
+    <!-- SIGN UP / LOG IN -->
+    <div class="pane" id="v-auth">
+      <div class="tabs" role="tablist" aria-label="Account">
+        <button role="tab" id="t-signup" aria-selected="true" aria-controls="f-signup">Create account</button>
+        <button role="tab" id="t-login" aria-selected="false" aria-controls="f-login">Log in</button>
+      </div>
+
+      <div id="p-signup">
+        <div class="head" style="margin-bottom:26px">
+          <h1>Find your match</h1>
+          <p>Create your account in under a minute. Your profile stays private until our team approves it.</p>
+        </div>
+        <form id="f-signup" novalidate>
+          <div class="row">
+            <div class="field"><label for="su-first">First name</label><input id="su-first" autocomplete="given-name" placeholder="Chiamaka"></div>
+            <div class="field"><label for="su-last">Last name</label><input id="su-last" autocomplete="family-name" placeholder="Okafor"></div>
+          </div>
+          <div class="field"><label for="su-email">Email address</label><input id="su-email" type="email" autocomplete="email" placeholder="you@example.com"><span class="err" hidden></span></div>
+          <div class="field phone"><label for="su-phone">Phone number</label>
+            <div class="wrapin"><span class="cc">🇳🇬 +234</span><input id="su-phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="803 123 4567"></div>
+            <span class="hint">Used for WhatsApp support only. Never shown on your profile.</span></div>
+          <div class="field pw"><label for="su-pass">Password</label>
+            <div class="wrapin"><input id="su-pass" type="password" autocomplete="new-password" placeholder="At least 8 characters">
+              <button type="button" class="eye" aria-label="Show password" data-for="su-pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+            <div class="meter" id="meter" data-s="0" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <span class="hint" id="meterText">Use 8 or more characters with a number and a capital letter.</span></div>
+          <label class="check" for="su-age"><input type="checkbox" id="su-age"><span>I am 21 or older and I am looking for a relationship that leads to marriage.</span></label>
+          <label class="check" for="su-terms"><input type="checkbox" id="su-terms"><span>I agree to the <a href="#" onclick="return false">Terms of use</a> and <a href="#" onclick="return false">Privacy policy</a>.</span></label>
+          <p class="err" id="su-err" style="margin:0;color:var(--err);font-weight:600;font-size:.9rem" hidden></p>
+          <button class="btn" type="submit" id="su-btn">Create account
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          <p class="alt">Already a member? <button type="button" class="textbtn" data-go="login">Log in</button></p>
+        </form>
+      </div>
+
+      <div id="p-login" hidden>
+        <div class="head" style="margin-bottom:26px">
+          <h1>Welcome back</h1>
+          <p>Log in to see your matches and introduction requests.</p>
+        </div>
+        <form id="f-login" novalidate>
+          <div class="field"><label for="li-id">Email or phone number</label><input id="li-id" autocomplete="username" placeholder="you@example.com or 0803 123 4567"></div>
+          <div class="field pw"><label for="li-pass">Password</label>
+            <div class="wrapin"><input id="li-pass" type="password" autocomplete="current-password" placeholder="Your password">
+              <button type="button" class="eye" aria-label="Show password" data-for="li-pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+          <div class="between">
+            <label class="check" for="li-rem" style="align-items:center"><input type="checkbox" id="li-rem" checked style="margin-top:0"><span>Keep me logged in</span></label>
+            <button type="button" class="textbtn" data-go="forgot">Forgot password?</button>
+          </div>
+          <p class="err" id="li-err" style="margin:0;color:var(--err);font-weight:600;font-size:.9rem" hidden></p>
+          <button class="btn" type="submit" id="li-btn">Log in
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          <p class="alt">New to NSC? <button type="button" class="textbtn" data-go="signup">Create an account</button></p>
+        </form>
+      </div>
+
+      <div class="privacy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span>Your phone and email are never shown on your profile. Only approved members can see profiles, and you choose what they see.</span></div>
+    </div>
+
+    <!-- VERIFY -->
+    <div class="pane" id="v-verify" hidden>
+      <div class="head">
+        <h1>Check your email</h1>
+        <p>We sent a 6-digit code to <b id="vEmail">you@example.com</b>. Enter it below to verify your account.</p>
+      </div>
+      <form id="f-verify" novalidate>
+        <div class="otp" id="otp">
+          <input id="o1" inputmode="numeric" maxlength="1" aria-label="Digit 1" autocomplete="one-time-code">
+          <input id="o2" inputmode="numeric" maxlength="1" aria-label="Digit 2">
+          <input id="o3" inputmode="numeric" maxlength="1" aria-label="Digit 3">
+          <input id="o4" inputmode="numeric" maxlength="1" aria-label="Digit 4">
+          <input id="o5" inputmode="numeric" maxlength="1" aria-label="Digit 5">
+          <input id="o6" inputmode="numeric" maxlength="1" aria-label="Digit 6">
+        </div>
+        <p class="err" id="v-err" style="margin:0;color:var(--err);font-weight:600;font-size:.9rem" hidden></p>
+        <button class="btn" type="submit" id="v-btn">Verify and continue</button>
+        <div class="between">
+          <button type="button" class="textbtn" id="resend">Resend code</button>
+          <button type="button" class="textbtn" data-go="signup" style="color:var(--ink-2)">Use a different email</button>
+        </div>
+      </form>
+      <div class="sent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg><span>Can't find it? Check your spam folder, or message us on WhatsApp.</span></div>
+    </div>
+
+    <!-- FORGOT -->
+    <div class="pane" id="v-forgot" hidden>
+      <div class="head">
+        <h1>Reset your password</h1>
+        <p>Enter the email on your account and we will send you a link to choose a new password.</p>
+      </div>
+      <form id="f-forgot" novalidate>
+        <div class="field"><label for="fp-email">Email address</label><input id="fp-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
+        <p class="err" id="fp-err" style="margin:0;color:var(--err);font-weight:600;font-size:.9rem" hidden></p>
+        <button class="btn" type="submit">Send reset link</button>
+        <p class="alt"><button type="button" class="textbtn" data-go="login">Back to log in</button></p>
+      </form>
+      <div class="sent" id="fp-sent" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"/></svg><span>If that email has an account, a reset link is on its way. It expires in 30 minutes.</span></div>
+    </div>
+
+    <!-- DONE -->
+    <div class="pane" id="v-done" hidden>
+      <div class="done">
+        <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <div class="head"><h1 id="doneTitle">You're in, Chiamaka</h1><p id="doneText">Your account is verified. Next, build the profile our team will review.</p></div>
+        <ol class="next">
+          <li><span>✓</span>Create your account</li>
+          <li class="now"><span>2</span>Complete your profile, about 10 minutes</li>
+          <li><span>3</span>Pay and upload your receipt</li>
+          <li><span>4</span>Get approved and see your matches</li>
+        </ol>
+        <a class="btn" href="/#profile" style="text-decoration:none">Start my profile
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+    </div>
+
+    <div class="foot"><span>© 2026 NaijaSinglesConnect</span><span>support@naijasinglesconnect.com</span></div>
+  </main>
+</div>
+
+<script src="/assets/js/nsc-store.js"></script>
+<script>
+(function(){
+  // Email confirmation is off until Supabase Auth + Resend are wired in.
+  // Set to true to show the 6-digit code step after sign-up again.
+  var REQUIRE_EMAIL_VERIFICATION = false;
+
+  // Temporary local auth through assets/js/nsc-store.js.
+  // Replace with supabase.auth.signUp / signInWithPassword when the backend is wired.
+  var S = window.NSC;
+  if (S.session.get() && S.get('members', S.session.get().id) && location.hash !== '#login') { location.replace('/dashboard'); return; }
+  function startSession(id, keep){ S.session.set(id, keep); location.href = '/dashboard'; }
+  function createMember(d){
+    return S.hash(d.password).then(function(h){
+      var id = S.uid('m_');
+      S.insert('members', { id: id, email: d.email.toLowerCase(), phone: d.phone, pwHash: h, createdAt: Date.now(), status: 'draft', adminNote: '', submittedAt: null, approvedAt: null,
+        privacy: 'full', blocked: [], demo: false,
+        payment: { status: 'none', ref: 'NSC-' + String(Math.floor(10000 + Math.random() * 89999)), file: null, uploadedAt: null },
+        profile: { first: d.first, last: d.last, gender: '', dob: '', location: '', origin: '', lga: '', qual: '', job: '', religion: '', denom: '', worship: '', marital: '', genotype: '',
+          children: '', wantkids: '', intent: '', agemin: '', agemax: '', ploc: '', lookfor: '', dealbreakers: [], bio: '', photos: [] } });
+      S.insert('messages', { id: S.uid('msg_'), thread: S.supportThread(id), from: 'admin', at: Date.now(),
+        body: 'Welcome to NaijaSinglesConnect, ' + d.first + '. Complete your profile and upload your payment receipt, and our team will review you, usually within 24 hours. Reply here any time if you need help.' });
+      S.log(d.first + ' ' + d.last + ' created an account');
+      return id;
+    });
+  }
+  var pending = null;
+
+  var views = {auth:'v-auth', verify:'v-verify', forgot:'v-forgot', done:'v-done'};
+  function view(v){ Object.keys(views).forEach(function(k){ document.getElementById(views[k]).hidden = k !== v }); window.scrollTo(0,0); }
+  function tab(t){
+    view('auth');
+    var su = t === 'signup';
+    document.getElementById('t-signup').setAttribute('aria-selected', String(su));
+    document.getElementById('t-login').setAttribute('aria-selected', String(!su));
+    document.getElementById('p-signup').hidden = !su;
+    document.getElementById('p-login').hidden = su;
+  }
+  document.getElementById('t-signup').onclick = function(){ tab('signup') };
+  document.getElementById('t-login').onclick = function(){ tab('login') };
+  document.querySelectorAll('[data-go]').forEach(function(b){
+    b.addEventListener('click', function(){ var g = b.dataset.go; if (g === 'forgot') { document.getElementById('fp-sent').hidden = true; view('forgot') } else tab(g) });
+  });
+  if (location.hash === '#login') tab('login');
+
+  document.querySelectorAll('.eye').forEach(function(b){
+    b.addEventListener('click', function(){
+      var i = document.getElementById(b.dataset.for), show = i.type === 'password';
+      i.type = show ? 'text' : 'password';
+      b.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    });
+  });
+
+  var pass = document.getElementById('su-pass'), meter = document.getElementById('meter'), mt = document.getElementById('meterText');
+  var words = ['Use 8 or more characters with a number and a capital letter.','Weak. Add more characters.','Fair. Add a number or a capital letter.','Good password.','Strong password.'];
+  pass.addEventListener('input', function(){
+    var v = pass.value, s = 0;
+    if (v.length) s = 1;
+    if (v.length >= 8) s++;
+    if (/[0-9]/.test(v) && /[A-Z]/.test(v)) s++;
+    if (v.length >= 12 || /[^A-Za-z0-9]/.test(v)) s++;
+    if (v.length < 8) s = Math.min(s, 1);
+    meter.dataset.s = s; mt.textContent = words[s];
+  });
+
+  function fieldErr(id, msg){
+    var f = document.getElementById(id).closest('.field');
+    f.classList.toggle('bad', !!msg);
+    var e = f.querySelector('.err'); if (e) { e.hidden = !msg; e.textContent = msg || '' }
+  }
+  function busy(btn, on, label){
+    btn.disabled = on;
+    if (on) { btn.dataset.html = btn.innerHTML; btn.innerHTML = '<span class="spin"></span>' + label }
+    else if (btn.dataset.html) btn.innerHTML = btn.dataset.html;
+  }
+  var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  document.getElementById('f-signup').addEventListener('submit', function(e){
+    e.preventDefault();
+    var err = document.getElementById('su-err'), em = document.getElementById('su-email').value.trim();
+    var first = document.getElementById('su-first').value.trim();
+    var msg = '';
+    if (!first) msg = 'Enter your first name.';
+    else if (!emailRe.test(em)) { msg = 'Enter a valid email address, like name@example.com.'; fieldErr('su-email', 'Check this email address.') }
+    else if (document.getElementById('su-phone').value.replace(/\D/g,'').length < 10) msg = 'Enter your 10-digit phone number after +234.';
+    else if (pass.value.length < 8) msg = 'Your password needs at least 8 characters.';
+    else if (!document.getElementById('su-age').checked) msg = 'Confirm that you are 21 or older and looking for marriage.';
+    else if (!document.getElementById('su-terms').checked) msg = 'Agree to the terms and privacy policy to continue.';
+    if (emailRe.test(em)) fieldErr('su-email', '');
+    if (!msg && S.memberByLogin(em)) { msg = 'An account with this email already exists. Log in instead.'; fieldErr('su-email', 'Already registered.') }
+    err.hidden = !msg; err.textContent = msg;
+    if (msg) return;
+    var btn = document.getElementById('su-btn'); busy(btn, true, 'Creating account');
+    createMember({ first: first, last: document.getElementById('su-last').value.trim(), email: em, password: pass.value,
+      phone: '+234' + document.getElementById('su-phone').value.replace(/\D/g,'').replace(/^0/, '') }).then(function(id){
+      pending = id;
+      busy(btn, false);
+      if (!REQUIRE_EMAIL_VERIFICATION) { startSession(id, true); return; }
+      document.getElementById('vEmail').textContent = em;
+      document.getElementById('doneTitle').textContent = "You're in, " + first;
+      view('verify'); document.getElementById('o1').focus();
+    }, function(){ busy(btn, false); err.hidden = false; err.textContent = 'Something went wrong creating your account. Try again.' });
+  });
+
+  document.getElementById('f-login').addEventListener('submit', function(e){
+    e.preventDefault();
+    var err = document.getElementById('li-err');
+    var msg = !document.getElementById('li-id').value.trim() ? 'Enter your email or phone number.' : (!document.getElementById('li-pass').value ? 'Enter your password.' : '');
+    err.hidden = !msg; err.textContent = msg;
+    if (msg) return;
+    var btn = document.getElementById('li-btn'); busy(btn, true, 'Logging in');
+    var mem = S.memberByLogin(document.getElementById('li-id').value);
+    S.hash(document.getElementById('li-pass').value).then(function(h){
+      busy(btn, false);
+      if (!mem) { err.hidden = false; err.textContent = "We couldn't find an account with that email or phone number."; return; }
+      if (mem.pwHash !== h) { err.hidden = false; err.textContent = "That password isn't right. Try again or reset it."; return; }
+      startSession(mem.id, document.getElementById('li-rem').checked);
+    });
+  });
+
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('#otp input'));
+  boxes.forEach(function(b, i){
+    b.addEventListener('input', function(){ b.value = b.value.replace(/\D/g,'').slice(-1); if (b.value && boxes[i+1]) boxes[i+1].focus() });
+    b.addEventListener('keydown', function(e){ if (e.key === 'Backspace' && !b.value && boxes[i-1]) boxes[i-1].focus() });
+    b.addEventListener('paste', function(e){
+      var t = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+      if (!t) return; e.preventDefault();
+      boxes.forEach(function(x, j){ x.value = t[j] || '' }); (boxes[Math.min(t.length,5)]).focus();
+    });
+  });
+  document.getElementById('f-verify').addEventListener('submit', function(e){
+    e.preventDefault();
+    var code = boxes.map(function(b){ return b.value }).join(''), err = document.getElementById('v-err');
+    err.hidden = code.length === 6; err.textContent = 'Enter all 6 digits from the email.';
+    if (code.length === 6) startSession(pending, true);
+  });
+  document.getElementById('resend').addEventListener('click', function(){ var b = this; b.textContent = 'Code sent again'; b.disabled = true; setTimeout(function(){ b.textContent = 'Resend code'; b.disabled = false }, 30000) });
+
+  document.getElementById('f-forgot').addEventListener('submit', function(e){
+    e.preventDefault();
+    var ok = emailRe.test(document.getElementById('fp-email').value.trim()), err = document.getElementById('fp-err');
+    err.hidden = ok; err.textContent = 'Enter a valid email address.';
+    document.getElementById('fp-sent').hidden = !ok;
+  });
+})();
+</script>
+</body>
+</html>

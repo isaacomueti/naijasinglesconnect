@@ -1,0 +1,20 @@
+# NaijaSinglesConnect
+
+> A private matchmaking community for Nigerians seeking relationships that lead to marriage. Open to singles of every faith, in Nigeria and the diaspora. Every profile is reviewed by a person before other members can see it.
+
+## How it works
+- Create an account, then complete a profile covering faith, marriage intentions, family plans, genotype, children, location, education and work.
+- Pay the membership fee by bank transfer and upload the receipt. The team approves profiles, usually within 24 hours, with support on WhatsApp.
+- Approved members see compatible members ranked by how well their answers align. Deal-breakers, such as a different religion, are applied first.
+- Genotype pairings that risk sickle cell disease are flagged before an introduction.
+
+## Privacy
+- Members choose a full profile, a profile without photographs, or a name-restricted profile showing only initials.
+- Phone numbers, email addresses and payment details are never shown on profiles.
+
+## Key pages
+- [Home](https://naijasinglesconnect.com/): overview, how it works, matching, privacy, membership and FAQ
+- [Join or log in](https://naijasinglesconnect.com/auth)
+
+## Contact
+- support@naijasinglesconnect.com

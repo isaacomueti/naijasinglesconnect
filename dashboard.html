@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="en-NG">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashboard | NaijaSinglesConnect</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#07764B">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/assets/css/app.css">
+<style>
+.journey{display:grid;grid-template-columns:repeat(4,1fr);background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.jstep{padding:22px;display:grid;gap:10px;align-content:start;border-left:1px solid var(--line);min-width:0}
+.jstep:first-child{border-left:0}
+.jstep .n{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.9rem;background:var(--panel-2);color:var(--ink-2)}
+.jstep.done .n{background:var(--green);color:var(--on-green)}
+.jstep.now{background:var(--gold-soft)}
+.jstep.now .n{background:var(--gold);color:#241703}
+.jstep b{font-size:1rem}
+.jstep p{font-size:.88rem;color:var(--ink-2);margin:0}
+.jstep .btn{justify-self:start;margin-top:4px}
+.strength{display:flex;gap:20px;align-items:center}
+.todo{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:8px}
+.todo li{display:flex;gap:10px;align-items:center;font-size:.92rem;color:var(--ink-2)}
+.todo li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--gold);flex:none}
+.todo li.ok{color:var(--ink-3);text-decoration:line-through}
+.todo li.ok::before{background:var(--green)}
+.pform{display:grid;gap:20px}
+.sect{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.sect > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:20px 24px;font-weight:800;font-size:1.05rem}
+.sect > summary::-webkit-details-marker{display:none}
+.sect > summary .pill{margin-left:auto}
+.sect > summary::after{content:"";width:9px;height:9px;border-right:2px solid var(--ink-2);border-bottom:2px solid var(--ink-2);transform:rotate(45deg);margin-left:8px;transition:transform .2s}
+.sect[open] > summary::after{transform:rotate(-135deg)}
+.sect .inner{padding:22px 24px 24px;display:grid;gap:18px;border-top:1px solid var(--line)}
+.range{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.slot{position:relative;aspect-ratio:4/5;max-width:100%;border:2px dashed var(--line);border-radius:16px;display:grid;place-items:center;background:var(--panel-2);overflow:hidden;cursor:pointer;color:var(--ink-2);font-size:.85rem;font-weight:700;text-align:center;padding:10px}
+.slot:hover{border-color:var(--green);color:var(--green)}
+.slot svg{width:26px;height:26px;margin:0 auto 6px;display:block}
+.slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.slot .rm{position:absolute;top:8px;right:8px;z-index:2;width:30px;height:30px;border-radius:50%;border:0;background:rgba(19,38,29,.75);color:#fff;cursor:pointer;font-size:1rem;line-height:1}
+.slot input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.slot .main-tag{position:absolute;left:8px;bottom:8px;z-index:2;background:var(--gold);color:#241703;font-size:.72rem;font-weight:800;padding:4px 8px;border-radius:999px}
+.savebar{position:sticky;bottom:16px;z-index:10;display:flex;justify-content:space-between;align-items:center;gap:16px;background:var(--green-deep);color:var(--on-green);border-radius:18px;padding:14px 16px 14px 22px;box-shadow:0 20px 40px -20px rgba(5,68,44,.7);flex-wrap:wrap}
+.savebar span{font-weight:600;font-size:.95rem}
+.modes{display:grid;gap:12px}
+.mode{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;padding:18px 20px;border:1.5px solid var(--line);border-radius:16px;background:var(--panel);cursor:pointer;text-align:left;font:inherit;color:inherit}
+.mode[aria-pressed="true"]{border-color:var(--green);box-shadow:0 0 0 1px var(--green)}
+.mode .radio{grid-row:1/3;width:20px;height:20px;border-radius:50%;border:2px solid var(--line);margin-top:3px}
+.mode[aria-pressed="true"] .radio{border-color:var(--green);background:radial-gradient(circle,var(--green) 45%,transparent 50%)}
+.mode span{color:var(--ink-2);font-size:.92rem}
+.acct{display:grid;grid-template-columns:auto 1fr auto;gap:12px 18px;align-items:center;font-size:.95rem;margin:0}
+.acct dt{color:var(--ink-2)}
+.acct dd{margin:0;font-weight:800;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.copy{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;font:700 .8rem var(--body);cursor:pointer;color:var(--ink)}
+.drop{border:2px dashed var(--line);border-radius:16px;padding:28px;text-align:center;display:grid;gap:8px;justify-items:center;position:relative;background:var(--panel-2);color:var(--ink-2);cursor:pointer}
+.drop:hover{border-color:var(--green)}
+.drop svg{width:30px;height:30px;color:var(--green)}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.file{display:flex;gap:14px;align-items:center;padding:14px 16px;border:1px solid var(--line);border-radius:14px}
+.file svg{width:24px;height:24px;color:var(--green);flex:none}
+.pv{display:grid;grid-template-columns:1fr 1.2fr;gap:0;background:var(--panel);border:1px solid var(--line);border-radius:22px;overflow:hidden}
+.pv .ph{background:var(--green-deep);min-height:320px;position:relative}
+.pv .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pv .ph .ini{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:4rem;color:#F8F5F0}
+.pv .bd{padding:24px;display:grid;gap:12px;align-content:start}
+.pv .nm{font-family:var(--display);font-size:2.2rem;font-weight:600;line-height:1}
+@media (max-width:980px){
+  .journey{grid-template-columns:1fr 1fr}
+  .jstep:nth-child(3){border-left:0}
+  .jstep:nth-child(n+3){border-top:1px solid var(--line)}
+  .savebar{bottom:84px}
+}
+@media (max-width:560px){
+  .journey{grid-template-columns:1fr}
+  .jstep{border-left:0;border-top:1px solid var(--line)}
+  .jstep:first-child{border-top:0}
+  .photos{gap:8px}
+  .acct{grid-template-columns:auto 1fr}
+  .acct .copy{grid-column:2;justify-self:start}
+  .pv{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" aria-label="Main">
+    <a href="/" aria-label="NaijaSinglesConnect home"><img class="logo" src="/assets/nsc-logo.png" alt="NSC"></a>
+    <ul class="navlist">
+      <li><a href="#overview" data-v="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Overview</a></li>
+      <li><a href="#matches" data-v="matches"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 20s-7-4.4-9.3-8.8A5.2 5.2 0 0 1 12 6.4a5.2 5.2 0 0 1 9.3 4.8C19 15.6 12 20 12 20Z"/></svg>Matches</a></li>
+      <li><a href="#introductions" data-v="introductions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/></svg>Introductions<span class="count" data-badge="intros" hidden></span></a></li>
+      <li><a href="#messages" data-v="messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M20 12.5a8 8 0 0 1-11.6 7.1L4 21l1.4-4.2A8 8 0 1 1 20 12.5Z"/></svg>Messages<span class="count" data-badge="msgs" hidden></span></a></li>
+      <li><a href="#profile" data-v="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>My profile</a></li>
+      <li><a href="#privacy" data-v="privacy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>Privacy</a></li>
+      <li><a href="#membership" data-v="membership"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg>Membership</a></li>
+    </ul>
+    <div class="help">
+      <b>Need a hand?</b>
+      <span>Message the NSC team any time. We reply Monday to Saturday, 9am to 7pm.</span>
+      <a class="btn btn-ghost btn-sm" href="#messages" data-support>Message support</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="top">
+      <a href="/" aria-label="Home"><img class="mlogo" src="/assets/nsc-logo.png" alt="NSC"></a>
+      <h1 id="pageTitle">Overview</h1>
+      <span class="sp"></span>
+      <span class="pill wait" id="statusPill">Profile in progress</span>
+      <div class="who">
+        <button type="button" id="whoBtn" aria-haspopup="true" aria-expanded="false"><span class="av" id="topAv">M</span><span id="topName">Member</span></button>
+        <div class="menu" id="whoMenu" hidden>
+          <a href="#profile">Edit profile</a>
+          <a href="#privacy">Privacy settings</a>
+          <a href="#membership">Membership</a>
+          <a href="/">View website</a>
+          <button type="button" class="out" id="logout">Log out</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- OVERVIEW -->
+      <section id="v-overview" data-view>
+        <div style="display:grid;gap:26px">
+          <div class="hello">
+            <div><h2 id="greet">Welcome</h2><p id="greetSub">Finish these steps and our team will review your profile.</p></div>
+            <a class="btn btn-primary" href="#profile" id="heroCta"><span>Continue my profile</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+          <div id="statusBanner"></div>
+          <div class="journey" id="journey" aria-label="Your progress">
+            <div class="jstep done" data-j="account"><span class="n">✓</span><b>Account created</b><p>You're signed in and your details are private.</p></div>
+            <div class="jstep" data-j="profile"><span class="n">2</span><b>Complete your profile</b><p data-jt="profile"></p><a class="btn btn-primary btn-sm" href="#profile">Continue</a></div>
+            <div class="jstep" data-j="pay"><span class="n">3</span><b>Pay and upload receipt</b><p data-jt="pay"></p><a class="btn btn-ghost btn-sm" href="#membership">Pay now</a></div>
+            <div class="jstep" data-j="review"><span class="n">4</span><b>Team review</b><p data-jt="review"></p></div>
+          </div>
+          <div class="stats" id="stats" hidden>
+            <a class="stat" href="#matches"><span>Your matches</span><b id="sMatches">0</b><small id="sMatchesHi"></small></a>
+            <a class="stat" href="#introductions"><span>Introduction requests</span><b id="sIntros">0</b><small>Waiting for your reply</small></a>
+            <a class="stat" href="#messages"><span>Unread messages</span><b id="sMsgs">0</b><small id="sConvos"></small></a>
+          </div>
+          <div class="grid2">
+            <div class="card">
+              <div class="chead"><div><h2>Top matches for you</h2><p class="sub" id="topSub"></p></div><a href="#matches">See all</a></div>
+              <div id="topMatches"></div>
+            </div>
+            <div style="display:grid;gap:24px;align-content:start">
+              <div class="card">
+                <h2>Profile strength</h2>
+                <div class="strength" style="margin-top:14px">
+                  <div class="ring" id="ring"><b id="ringNum">0%</b></div>
+                  <p class="sub">Complete profiles get approved faster and receive more introductions.</p>
+                </div>
+                <ul class="todo" id="todo"></ul>
+              </div>
+              <div class="card" id="introPreview" hidden>
+                <div class="chead"><h2>Introduction requests</h2><a href="#introductions">View all</a></div>
+                <div class="ilist" id="introMini"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MATCHES -->
+      <section id="v-matches" data-view hidden>
+        <div style="display:grid;gap:22px">
+          <div class="hello"><div><h2>Your matches</h2><p>Ranked by how closely your answers line up. Your deal-breakers are already filtered out.</p></div></div>
+          <div class="filters" id="filters">
+            <button type="button" class="f" aria-pressed="true" data-f="all">All</button>
+            <button type="button" class="f" aria-pressed="false" data-f="80">80% and above</button>
+            <button type="button" class="f" aria-pressed="false" data-f="faith">Same religion</button>
+            <button type="button" class="f" aria-pressed="false" data-f="near">Same city</button>
+          </div>
+          <div id="matchWrap"></div>
+        </div>
+      </section>
+
+      <!-- MEMBER PROFILE VIEW -->
+      <section id="v-member" data-view hidden>
+        <div style="display:grid;gap:18px">
+          <a class="textbtn" href="#matches">← Back to matches</a>
+          <div id="memberView"></div>
+        </div>
+      </section>
+
+      <!-- INTRODUCTIONS -->
+      <section id="v-introductions" data-view hidden>
+        <div style="display:grid;gap:22px">
+          <div class="hello"><div><h2>Introductions</h2><p>When you both accept, full profiles open up and you can message each other.</p></div></div>
+          <div class="tabs" role="tablist">
+            <button role="tab" aria-selected="true" data-t="recv">Received</button>
+            <button role="tab" aria-selected="false" data-t="sent">Sent</button>
+          </div>
+          <div class="ilist" id="introList"></div>
+        </div>
+      </section>
+
+      <!-- MESSAGES -->
+      <section id="v-messages" data-view hidden>
+        <div class="chat" id="chat">
+          <div class="clist">
+            <div class="hd"><b>Messages</b><span class="sub">Conversations open when an introduction is accepted.</span></div>
+            <ul id="threadList"></ul>
+          </div>
+          <div class="thread" id="thread"></div>
+        </div>
+      </section>
+
+      <!-- PROFILE -->
+      <section id="v-profile" data-view hidden>
+        <form class="pform" id="pform" novalidate>
+          <div class="hello">
+            <div><h2>My profile</h2><p>Everything here is private until our team approves you. You can edit it any time.</p></div>
+            <div class="ring" id="ring2" style="width:72px;height:72px"><b id="ringNum2" style="width:56px;height:56px;font-size:1rem">0%</b></div>
+          </div>
+          <div id="profileBanner"></div>
+
+          <details class="sect" open>
+            <summary>Photos <span class="pill off" data-sp="photos"></span></summary>
+            <div class="inner">
+              <p class="sub">Add two or three clear, recent photos of yourself. The first one is your main photo.</p>
+              <div class="photos" id="photos"></div>
+            </div>
+          </details>
+
+          <details class="sect" open>
+            <summary>About you <span class="pill off" data-sp="about"></span></summary>
+            <div class="inner fields">
+              <div class="field"><label for="first">First name</label><input id="first" name="first" autocomplete="given-name"></div>
+              <div class="field"><label for="last">Last name</label><input id="last" name="last" autocomplete="family-name"><span class="hint">Never shown on your profile.</span></div>
+              <div class="field"><span class="lbl" id="l-gender">I am a</span>
+                <div class="seg" role="group" aria-labelledby="l-gender" data-name="gender"><button type="button" aria-pressed="false" data-val="Woman">Woman</button><button type="button" aria-pressed="false" data-val="Man">Man</button></div></div>
+              <div class="field"><label for="dob">Date of birth</label><input id="dob" name="dob" type="date"><span class="hint">Members see your age, not your birthday.</span></div>
+              <div class="field"><label for="location">Where you live</label><input id="location" name="location" placeholder="City, State or Country"></div>
+              <div class="field"><label for="origin">State of origin</label><select id="origin" name="origin"><option value="">Select</option></select></div>
+              <div class="field"><label for="lga">LGA</label><input id="lga" name="lga" placeholder="e.g. Nsukka"></div>
+              <div class="field"><label for="qual">Highest qualification</label>
+                <select id="qual" name="qual"><option value="">Select</option><option>SSCE</option><option>OND / NCE</option><option>HND</option><option>Bachelor's degree</option><option>Master's degree</option><option>Doctorate</option><option>Professional certification</option></select></div>
+              <div class="field full"><label for="job">Occupation</label><input id="job" name="job" placeholder="e.g. Pharmacist"></div>
+            </div>
+          </details>
+
+          <details class="sect">
+            <summary>Faith <span class="pill off" data-sp="faith"></span></summary>
+            <div class="inner fields">
+              <div class="field"><label for="religion">Religion</label>
+                <select id="religion" name="religion"><option value="">Select</option><option>Christianity</option><option>Islam</option><option>Traditional religion</option><option>Other</option><option>Prefer not to say</option></select></div>
+              <div class="field"><label for="denom">Denomination or group</label><input id="denom" name="denom" placeholder="e.g. Anglican, Sunni, RCCG"></div>
+              <div class="field full"><label for="worship">Place of worship</label><input id="worship" name="worship" placeholder="Optional"><span class="hint">Only shown to members you accept.</span></div>
+            </div>
+          </details>
+
+          <details class="sect">
+            <summary>Family <span class="pill off" data-sp="family"></span></summary>
+            <div class="inner fields">
+              <div class="field"><label for="marital">Marital status</label>
+                <select id="marital" name="marital"><option value="">Select</option><option>Never married</option><option>Divorced</option><option>Widowed</option><option>Separated</option></select></div>
+              <div class="field"><label for="genotype">Genotype</label>
+                <select id="genotype" name="genotype"><option value="">Select</option><option>AA</option><option>AS</option><option>AC</option><option>SS</option><option>SC</option><option>Not sure yet</option></select>
+                <span class="hint">Only shown to members you are matched with.</span></div>
+              <div class="field"><label for="children">Do you have children?</label>
+                <select id="children" name="children"><option value="">Select</option><option>No</option><option>Yes, they live with me</option><option>Yes, they don't live with me</option></select></div>
+              <div class="field"><label for="wantkids">Do you want children?</label>
+                <select id="wantkids" name="wantkids"><option value="">Select</option><option>Yes</option><option>Open to it</option><option>No</option></select></div>
+            </div>
+          </details>
+
+          <details class="sect">
+            <summary>What you're looking for <span class="pill off" data-sp="looking"></span></summary>
+            <div class="inner fields">
+              <div class="field full"><span class="lbl" id="l-intent">Relationship intent</span>
+                <div class="seg" role="group" aria-labelledby="l-intent" data-name="intent">
+                  <button type="button" aria-pressed="false" data-val="Marriage within 1 year">Marriage within 1 year</button>
+                  <button type="button" aria-pressed="false" data-val="Marriage within 1 to 2 years">Within 1 to 2 years</button>
+                  <button type="button" aria-pressed="false" data-val="Courtship first, then marriage">Courtship first</button>
+                </div></div>
+              <div class="field"><span class="lbl">Preferred age range</span>
+                <div class="range"><input id="agemin" name="agemin" type="number" min="21" max="80" placeholder="28" aria-label="Minimum age"><span>to</span><input id="agemax" name="agemax" type="number" min="21" max="80" placeholder="38" aria-label="Maximum age"></div></div>
+              <div class="field"><label for="ploc">Preferred partner location</label><input id="ploc" name="ploc" placeholder="e.g. Lagos, anywhere in Nigeria"></div>
+              <div class="field full"><label for="lookfor">The partner you hope for</label><textarea id="lookfor" name="lookfor" placeholder="Their character, values and the home you want to build together"></textarea></div>
+              <div class="field full"><span class="lbl" id="l-db">Deal-breakers</span>
+                <div class="seg" role="group" aria-labelledby="l-db" data-name="dealbreakers" data-multi="1">
+                  <button type="button" aria-pressed="false" data-val="Different religion">Different religion</button>
+                  <button type="button" aria-pressed="false" data-val="Has children">Has children</button>
+                  <button type="button" aria-pressed="false" data-val="Previously married">Previously married</button>
+                  <button type="button" aria-pressed="false" data-val="Lives outside Nigeria">Lives outside Nigeria</button>
+                  <button type="button" aria-pressed="false" data-val="Incompatible genotype">Incompatible genotype</button>
+                </div>
+                <span class="hint">Anyone who fails one of these never appears in your matches.</span></div>
+            </div>
+          </details>
+
+          <details class="sect">
+            <summary>In your own words <span class="pill off" data-sp="words"></span></summary>
+            <div class="inner">
+              <div class="field"><label for="bio">About me</label><textarea id="bio" name="bio" maxlength="600" placeholder="What does a good Saturday look like? What matters most to you?"></textarea><span class="hint" id="bioCount">0 / 600</span></div>
+            </div>
+          </details>
+
+          <div class="savebar"><span id="saveText">Changes save as you type.</span><button class="btn btn-gold" type="submit" id="submitBtn">Submit for review</button></div>
+        </form>
+      </section>
+
+      <!-- PRIVACY -->
+      <section id="v-privacy" data-view hidden>
+        <div style="display:grid;gap:22px;max-width:780px">
+          <div class="hello"><div><h2>Privacy</h2><p>Choose how you appear to other approved members. Your phone, email and payment details are never shown.</p></div></div>
+          <div class="modes" id="modes">
+            <button type="button" class="mode" aria-pressed="true" data-mode="full"><span class="radio"></span><b>Full profile</b><span>Your first name, photos and profile details are visible to approved members.</span></button>
+            <button type="button" class="mode" aria-pressed="false" data-mode="nophoto"><span class="radio"></span><b>Without photographs</b><span>Your details are visible. Photos open only to introductions you accept.</span></button>
+            <button type="button" class="mode" aria-pressed="false" data-mode="name"><span class="radio"></span><b>Name-restricted</b><span>Only your initials and general details show until you choose to connect.</span></button>
+          </div>
+          <div class="card" id="blockedCard"></div>
+          <div class="card">
+            <h2>Account</h2>
+            <dl class="acct" style="margin-top:14px"><dt>Email</dt><dd id="accEmail"></dd><span></span><dt>Phone</dt><dd id="accPhone"></dd><span></span></dl>
+          </div>
+        </div>
+      </section>
+
+      <!-- MEMBERSHIP -->
+      <section id="v-membership" data-view hidden>
+        <div style="display:grid;gap:22px">
+          <div class="hello"><div><h2>Membership</h2><p>Pay by bank transfer, upload your receipt, and our team approves you, usually the same day.</p></div><span class="pill off" id="payPill"></span></div>
+          <div class="grid2">
+            <div class="card">
+              <h2>1. Transfer your membership fee</h2>
+              <p class="sub">Use your reference so we can match your payment.</p>
+              <dl class="acct" style="margin-top:20px">
+                <dt>Amount</dt><dd>To be confirmed by NSC</dd><span></span>
+                <dt>Bank</dt><dd>To be confirmed</dd><span></span>
+                <dt>Account name</dt><dd>NaijaSinglesConnect</dd><span></span>
+                <dt>Account number</dt><dd id="acctNo">0000000000</dd><button type="button" class="copy" data-copy="acctNo">Copy</button>
+                <dt>Reference</dt><dd id="payRef"></dd><button type="button" class="copy" data-copy="payRef">Copy</button>
+              </dl>
+              <p class="sub" style="margin-top:18px"><span class="pill wait">Coming soon</span> Card and USSD payments through Paystack or Flutterwave.</p>
+            </div>
+            <div class="card" style="display:grid;gap:16px;align-content:start">
+              <div><h2>2. Upload your receipt</h2><p class="sub">A screenshot or PDF of the transfer.</p></div>
+              <label class="drop" id="drop" for="receipt">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+                <b style="color:var(--ink)">Choose a file</b><span>JPG, PNG or PDF, up to 5 MB</span>
+                <input type="file" id="receipt" accept="image/*,application/pdf">
+              </label>
+              <div class="file" id="fileRow" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg><div style="min-width:0"><b id="fileName" style="display:block;overflow-wrap:anywhere"></b><span class="sub" id="fileMeta"></span></div><button type="button" class="textbtn" id="fileRemove" style="margin-left:auto;color:var(--err)">Remove</button></div>
+              <div><h2 style="margin-top:6px">3. Let us know</h2><p class="sub">Send the team a message with your reference after uploading. It helps us approve you faster.</p></div>
+              <a class="btn btn-ghost" href="#messages" data-support>Message support</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<nav class="tabbar" aria-label="Main">
+  <a href="#overview" data-v="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</a>
+  <a href="#matches" data-v="matches"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 20s-7-4.4-9.3-8.8A5.2 5.2 0 0 1 12 6.4a5.2 5.2 0 0 1 9.3 4.8C19 15.6 12 20 12 20Z"/></svg>Matches</a>
+  <a href="#introductions" data-v="introductions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/></svg>Intros<span class="count" data-badge="intros" hidden></span></a>
+  <a href="#messages" data-v="messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M20 12.5a8 8 0 0 1-11.6 7.1L4 21l1.4-4.2A8 8 0 1 1 20 12.5Z"/></svg>Chat<span class="count" data-badge="msgs" hidden></span></a>
+  <a href="#profile" data-v="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Profile</a>
+</nav>
+
+<div id="layer"></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="/assets/js/nsc-store.js"></script>
+<script>
+(function(){
+  var S = window.NSC, esc = S.esc, $ = function(id){ return document.getElementById(id) };
+  var sess = S.session.get();
+  if (!sess || !S.get('members', sess.id)) { S.session.clear(); location.replace('/auth#login'); return; }
+  var ME = sess.id;
+  function me(){ return S.get('members', ME) }
+  function toast(msg){ var t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(t._h); t._h = setTimeout(function(){ t.hidden = true }, 2800) }
+  var ICON = {
+    lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>',
+    info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+    check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+    chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M20 12.5a8 8 0 0 1-11.6 7.1L4 21l1.4-4.2A8 8 0 1 1 20 12.5Z"/></svg>',
+    back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>',
+    more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5h.01M12 12h.01M12 19h.01"/></svg>',
+    send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 3 4.5 6v6c0 4.4 3.2 8.2 7.5 9 4.3-.8 7.5-4.6 7.5-9V6L12 3Z"/></svg>'
+  };
+
+  /* ---------- profile completion ---------- */
+  var groups = {
+    about:['first','last','gender','dob','location','origin','lga','qual','job'],
+    faith:['religion','denom'],
+    family:['marital','genotype','children','wantkids'],
+    looking:['intent','agemin','agemax','ploc','lookfor'],
+    words:['bio']
+  };
+  function filled(pr, k){ var v = pr[k]; return Array.isArray(v) ? v.length > 0 : v != null && String(v).trim() !== '' }
+  function completion(pr){
+    var total = 2, done = Math.min(2, (pr.photos || []).length);
+    Object.keys(groups).forEach(function(g){ groups[g].forEach(function(k){ total++; if (filled(pr, k)) done++ }) });
+    return Math.round(done / total * 100);
+  }
+
+  /* ---------- matching ---------- */
+  function candidates(){
+    var m = me(), want = m.profile.gender === 'Man' ? 'Woman' : m.profile.gender === 'Woman' ? 'Man' : null;
+    return S.all('members').filter(function(x){
+      return x.id !== ME && x.status === 'approved' && (!want || !x.profile.gender || x.profile.gender === want) &&
+        (m.blocked || []).indexOf(x.id) < 0 && (x.blocked || []).indexOf(ME) < 0 && !S.breaks(m, x);
+    }).map(function(x){ return { m: x, score: S.compat(m, x) } }).sort(function(a, b){ return b.score - a.score });
+  }
+  function relation(otherId){
+    var i = S.introBetween(ME, otherId);
+    if (!i) return { kind:'none' };
+    if (i.status === 'accepted') return { kind:'connected', intro:i };
+    if (i.status === 'pending') return { kind: i.from === ME ? 'sent' : 'received', intro:i };
+    return { kind:'declined', intro:i };
+  }
+
+  /* ---------- routing ---------- */
+  var titles = {overview:'Overview', matches:'Matches', member:'Profile', introductions:'Introductions', messages:'Messages', profile:'My profile', privacy:'Privacy', membership:'Membership'};
+  var view = 'overview', viewing = null, curThread = null;
+  function route(){
+    var h = (location.hash || '#overview').slice(1), parts = h.split('/');
+    view = titles[parts[0]] ? parts[0] : 'overview';
+    if (view === 'member') viewing = parts[1] || null;
+    if (view === 'messages' && parts[1]) curThread = decodeURIComponent(parts[1]);
+    document.querySelectorAll('[data-view]').forEach(function(s){ s.hidden = s.id !== 'v-' + view });
+    var navKey = view === 'member' ? 'matches' : view;
+    document.querySelectorAll('[data-v]').forEach(function(a){ if (a.dataset.v === navKey) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current') });
+    $('pageTitle').textContent = titles[view];
+    $('whoMenu').hidden = true;
+    if (view !== 'messages') window.scrollTo(0, 0);
+    render();
+  }
+  window.addEventListener('hashchange', route);
+  function go(h){ if (location.hash === h) route(); else location.hash = h }
+
+  /* ---------- render ---------- */
+  function render(){
+    var m = me(); if (!m) { S.session.clear(); location.replace('/auth#login'); return; }
+    renderTop(m); renderOverview(m); renderBadges(m);
+    if (view === 'matches') renderMatches(m);
+    if (view === 'member') renderMember(m);
+    if (view === 'introductions') renderIntros(m);
+    if (view === 'messages') renderChat(m);
+    if (view === 'profile') renderProfileMeta(m);
+    if (view === 'privacy') renderPrivacy(m);
+    if (view === 'membership') renderMembership(m);
+  }
+  S.on(render);
+
+  function avatarHtml(v, cls){ return '<span class="av ' + (cls || '') + '">' + (v.photo ? '<img alt="" src="' + v.photo + '">' : esc(v.initials)) + '</span>' }
+
+  function renderTop(m){
+    var pr = m.profile, photo = (pr.photos || [])[0];
+    $('topAv').innerHTML = photo ? '<img alt="" src="' + photo + '">' : esc(S.initials(m));
+    $('topName').textContent = pr.first || 'Member';
+    var pill = $('statusPill'), st = m.status;
+    var map = { approved:['ok','Approved member'], pending:['wait','In review'], changes:['wait','Changes requested'], rejected:['bad','Not approved'], suspended:['bad','Account paused'], draft:['wait','Profile in progress'] };
+    pill.className = 'pill ' + map[st][0]; pill.textContent = map[st][1];
+  }
+
+  function renderBadges(m){
+    var intros = S.all('intros').filter(function(i){ return i.to === ME && i.status === 'pending' }).length;
+    var msgs = S.threadsFor(ME).reduce(function(n, t){ return n + t.unread }, 0);
+    document.querySelectorAll('[data-badge="intros"]').forEach(function(b){ b.textContent = intros; b.hidden = !intros });
+    document.querySelectorAll('[data-badge="msgs"]').forEach(function(b){ b.textContent = msgs; b.hidden = !msgs });
+    document.title = (intros + msgs ? '(' + (intros + msgs) + ') ' : '') + 'Dashboard | NaijaSinglesConnect';
+  }
+
+  function statusBanner(m){
+    if (m.status === 'changes') return '<div class="banner">' + ICON.info + '<div><b>Our team asked for a few changes</b><p>' + esc(m.adminNote || 'Please review your profile.') + '</p><p><a class="textbtn" href="#profile">Update my profile</a></p></div></div>';
+    if (m.status === 'rejected') return '<div class="banner bad">' + ICON.info + '<div><b>Your profile was not approved</b><p>' + esc(m.adminNote || '') + '</p><p><a class="textbtn" href="#messages" data-support>Message support</a></p></div></div>';
+    if (m.status === 'suspended') return '<div class="banner bad">' + ICON.lock + '<div><b>Your account is paused</b><p>' + esc(m.adminNote || 'Our team has paused your account while we look into a report.') + ' Message support if you think this is a mistake.</p></div></div>';
+    if (m.status === 'pending') return '<div class="banner ok">' + ICON.check + '<div><b>Your profile is with our team</b><p>We review every member by hand, usually within 24 hours of payment. You will see your matches here as soon as you are approved.</p></div></div>';
+    return '';
+  }
+
+  function renderOverview(m){
+    var pr = m.profile, pct = completion(pr), approved = m.status === 'approved';
+    var h = new Date().getHours();
+    $('greet').textContent = (h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening') + (pr.first ? ', ' + pr.first : '');
+    $('statusBanner').innerHTML = statusBanner(m);
+    var paid = m.payment.status === 'uploaded' || m.payment.status === 'confirmed';
+    var submitted = ['pending','approved'].indexOf(m.status) >= 0;
+    var steps = { profile: submitted, pay: paid, review: approved };
+    var nowStep = !steps.profile ? 'profile' : !steps.pay ? 'pay' : !steps.review ? 'review' : null;
+    ['profile','pay','review'].forEach(function(k, i){
+      var el = document.querySelector('[data-j="' + k + '"]');
+      el.classList.toggle('done', steps[k]); el.classList.toggle('now', nowStep === k);
+      el.querySelector('.n').textContent = steps[k] ? '✓' : String(i + 2);
+      var b = el.querySelector('.btn'); if (b) b.hidden = steps[k];
+    });
+    document.querySelector('[data-jt="profile"]').textContent = steps.profile ? 'Submitted for review.' : m.status === 'changes' ? 'Changes requested. ' + pct + '% done.' : pct + '% done. About 10 minutes.';
+    document.querySelector('[data-jt="pay"]').textContent = m.payment.status === 'confirmed' ? 'Payment confirmed.' : paid ? 'Receipt received. We are checking it.' : m.payment.status === 'rejected' ? 'We could not confirm that receipt. Upload it again.' : 'Bank transfer, then add your receipt.';
+    document.querySelector('[data-jt="review"]').textContent = approved ? 'Approved.' : steps.profile && paid ? 'In review. Usually within 24 hours.' : 'Usually within 24 hours of payment.';
+    $('journey').hidden = approved;
+    $('stats').hidden = !approved;
+    $('introPreview').hidden = !approved;
+    $('greetSub').textContent = approved ? 'Here is what is new since your last visit.' : 'Finish these steps and our team will review your profile.';
+
+    var cta = $('heroCta'), label = cta.querySelector('span');
+    cta.removeAttribute('data-support');
+    if (approved) { cta.href = '#matches'; label.textContent = 'See my matches' }
+    else if (!steps.profile) { cta.href = '#profile'; label.textContent = m.status === 'changes' ? 'Update my profile' : 'Continue my profile' }
+    else if (!paid) { cta.href = '#membership'; label.textContent = 'Pay and upload receipt' }
+    else { cta.href = '#messages'; cta.setAttribute('data-support', ''); label.textContent = 'Message support' }
+
+    ['ring','ring2'].forEach(function(id){ $(id).style.setProperty('--p', pct) });
+    $('ringNum').textContent = $('ringNum2').textContent = pct + '%';
+    var ph = (pr.photos || []).length;
+    $('todo').innerHTML = [
+      ['Add at least 2 photos', ph >= 2], ['Share your faith', groups.faith.every(function(k){ return filled(pr, k) })],
+      ['Add family details and genotype', groups.family.every(function(k){ return filled(pr, k) })],
+      ['Describe the partner you hope for', groups.looking.every(function(k){ return filled(pr, k) })], ['Write about yourself', filled(pr, 'bio')]
+    ].map(function(t){ return '<li class="' + (t[1] ? 'ok' : '') + '">' + t[0] + '</li>' }).join('');
+
+    var list = candidates();
+    $('topSub').textContent = approved ? list.length + ' members match what you are looking for' : 'Unlocks after approval';
+    var top = list.slice(0, 3).map(function(c){ return card(c, true) }).join('') || '<div class="empty"><b>No matches yet</b><span>New members are approved every day.</span></div>';
+    $('topMatches').innerHTML = approved ? '<div class="mgrid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">' + top + '</div>'
+      : '<div class="locked" style="min-height:300px"><div class="mgrid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">' + top + '</div>' + lockMsg(m, true) + '</div>';
+    if (approved) {
+      $('sMatches').textContent = list.length;
+      $('sMatchesHi').textContent = list.filter(function(c){ return c.score >= 80 }).length + ' above 80%';
+      var recv = S.all('intros').filter(function(i){ return i.to === ME && i.status === 'pending' });
+      $('sIntros').textContent = recv.length;
+      var th = S.threadsFor(ME);
+      $('sMsgs').textContent = th.reduce(function(n, t){ return n + t.unread }, 0);
+      $('sConvos').textContent = th.filter(function(t){ return t.kind === 'intro' }).length + ' conversations';
+      $('introMini').innerHTML = recv.length ? recv.slice(0, 2).map(function(i){ return introRow(i, true) }).join('') : '<p class="sub">No new requests right now.</p>';
+    }
+  }
+
+  function card(c, compact){
+    var x = c.m, v = S.view(x, ME), pr = x.profile, rel = relation(x.id), m = me(), approved = m.status === 'approved';
+    var ph = v.photo ? '<img src="' + v.photo + '" alt="' + esc(v.name) + '">' : '<span class="ini">' + esc(v.initials) + (v.hiddenPhoto ? '<small>Photos after introduction</small>' : '') + '</span>';
+    var risk = S.genoRisk(m.profile.genotype, pr.genotype);
+    var btn = '';
+    if (!compact) {
+      if (rel.kind === 'connected') btn = '<a class="btn btn-primary btn-sm" href="#messages/' + rel.intro.id + '">Message</a>';
+      else if (rel.kind === 'sent') btn = '<button type="button" class="btn btn-ghost btn-sm" disabled>Request sent</button>';
+      else if (rel.kind === 'received') btn = '<a class="btn btn-gold btn-sm" href="#introductions">Respond to request</a>';
+      else if (rel.kind === 'declined') btn = '<button type="button" class="btn btn-ghost btn-sm" disabled>Not available</button>';
+      else btn = '<button type="button" class="btn btn-primary btn-sm" data-req="' + x.id + '"' + (approved ? '' : ' disabled') + '>Request introduction</button>';
+      btn = '<a class="btn btn-ghost btn-sm" href="#member/' + x.id + '">View</a>' + btn;
+    }
+    return '<article class="m"><a href="#member/' + x.id + '" class="ph" style="display:block">' + ph + '<span class="score">' + c.score + '%</span></a><div class="bd">' +
+      '<div class="nm">' + esc(v.name) + (v.age ? ', ' + v.age : '') + '</div><div class="mt">' + esc(pr.job) + ' · ' + esc(pr.location) + '</div>' +
+      '<div class="chips"><span class="chip">' + esc(S.religionLabel(pr.religion)) + '</span>' + (risk ? '<span class="chip w">Genotype check</span>' : '<span class="chip g">Genotype ' + esc(pr.genotype || '—') + '</span>') + '<span class="chip">' + esc(pr.marital) + '</span></div>' +
+      '<div class="intent">' + esc(pr.intent) + '</div>' + (compact ? '' : '<div class="acts">' + btn + '</div>') + '</div></article>';
+  }
+  function lockMsg(m, small){
+    var t = m.status === 'pending' ? 'Your profile is in review' : 'Your matches unlock after approval';
+    var s = m.status === 'pending' ? 'Matches open as soon as our team approves you.' : 'Complete your profile and upload your payment receipt. Our team reviews every member before matches open.';
+    var a = m.status === 'pending' ? '' : '<a class="btn btn-primary btn-sm" href="#profile">Finish my profile</a>';
+    return '<div class="lockmsg"><div>' + ICON.lock + '<b>' + t + '</b>' + (small ? '' : '<p class="sub">' + s + '</p>') + a + '</div></div>';
+  }
+
+  var filter = 'all';
+  function renderMatches(m){
+    var approved = m.status === 'approved', list = candidates().filter(function(c){
+      var pr = c.m.profile;
+      if (filter === '80') return c.score >= 80;
+      if (filter === 'faith') return !m.profile.religion || pr.religion === m.profile.religion;
+      if (filter === 'near') return !m.profile.location || (pr.location || '').split(',')[0].trim().toLowerCase() === m.profile.location.split(',')[0].trim().toLowerCase();
+      return true;
+    });
+    var grid = '<div class="mgrid">' + (list.length ? list.map(function(c){ return card(c) }).join('') : '<div class="empty card" style="grid-column:1/-1"><b>No matches for this filter yet</b><span>Try another filter. New members are approved every day.</span></div>') + '</div>';
+    $('matchWrap').className = approved ? '' : 'locked';
+    $('matchWrap').innerHTML = approved ? grid : grid + lockMsg(m);
+  }
+  $('filters').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b) return; filter = b.dataset.f;
+    this.querySelectorAll('button').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)) }); render();
+  });
+
+  function renderMember(m){
+    var x = S.get('members', viewing);
+    if (!x || x.status !== 'approved') { $('memberView').innerHTML = '<div class="empty card"><b>This profile is not available</b></div>'; return; }
+    var v = S.view(x, ME), pr = x.profile, rel = relation(x.id), score = S.compat(m, x), approved = m.status === 'approved';
+    var action = rel.kind === 'connected' ? '<a class="btn btn-primary" href="#messages/' + rel.intro.id + '">Message ' + esc(v.name) + '</a>'
+      : rel.kind === 'sent' ? '<button class="btn btn-ghost" disabled>Request sent</button>'
+      : rel.kind === 'received' ? '<a class="btn btn-gold" href="#introductions">Respond to their request</a>'
+      : rel.kind === 'declined' ? '<button class="btn btn-ghost" disabled>Not available</button>'
+      : '<button class="btn btn-primary" data-req="' + x.id + '"' + (approved ? '' : ' disabled') + '>Request introduction</button>';
+    var rows = [['Faith', S.religionLabel(pr.religion) + (pr.denom ? ' · ' + pr.denom : '')], ['Intent', pr.intent], ['Lives in', pr.location], ['From', (pr.lga ? pr.lga + ', ' : '') + pr.origin + ' State'],
+      ['Work', pr.job + (pr.qual ? ' · ' + pr.qual : '')], ['Marital status', pr.marital], ['Children', pr.children], ['Wants children', pr.wantkids],
+      ['Genotype', v.open ? pr.genotype : (pr.genotype ? pr.genotype : '—')], ['Looking for', pr.agemin && pr.agemax ? 'Ages ' + pr.agemin + ' to ' + pr.agemax + (pr.ploc ? ' · ' + pr.ploc : '') : pr.ploc]];
+    if (v.open && pr.worship) rows.push(['Place of worship', pr.worship]);
+    $('memberView').innerHTML = '<div class="pv"><div class="ph">' + (v.photo ? '<img src="' + v.photo + '" alt="">' : '<span class="ini">' + esc(v.initials) + '</span>') + '</div><div class="bd">' +
+      '<div class="chips"><span class="pill ok">' + score + '% match</span>' + (S.genoRisk(m.profile.genotype, pr.genotype) ? '<span class="pill wait">Genotype check advised</span>' : '') + (v.hiddenPhoto ? '<span class="pill off">Photos open after introduction</span>' : '') + '</div>' +
+      '<div class="nm">' + esc(v.name) + (v.age ? ', ' + v.age : '') + '</div>' +
+      (pr.bio ? '<p style="font-family:var(--display);font-style:italic;font-size:1.25rem;line-height:1.35;margin:0">“' + esc(pr.bio) + '”</p>' : '') +
+      '<dl class="kv">' + rows.filter(function(r){ return r[1] }).map(function(r){ return '<dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd>' }).join('') + '</dl>' +
+      (pr.lookfor ? '<div><b>The partner they hope for</b><p class="sub" style="margin-top:4px">' + esc(pr.lookfor) + '</p></div>' : '') +
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">' + action + '<button type="button" class="btn btn-ghost" data-report="' + x.id + '">Report</button></div></div></div>' +
+      (v.photos.length > 1 ? '<div class="gallery" style="margin-top:16px">' + v.photos.slice(1).map(function(p){ return '<img src="' + p + '" alt="">' }).join('') + '</div>' : '');
+  }
+
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('[data-req]'); if (!b) return;
+    var m = me(); if (m.status !== 'approved') return;
+    var to = S.get('members', b.dataset.req); if (!to || S.introBetween(ME, to.id)) return;
+    var intro = S.insert('intros', { id: S.uid('i_'), from: ME, to: to.id, status: 'pending', note: '', createdAt: Date.now() });
+    S.log(S.fullName(m) + ' requested an introduction to ' + S.fullName(to));
+    toast('Introduction request sent to ' + S.view(to, ME).name);
+    if (to.demo) S.demoAccept(intro.id, 4000);
+  });
+
+  /* ---------- introductions ---------- */
+  var itab = 'recv';
+  function introRow(i, mini){
+    var otherId = i.from === ME ? i.to : i.from, x = S.get('members', otherId); if (!x) return '';
+    var v = S.view(x, ME), pr = x.profile, score = S.compat(me(), x), acts;
+    if (i.from === ME) acts = i.status === 'accepted' ? '<a class="btn btn-primary btn-sm" href="#messages/' + i.id + '">Message</a>' : i.status === 'declined' ? '<span class="pill off">Not accepted</span>' : '<span class="pill wait">Waiting for reply</span>';
+    else acts = i.status === 'accepted' ? '<a class="btn btn-primary btn-sm" href="#messages/' + i.id + '">Message</a>' : i.status === 'declined' ? '<span class="pill off">Declined</span>'
+      : '<button type="button" class="btn btn-ghost btn-sm" data-dec="' + i.id + '">Decline</button><button type="button" class="btn btn-primary btn-sm" data-acc="' + i.id + '">Accept</button>';
+    return '<div class="irow"><a class="ph" href="#member/' + x.id + '">' + (v.photo ? '<img src="' + v.photo + '" alt="">' : esc(v.initials)) + '</a><div style="min-width:0"><b>' + esc(v.name) + (v.age ? ', ' + v.age : '') + '</b> <span class="pill ok" style="margin-left:6px">' + score + '%</span>' +
+      '<p>' + esc(pr.job) + ' · ' + esc(pr.location) + ' · ' + S.ago(i.createdAt) + '</p>' + (!mini && i.note ? '<p class="note">“' + esc(i.note) + '”</p>' : '') + '</div><div class="acts">' + acts + '</div></div>';
+  }
+  function renderIntros(m){
+    if (m.status !== 'approved') { $('introList').innerHTML = '<div class="empty card">' + ICON.chat + '<b>No introductions yet</b><span>Once you are approved, members can request an introduction and you can send your own.</span></div>'; return; }
+    var list = S.all('intros').filter(function(i){ return itab === 'recv' ? i.to === ME : i.from === ME }).sort(function(a, b){ return (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || b.createdAt - a.createdAt });
+    $('introList').innerHTML = list.length ? list.map(function(i){ return introRow(i) }).join('')
+      : '<div class="empty card">' + ICON.chat + '<b>' + (itab === 'recv' ? 'No requests yet' : 'You haven\'t sent any requests') + '</b><span>' + (itab === 'recv' ? 'When someone asks to be introduced to you, it will appear here.' : 'Open Matches and request an introduction.') + '</span></div>';
+  }
+  document.querySelectorAll('#v-introductions .tabs button').forEach(function(b){
+    b.addEventListener('click', function(){ itab = b.dataset.t; document.querySelectorAll('#v-introductions .tabs button').forEach(function(x){ x.setAttribute('aria-selected', String(x === b)) }); render() });
+  });
+  document.addEventListener('click', function(e){
+    var a = e.target.closest('[data-acc]'), d = e.target.closest('[data-dec]');
+    if (a) { var i = S.acceptIntro(a.dataset.acc); var x = S.get('members', i.from); S.log(S.fullName(me()) + ' accepted an introduction from ' + S.fullName(x)); toast('Introduction accepted. You can now message each other.'); go('#messages/' + i.id) }
+    if (d) { S.update('intros', d.dataset.dec, { status: 'declined', respondedAt: Date.now() }); toast('Request declined. They won\'t be told why.') }
+  });
+
+  /* ---------- chat ---------- */
+  var typing = {};
+  function threadMeta(t){
+    if (t.kind === 'support') return { name: 'NSC Support', sub: 'Our team replies Monday to Saturday, 9am to 7pm', av: '<span class="av gold">NSC</span>' };
+    var v = S.view(t.other, ME);
+    return { name: v.name, sub: (t.other.profile.job || '') + (t.other.profile.location ? ' · ' + t.other.profile.location : ''), av: avatarHtml(v), other: t.other };
+  }
+  function renderChat(m){
+    var threads = S.threadsFor(ME);
+    if (curThread && !threads.some(function(t){ return t.id === curThread })) curThread = null;
+    $('threadList').innerHTML = threads.map(function(t){
+      var meta = threadMeta(t), last = t.last;
+      var prev = last ? (last.from === ME ? 'You: ' : last.from === 'system' ? '' : '') + last.body : (t.kind === 'support' ? 'Ask us anything about your account' : 'Say hello');
+      return '<li><button type="button" class="citem' + (t.unread ? ' unread' : '') + '" data-thread="' + t.id + '" aria-current="' + (t.id === curThread) + '">' + meta.av +
+        '<span class="t"><b>' + esc(meta.name) + '</b><span>' + esc(prev) + '</span></span><span class="r">' + (last ? S.ago(last.at) : '') + (t.unread ? '<span class="count" style="margin:0">' + t.unread + '</span>' : '') + '</span></button></li>';
+    }).join('');
+    $('chat').classList.toggle('open', !!curThread);
+    var th = threads.filter(function(t){ return t.id === curThread })[0];
+    if (!th) {
+      $('thread').innerHTML = '<div class="empty" style="margin:auto">' + ICON.chat + '<b>Choose a conversation</b><span>' + (m.status === 'approved' ? 'Accept an introduction to start chatting, or message our team.' : 'You can message our team while your profile is in review.') + '</span></div>';
+      return;
+    }
+    var meta = threadMeta(th), msgs = S.threadMessages(th.id), box = $('msgs');
+    var nearBottom = !box || box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+    var draft = $('composeText') ? $('composeText').value : '', hadFocus = document.activeElement && document.activeElement.id === 'composeText';
+    var html = '', lastDay = '';
+    msgs.forEach(function(x){
+      var d = S.day(x.at); if (d !== lastDay) { html += '<div class="daysep">' + d + '</div>'; lastDay = d; }
+      if (x.from === 'system') { html += '<div class="sys">' + esc(x.body) + '</div>'; return; }
+      var cls = x.from === ME ? 'me' : x.from === 'admin' ? 'staff' : 'them';
+      html += '<div class="bub ' + cls + '">' + (cls === 'staff' ? '<span class="from">NSC Support</span>' : '') + esc(x.body) + '<time>' + S.clock(x.at) + '</time></div>';
+    });
+    if (!msgs.length) html = '<div class="sys">' + (th.kind === 'support' ? 'Send us a message and the NSC team will reply here.' : 'Say hello to ' + esc(meta.name) + '.') + '</div>';
+    var replied = msgs.some(function(x){ return x.from !== ME && x.from !== 'system' && x.at >= (typing[th.id] || Infinity) });
+    if (typing[th.id] && !replied && Date.now() - typing[th.id] < 8000) html += '<div class="typing">' + esc(meta.name) + ' is typing…</div>';
+    $('thread').innerHTML = '<div class="hd"><button type="button" class="back" id="chatBack" aria-label="Back to conversations">' + ICON.back + '</button>' + meta.av +
+      '<div class="who-t"><b>' + esc(meta.name) + '</b><span>' + esc(meta.sub) + '</span></div>' +
+      (meta.other ? '<a class="btn btn-ghost btn-sm" href="#member/' + meta.other.id + '">Profile</a><button type="button" class="iconbtn" id="threadMore" aria-label="More options">' + ICON.more + '</button><div class="menu" id="threadMenu" hidden style="top:60px;right:14px"><button type="button" data-report="' + meta.other.id + '" data-thread-id="' + th.id + '">Report ' + esc(meta.name) + '</button><button type="button" class="out" data-block="' + meta.other.id + '">Block ' + esc(meta.name) + '</button></div>' : '') + '</div>' +
+      (th.kind === 'intro' ? '<div class="safety">' + ICON.shield + '<span>Never send money or share bank details. Keep chatting on NSC until you are comfortable.</span></div>' : '') +
+      '<div class="msgs" id="msgs">' + html + '</div>' +
+      '<form class="compose" id="compose"><textarea id="composeText" rows="1" placeholder="Write a message" aria-label="Message"' + (m.status === 'suspended' && th.kind !== 'support' ? ' disabled' : '') + '></textarea><button class="btn btn-primary" type="submit" aria-label="Send">' + ICON.send + '</button></form>';
+    $('composeText').value = draft;
+    if (hadFocus) $('composeText').focus();
+    box = $('msgs'); if (nearBottom || !draft) box.scrollTop = box.scrollHeight;
+    if (th.unread && view === 'messages' && document.visibilityState === 'visible') S.markRead(ME, th.id);
+  }
+  $('threadList').addEventListener('click', function(e){ var b = e.target.closest('[data-thread]'); if (b) go('#messages/' + encodeURIComponent(b.dataset.thread)) });
+  document.addEventListener('click', function(e){
+    if (e.target.closest('#chatBack')) { curThread = null; go('#messages') }
+    if (e.target.closest('#threadMore')) { var mn = $('threadMenu'); mn.hidden = !mn.hidden; return }
+    if (!e.target.closest('#threadMenu') && $('threadMenu')) $('threadMenu').hidden = true;
+    var s = e.target.closest('[data-support]'); if (s) { e.preventDefault(); curThread = S.supportThread(ME); go('#messages/' + encodeURIComponent(curThread)) }
+  });
+  document.addEventListener('submit', function(e){
+    if (e.target.id !== 'compose') return; e.preventDefault();
+    var ta = $('composeText'), body = ta.value.trim(); if (!body || !curThread) return;
+    ta.value = '';
+    S.send(curThread, ME, body);
+    var th = S.threadsFor(ME).filter(function(t){ return t.id === curThread })[0];
+    if (th && th.kind === 'intro' && th.other.demo) {
+      typing[curThread] = Date.now(); render();
+      S.demoReply(curThread, th.other.id, 2300);
+    }
+    if (th && th.kind === 'support') S.log(S.fullName(me()) + ' messaged support');
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.target.id === 'composeText' && e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('compose').requestSubmit() }
+  });
+  document.addEventListener('input', function(e){ if (e.target.id === 'composeText') { e.target.style.height = 'auto'; e.target.style.height = Math.min(140, e.target.scrollHeight) + 'px' } });
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') render() });
+
+  /* report + block */
+  function modal(html){ $('layer').innerHTML = '<div class="scrim" data-close></div><div class="modal" role="dialog" aria-modal="true">' + html + '</div>'; }
+  function closeModal(){ $('layer').innerHTML = '' }
+  $('layer').addEventListener('click', function(e){ if (e.target.closest('[data-close]')) closeModal() });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeModal() });
+  document.addEventListener('click', function(e){
+    var r = e.target.closest('[data-report]'), bl = e.target.closest('[data-block]');
+    if (r) {
+      var x = S.get('members', r.dataset.report), name = S.view(x, ME).name;
+      modal('<h3>Report ' + esc(name) + '</h3><p class="sub">Our team reviews every report. ' + esc(name) + ' won\'t be told who reported them.</p>' +
+        '<div class="field"><label for="rReason">What happened?</label><select id="rReason"><option>Asked for money or bank details</option><option>Fake profile or photos</option><option>Rude, abusive or sexual messages</option><option>Already married</option><option>Not looking for marriage</option><option>Something else</option></select></div>' +
+        '<div class="field"><label for="rText">Tell us more (optional)</label><textarea id="rText" placeholder="What should our team know?"></textarea></div>' +
+        '<label style="display:flex;gap:10px;align-items:center;font-size:.92rem"><input type="checkbox" id="rBlock" checked style="width:18px;height:18px;accent-color:var(--green)">Also block ' + esc(name) + '</label>' +
+        '<div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-danger" id="rSend" data-who="' + x.id + '" data-th="' + (r.dataset.threadId || '') + '">Send report</button></div>');
+    }
+    if (e.target.id === 'rSend') {
+      var who = e.target.dataset.who;
+      S.insert('reports', { id: S.uid('r_'), by: ME, about: who, thread: e.target.dataset.th || (S.introBetween(ME, who) || {}).id || null, reason: $('rReason').value, details: $('rText').value.trim(), at: Date.now(), status: 'open' });
+      S.log(S.fullName(me()) + ' reported ' + S.fullName(S.get('members', who)));
+      if ($('rBlock').checked) block(who);
+      closeModal(); toast('Thank you. Our team will review this report.');
+    }
+    if (bl) {
+      var y = S.get('members', bl.dataset.block), n = S.view(y, ME).name;
+      modal('<h3>Block ' + esc(n) + '?</h3><p class="sub">You won\'t see each other in matches, and your conversation will close. You can unblock them in Privacy.</p><div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-danger" id="bConfirm" data-who="' + y.id + '">Block</button></div>');
+    }
+    if (e.target.id === 'bConfirm') { block(e.target.dataset.who); closeModal(); toast('Blocked.') }
+    var ub = e.target.closest('[data-unblock]');
+    if (ub) { S.update('members', ME, function(r){ r.blocked = (r.blocked || []).filter(function(i){ return i !== ub.dataset.unblock }) }); toast('Unblocked.') }
+  });
+  function block(id){ S.update('members', ME, function(r){ r.blocked = r.blocked || []; if (r.blocked.indexOf(id) < 0) r.blocked.push(id) }); if (curThread && S.threadsFor(ME).every(function(t){ return t.id !== curThread })) { curThread = null; if (view === 'messages') go('#messages') } }
+
+  /* ---------- profile form ---------- */
+  var form = $('pform');
+  S.STATES.forEach(function(s){ var o = document.createElement('option'); o.textContent = s; $('origin').appendChild(o) });
+  (function fill(){
+    var pr = me().profile;
+    Array.prototype.forEach.call(form.elements, function(el){ if (el.name && typeof pr[el.name] === 'string') el.value = pr[el.name] });
+    form.querySelectorAll('.seg').forEach(function(g){
+      var name = g.dataset.name, multi = !!g.dataset.multi, v = pr[name];
+      g.querySelectorAll('button').forEach(function(b){ b.setAttribute('aria-pressed', String(multi ? (v || []).indexOf(b.dataset.val) >= 0 : v === b.dataset.val)) });
+    });
+    $('bioCount').textContent = (pr.bio || '').length + ' / 600';
+  })();
+  var pending = {}, saveT;
+  function setField(k, v){
+    pending[k] = v; clearTimeout(saveT);
+    saveT = setTimeout(function(){
+      var patch = pending; pending = {};
+      S.update('members', ME, function(r){ Object.assign(r.profile, patch); if (r.status === 'draft' || r.status === 'changes') r.updatedAt = Date.now() });
+      $('saveText').textContent = S.lastError ? 'Could not save. Your browser storage may be full.' : 'Saved';
+      setTimeout(function(){ $('saveText').textContent = 'Changes save as you type.' }, 1600);
+    }, 350);
+  }
+  form.querySelectorAll('.seg').forEach(function(g){
+    g.addEventListener('click', function(e){
+      var b = e.target.closest('button'); if (!b) return;
+      var name = g.dataset.name;
+      if (g.dataset.multi) { var arr = (pending[name] || me().profile[name] || []).slice(); var i = arr.indexOf(b.dataset.val); if (i >= 0) arr.splice(i, 1); else arr.push(b.dataset.val); b.setAttribute('aria-pressed', String(i < 0)); setField(name, arr) }
+      else { g.querySelectorAll('button').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)) }); setField(name, b.dataset.val) }
+    });
+  });
+  form.addEventListener('input', function(e){
+    var el = e.target; if (!el.name) return; setField(el.name, el.value);
+    if (el.name === 'bio') $('bioCount').textContent = el.value.length + ' / 600';
+  });
+  function renderProfileMeta(m){
+    var pr = Object.assign({}, m.profile, pending);
+    Object.keys(groups).forEach(function(g){
+      var n = groups[g].filter(function(k){ return filled(pr, k) }).length, all = groups[g].length, el = document.querySelector('[data-sp="' + g + '"]');
+      el.textContent = n === all ? 'Complete' : n + ' of ' + all; el.className = 'pill ' + (n === all ? 'ok' : n ? 'wait' : 'off');
+    });
+    var ph = (pr.photos || []).length, pe = document.querySelector('[data-sp="photos"]');
+    pe.textContent = ph + ' of 3'; pe.className = 'pill ' + (ph >= 2 ? 'ok' : ph ? 'wait' : 'off');
+    $('profileBanner').innerHTML = m.status === 'changes' || m.status === 'rejected' ? statusBanner(m) : '';
+    var btn = $('submitBtn');
+    btn.textContent = m.status === 'approved' ? 'Saved' : m.status === 'pending' ? 'In review' : m.status === 'changes' ? 'Resubmit for review' : 'Submit for review';
+    btn.disabled = m.status === 'approved' || m.status === 'pending' || m.status === 'suspended';
+    if (!$('photos').dataset.n || +$('photos').dataset.n !== ph || $('photos').dataset.sig !== (pr.photos || []).map(function(p){ return p.length }).join(',')) paintPhotos(pr.photos || []);
+  }
+  form.addEventListener('submit', function(e){
+    e.preventDefault(); clearTimeout(saveT);
+    var m = me(), pr = Object.assign({}, m.profile, pending), pct = completion(pr);
+    if (pct < 80) { toast('Your profile is ' + pct + '% complete. Reach 80% to submit.'); return }
+    if ((pr.photos || []).length < 1) { toast('Add at least one photo of yourself.'); return }
+    var patch = pending; pending = {};
+    S.update('members', ME, function(r){ Object.assign(r.profile, patch); r.status = 'pending'; r.submittedAt = Date.now() });
+    S.log(S.fullName(me()) + (m.status === 'changes' ? ' resubmitted' : ' submitted') + ' a profile for review');
+    toast(m.payment.status === 'none' || m.payment.status === 'rejected' ? 'Profile submitted. Next, pay and upload your receipt.' : 'Profile submitted. Our team will review it soon.');
+    if (m.payment.status === 'none' || m.payment.status === 'rejected') go('#membership');
+  });
+
+  function paintPhotos(ph){
+    var html = '';
+    for (var i = 0; i < 3; i++) {
+      html += ph[i]
+        ? '<div class="slot"><img src="' + ph[i] + '" alt="Your photo ' + (i + 1) + '"><button type="button" class="rm" data-rm="' + i + '" aria-label="Remove photo ' + (i + 1) + '">×</button>' + (i === 0 ? '<span class="main-tag">Main photo</span>' : '') + '</div>'
+        : '<label class="slot" for="ph' + i + '"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' + (i < 2 ? 'Add photo' : 'Optional') + '</span><input type="file" id="ph' + i + '" accept="image/*"></label>';
+    }
+    $('photos').innerHTML = html; $('photos').dataset.n = ph.length; $('photos').dataset.sig = ph.map(function(p){ return p.length }).join(',');
+  }
+  function shrink(file, max, cb){
+    var r = new FileReader();
+    r.onload = function(){ var img = new Image(); img.onload = function(){ var s = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); cb(c.toDataURL('image/jpeg', .8)) }; img.onerror = function(){ toast('That image could not be read. Try a JPG or PNG.') }; img.src = r.result };
+    r.readAsDataURL(file);
+  }
+  $('photos').addEventListener('change', function(e){
+    var f = e.target.files && e.target.files[0]; if (!f) return;
+    if (!/^image\//.test(f.type)) { toast('Choose an image file, like a JPG or PNG.'); return }
+    shrink(f, 720, function(url){ S.update('members', ME, function(r){ r.profile.photos = (r.profile.photos || []).concat(url).slice(0, 3) }); toast(S.lastError ? 'Could not save the photo. Storage is full.' : 'Photo added') });
+  });
+  $('photos').addEventListener('click', function(e){
+    var b = e.target.closest('[data-rm]'); if (!b) return; e.preventDefault();
+    S.update('members', ME, function(r){ r.profile.photos.splice(+b.dataset.rm, 1) });
+  });
+
+  /* ---------- privacy ---------- */
+  function renderPrivacy(m){
+    document.querySelectorAll('.mode').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.mode === (m.privacy || 'full'))) });
+    $('accEmail').textContent = m.email; $('accPhone').textContent = m.phone || 'Not added';
+    var bl = (m.blocked || []).map(function(id){ return S.get('members', id) }).filter(Boolean);
+    $('blockedCard').innerHTML = '<h2>Blocked members</h2>' + (bl.length ? '<div class="ilist" style="margin-top:14px">' + bl.map(function(x){ return '<div class="irow" style="grid-template-columns:52px 1fr auto"><span class="ph" style="width:52px;height:52px">' + esc(S.initials(x)) + '</span><div><b>' + esc(x.profile.first) + '</b></div><div class="acts"><button type="button" class="btn btn-ghost btn-sm" data-unblock="' + x.id + '">Unblock</button></div></div>' }).join('') + '</div>' : '<p class="sub">You haven\'t blocked anyone.</p>');
+  }
+  $('modes').addEventListener('click', function(e){
+    var b = e.target.closest('.mode'); if (!b) return;
+    S.update('members', ME, { privacy: b.dataset.mode });
+    toast({ full:'Full profile is on', nophoto:'Photos are now hidden until you accept an introduction', name:'Only your initials will show' }[b.dataset.mode]);
+  });
+
+  /* ---------- membership ---------- */
+  function renderMembership(m){
+    var p = m.payment;
+    $('payRef').textContent = p.ref;
+    var map = { none:['off','Payment not received'], uploaded:['wait','Receipt in review'], confirmed:['ok','Payment confirmed'], rejected:['bad','Receipt not accepted'] };
+    $('payPill').className = 'pill ' + map[p.status][0]; $('payPill').textContent = map[p.status][1];
+    var has = p.file && p.status !== 'rejected';
+    $('fileRow').hidden = !has; $('drop').hidden = !!has;
+    if (has) { $('fileName').textContent = p.file.name; $('fileMeta').textContent = p.file.size + ' · Uploaded ' + S.ago(p.uploadedAt) + ' · ' + map[p.status][1]; $('fileRemove').hidden = p.status === 'confirmed' }
+  }
+  $('receipt').addEventListener('change', function(){
+    var f = this.files && this.files[0], input = this; if (!f) return;
+    if (f.size > 5 * 1024 * 1024) { toast('That file is over 5 MB. Choose a smaller one.'); input.value = ''; return }
+    var size = f.size / 1024 < 1024 ? Math.round(f.size / 1024) + ' KB' : (f.size / 1048576).toFixed(1) + ' MB';
+    function done(url){
+      S.update('members', ME, function(r){ r.payment.status = 'uploaded'; r.payment.uploadedAt = Date.now(); r.payment.file = { name: f.name, size: size, type: f.type, dataUrl: url } });
+      S.log(S.fullName(me()) + ' uploaded a payment receipt'); toast('Receipt uploaded. Our team will confirm it.'); input.value = '';
+    }
+    if (/^image\//.test(f.type)) shrink(f, 1200, done); else done(null);
+  });
+  $('fileRemove').addEventListener('click', function(){ S.update('members', ME, function(r){ r.payment.status = 'none'; r.payment.file = null; r.payment.uploadedAt = null }) });
+  document.querySelectorAll('[data-copy]').forEach(function(b){
+    b.addEventListener('click', function(){ var t = $(b.dataset.copy).textContent; (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function(){ toast('Copied ' + t) }, function(){ toast(t) }) });
+  });
+
+  /* ---------- account menu ---------- */
+  $('whoBtn').addEventListener('click', function(e){ e.stopPropagation(); var mn = $('whoMenu'); mn.hidden = !mn.hidden; this.setAttribute('aria-expanded', String(!mn.hidden)) });
+  document.addEventListener('click', function(e){ if (!e.target.closest('.who')) $('whoMenu').hidden = true });
+  $('logout').addEventListener('click', function(){ S.session.clear(); location.href = '/auth#login' });
+
+  route();
+})();
+</script>
+</body>
+</html>
