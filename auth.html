@@ -111,8 +111,8 @@ form{display:grid;gap:18px}
 .field.bad input{border-color:var(--err)}
 .field .err{font-size:.84rem;color:var(--err);font-weight:600}
 .field .hint{font-size:.84rem;color:var(--ink-2)}
-.phone input{padding-left:92px}
-.phone .cc{position:absolute;left:6px;top:6px;bottom:6px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:10px;background:var(--paper-2);font-weight:700;font-size:.95rem}
+.phone input{padding-left:118px}
+.phone .cc{position:absolute;left:6px;top:6px;bottom:6px;width:104px;border:0;padding:0 8px;border-radius:10px;background:var(--paper-2);font:700 .9rem var(--body);color:var(--ink);cursor:pointer}
 .eye{position:absolute;right:8px;border:0;background:transparent;color:var(--ink-2);cursor:pointer;padding:8px;border-radius:10px;display:grid;place-items:center}
 .eye svg{width:20px;height:20px}
 .pw input{padding-right:52px}
@@ -221,7 +221,7 @@ form{display:grid;gap:18px}
           </div>
           <div class="field"><label for="su-email">Email address</label><input id="su-email" type="email" autocomplete="email" placeholder="you@example.com"><span class="err" hidden></span></div>
           <div class="field phone"><label for="su-phone">Phone number</label>
-            <div class="wrapin"><span class="cc">🇳🇬 +234</span><input id="su-phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="803 123 4567"></div>
+            <div class="wrapin"><select class="cc" id="su-cc" aria-label="Country code"><option value="+234" selected>+234 Nigeria</option><option value="+44">+44 United Kingdom</option><option value="+1">+1 United States / Canada</option><option value="+233">+233 Ghana</option><option value="+254">+254 Kenya</option><option value="+27">+27 South Africa</option><option value="+237">+237 Cameroon</option><option value="+229">+229 Benin</option><option value="+353">+353 Ireland</option><option value="+49">+49 Germany</option><option value="+33">+33 France</option><option value="+31">+31 Netherlands</option><option value="+39">+39 Italy</option><option value="+34">+34 Spain</option><option value="+971">+971 UAE</option><option value="+966">+966 Saudi Arabia</option><option value="+974">+974 Qatar</option><option value="+61">+61 Australia</option><option value="+64">+64 New Zealand</option><option value="+55">+55 Brazil</option><option value="+91">+91 India</option><option value="+86">+86 China</option><option value="+1876">+1876 Jamaica</option></select><input id="su-phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="Phone number"></div>
             <span class="hint">Used for WhatsApp support only. Never shown on your profile.</span></div>
           <div class="field pw"><label for="su-pass">Password</label>
             <div class="wrapin"><input id="su-pass" type="password" autocomplete="new-password" placeholder="At least 8 characters">
@@ -339,7 +339,7 @@ form{display:grid;gap:18px}
       S.insert('members', { id: id, email: d.email.toLowerCase(), phone: d.phone, pwHash: h, createdAt: Date.now(), status: 'draft', adminNote: '', submittedAt: null, approvedAt: null,
         privacy: 'full', blocked: [], demo: false,
         payment: { status: 'none', ref: 'NSC-' + String(Math.floor(10000 + Math.random() * 89999)), file: null, uploadedAt: null },
-        profile: { first: d.first, last: d.last, gender: '', dob: '', location: '', origin: '', lga: '', qual: '', job: '', religion: '', denom: '', worship: '', marital: '', genotype: '',
+        profile: { first: d.first, last: d.last, gender: '', dob: '', location: '', nationality: d.phone.indexOf('+234') === 0 ? 'Nigeria' : '', heritage: '', openTo: 'both', circle: false, origin: '', lga: '', qual: '', job: '', religion: '', denom: '', worship: '', marital: '', genotype: '',
           children: '', wantkids: '', intent: '', agemin: '', agemax: '', ploc: '', lookfor: '', dealbreakers: [], bio: '', photos: [] } });
       S.insert('messages', { id: S.uid('msg_'), thread: S.supportThread(id), from: 'admin', at: Date.now(),
         body: 'Welcome to NaijaSinglesConnect, ' + d.first + '. Complete your profile and upload your payment receipt, and our team will review you, usually within 24 hours. Reply here any time if you need help.' });
@@ -405,7 +405,7 @@ form{display:grid;gap:18px}
     var msg = '';
     if (!first) msg = 'Enter your first name.';
     else if (!emailRe.test(em)) { msg = 'Enter a valid email address, like name@example.com.'; fieldErr('su-email', 'Check this email address.') }
-    else if (document.getElementById('su-phone').value.replace(/\D/g,'').length < 10) msg = 'Enter your 10-digit phone number after +234.';
+    else if (document.getElementById('su-phone').value.replace(/\D/g,'').length < 7) msg = 'Enter your phone number, without the country code.';
     else if (pass.value.length < 8) msg = 'Your password needs at least 8 characters.';
     else if (!document.getElementById('su-age').checked) msg = 'Confirm that you are 21 or older and looking for marriage.';
     else if (!document.getElementById('su-terms').checked) msg = 'Agree to the terms and privacy policy to continue.';
@@ -415,7 +415,7 @@ form{display:grid;gap:18px}
     if (msg) return;
     var btn = document.getElementById('su-btn'); busy(btn, true, 'Creating account');
     createMember({ first: first, last: document.getElementById('su-last').value.trim(), email: em, password: pass.value,
-      phone: '+234' + document.getElementById('su-phone').value.replace(/\D/g,'').replace(/^0/, '') }).then(function(id){
+      phone: document.getElementById('su-cc').value + document.getElementById('su-phone').value.replace(/\D/g,'').replace(/^0/, '') }).then(function(id){
       pending = id;
       busy(btn, false);
       if (!REQUIRE_EMAIL_VERIFICATION) { startSession(id, true); return; }

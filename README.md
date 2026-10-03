@@ -35,6 +35,19 @@ Both dashboards read and write the same data through `assets/js/nsc-store.js`. U
 
 Members chat with each other once an introduction is accepted. Each conversation has a safety note, Report and Block.
 
+## Across borders
+Members add a nationality and choose who they are open to meeting: Nigerians, people from other countries, or both. People with Nigerian heritage count as Nigerian. Two members only see each other when each is open to the other's group (NSC.eligible in 
+sc-store.js). Sign-up takes any country code, and state of origin and LGA are only asked of Nigerian members.
+
+## Private Circle (members living with HIV)
+An optional, opt-in space. Members who join are matched only with other circle members and are hidden from everyone else; joining closes any pending introductions outside the circle. Admins see a "sensitive" banner on circle members.
+
+HIV status is special-category health data under the Nigeria Data Protection Act 2023. Before launch:
+- get explicit, separate consent when a member joins the circle, and record it
+- store the flag in its own table with row-level security so only the member, matched circle members and named admins can read it
+- encrypt it at rest, keep it out of analytics, logs and emails, and never put it in notification or email subject lines
+- let members delete it permanently when they leave the circle
+
 ## Supabase tables to create
 `members` (profile JSON, status, privacy, payment, blocked), `intros`, `messages` (thread is the intro id or `support:<memberId>`), `reports`, `activity`, `reads` (last-read time per reader and thread). Every function in `nsc-store.js` maps to a query or an RPC. Use Supabase Realtime on `messages` and `intros` to replace the cross-tab sync, and Storage for photos and receipts (they are kept as data URLs for now).
 

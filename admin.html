@@ -111,7 +111,7 @@
             <input class="input" id="mbSearch" type="search" placeholder="Search name, email or city" aria-label="Search members">
             <div class="seg" id="mbFilter">
               <button type="button" aria-pressed="true" data-f="all">All</button><button type="button" aria-pressed="false" data-f="approved">Approved</button>
-              <button type="button" aria-pressed="false" data-f="pending">In review</button><button type="button" aria-pressed="false" data-f="suspended">Paused</button><button type="button" aria-pressed="false" data-f="rejected">Rejected</button>
+              <button type="button" aria-pressed="false" data-f="pending">In review</button><button type="button" aria-pressed="false" data-f="suspended">Paused</button><button type="button" aria-pressed="false" data-f="rejected">Rejected</button><button type="button" aria-pressed="false" data-f="intl">From other countries</button><button type="button" aria-pressed="false" data-f="circle">Private Circle</button>
             </div>
           </div>
           <div class="tablewrap"><table class="t"><thead><tr><th>Member</th><th>Status</th><th>Faith</th><th>Lives in</th><th>Genotype</th><th>Joined</th><th>Payment</th></tr></thead><tbody id="mbBody"></tbody></table></div>
@@ -276,13 +276,15 @@
   function rMembers(){
     var q = $('mbSearch').value.trim().toLowerCase(), all = members();
     var list = all.filter(function(m){
-      if (mbF !== 'all' && m.status !== mbF && !(mbF === 'pending' && m.status === 'changes')) return false;
+      if (mbF === 'intl') { if (S.groupOf(m) !== 'international') return false; }
+      else if (mbF === 'circle') { if (!m.profile.circle) return false; }
+      else if (mbF !== 'all' && m.status !== mbF && !(mbF === 'pending' && m.status === 'changes')) return false;
       return !q || (S.fullName(m) + ' ' + m.email + ' ' + (m.profile.location || '')).toLowerCase().indexOf(q) >= 0;
     }).sort(function(a, b){ return b.createdAt - a.createdAt });
     $('mbCount').textContent = all.length + ' accounts · ' + all.filter(function(m){ return m.status === 'approved' }).length + ' approved';
     $('mbBody').innerHTML = list.length ? list.map(function(m){
       var a = S.age(m.profile.dob);
-      return '<tr data-open="' + m.id + '"><td>' + person(m, [m.profile.gender, a].filter(Boolean).join(', ') || m.email) + '</td><td>' + pill(STATUS, m.status) + '</td><td>' + esc(S.religionLabel(m.profile.religion) || '—') + '</td><td>' + esc(m.profile.location || '—') + '</td><td>' + esc(m.profile.genotype || '—') + '</td><td>' + new Date(m.createdAt).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) + '</td><td>' + pill(PAY, m.payment.status) + '</td></tr>' }).join('')
+      return '<tr data-open="' + m.id + '"><td>' + person(m, [m.profile.gender, a].filter(Boolean).join(', ') || m.email) + '</td><td>' + pill(STATUS, m.status) + '</td><td>' + esc(S.religionLabel(m.profile.religion) || '—') + '</td><td>' + esc(m.profile.location || '—') + (S.groupOf(m) === 'international' ? ' <span class="pill wait">' + esc(m.profile.nationality) + '</span>' : '') + (m.profile.circle ? ' <span class="pill ok" title="Private Circle">Circle</span>' : '') + '</td><td>' + esc(m.profile.genotype || '—') + '</td><td>' + new Date(m.createdAt).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) + '</td><td>' + pill(PAY, m.payment.status) + '</td></tr>' }).join('')
       : '<tr><td colspan="7"><div class="empty"><b>No members found</b><span>Try another search or filter.</span></div></td></tr>';
   }
 
@@ -386,7 +388,7 @@
   function rDrawer(){
     var m = S.get('members', drawerId); if (!m) { closeDrawer(); return; }
     var pr = m.profile, pct = completion(pr), f = m.payment.file, a = S.age(pr.dob);
-    var rows = [['Email', m.email], ['Phone', m.phone], ['Gender', pr.gender], ['Age', a ? a + ' (born ' + pr.dob + ')' : ''], ['Lives in', pr.location], ['State of origin', pr.origin], ['LGA', pr.lga], ['Qualification', pr.qual], ['Occupation', pr.job],
+    var rows = [['Email', m.email], ['Phone', m.phone], ['Gender', pr.gender], ['Age', a ? a + ' (born ' + pr.dob + ')' : ''], ['Lives in', pr.location], ['Nationality', (pr.nationality || '') + (pr.heritage === 'Yes' ? ' (Nigerian heritage)' : '')], ['Open to', { nigerian:'Nigerians', international:'People from other countries', both:'Nigerians and people from other countries' }[pr.openTo || 'both']], ['State of origin', pr.origin], ['LGA', pr.lga], ['Qualification', pr.qual], ['Occupation', pr.job],
       ['Religion', pr.religion], ['Denomination', pr.denom], ['Place of worship', pr.worship], ['Marital status', pr.marital], ['Genotype', pr.genotype], ['Children', pr.children], ['Wants children', pr.wantkids],
       ['Intent', pr.intent], ['Preferred ages', pr.agemin || pr.agemax ? pr.agemin + ' to ' + pr.agemax : ''], ['Partner location', pr.ploc], ['Deal-breakers', (pr.dealbreakers || []).join(', ')], ['Privacy', { full:'Full profile', nophoto:'Without photographs', name:'Name-restricted' }[m.privacy || 'full']]];
     var intros = S.all('intros').filter(function(i){ return i.from === m.id || i.to === m.id });
@@ -400,6 +402,7 @@
       '<div class="dh">' + av(m).replace('class="av"', 'class="av lg"') + '<div style="min-width:0"><b style="font-size:1.15rem">' + esc(S.fullName(m)) + '</b><div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">' + pill(STATUS, m.status) + pill(PAY, m.payment.status) + '</div></div><span class="sp"></span><button type="button" class="iconbtn" data-closedrawer aria-label="Close">✕</button></div>' +
       '<div class="db">' +
         (m.adminNote && ['changes','rejected','suspended'].indexOf(m.status) >= 0 ? '<div class="banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><div><b>Last note to member</b><p>' + esc(m.adminNote) + '</p></div></div>' : '') +
+        (pr.circle ? '<div class="banner ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><div><b>Private Circle member · sensitive</b><p>This member is living with HIV and has opted into the Private Circle. Never mention this outside the circle or in messages that other people could see.</p></div></div>' : '') +
         '<div class="card" style="display:flex;gap:20px;align-items:center;flex-wrap:wrap"><div class="ring" style="--p:' + pct + ';width:72px;height:72px"><b style="width:56px;height:56px;font-size:1rem">' + pct + '%</b></div><div style="flex:1;min-width:200px"><b>Profile ' + pct + '% complete</b><p class="sub">Joined ' + new Date(m.createdAt).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }) + (m.submittedAt ? ' · Submitted ' + S.ago(m.submittedAt).toLowerCase() : '') + '</p><p class="sub">' + intros.length + ' introductions · ' + reports.length + ' reports about them</p></div></div>' +
         '<div><b>Photos</b><div class="gallery" style="margin-top:10px">' + [0,1,2].map(function(i){ return pr.photos[i] ? '<img src="' + pr.photos[i] + '" alt="Photo ' + (i + 1) + '">' : '<div class="ph">No photo</div>' }).join('') + '</div></div>' +
         (pr.bio ? '<div><b>About me</b><p style="margin:6px 0 0">' + esc(pr.bio) + '</p></div>' : '') +

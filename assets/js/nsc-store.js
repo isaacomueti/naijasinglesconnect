@@ -2,16 +2,19 @@
  * NSC local data layer.
  * Stands in for Supabase until the backend is wired. Every page (auth, dashboard, admin)
  * reads and writes through this file, so the member and admin sides share one dataset.
- * Data lives in localStorage under "nsc.db.v1" and syncs live between open tabs.
+ * Data lives in localStorage under "nsc.db.v2" and syncs live between open tabs.
  *
  * Supabase mapping (one table each): members, intros, messages, reports, activity, reads.
  */
 (function () {
   'use strict';
-  var KEY = 'nsc.db.v1';
+  var KEY = 'nsc.db.v2';
   var DEMO_HASH = '390c1fb37a84bbebd6425a08804081187b63492d8dc0756b8855f0c8df923b12';
   var ADMIN = { email: 'admin@naijasinglesconnect.com', hash: 'ecd4997df9fba0697cb6f4b59160343da463d79736865db4bb08bb95cfc56ea9' };
   var CARRIERS = ['AS', 'AC', 'SS', 'SC'];
+  var COUNTRIES = ['Nigeria','Ghana','Cameroon','Benin','Togo','Kenya','South Africa','Uganda','Rwanda','Tanzania','Ethiopia','Senegal','Ivory Coast','Sierra Leone','Liberia','Zimbabwe','Zambia','Egypt','Morocco',
+    'United Kingdom','Ireland','United States','Canada','Jamaica','Trinidad and Tobago','Barbados','Brazil','Germany','France','Netherlands','Belgium','Italy','Spain','Portugal','Sweden','Norway','Denmark','Switzerland','Poland',
+    'United Arab Emirates','Saudi Arabia','Qatar','Turkey','India','Pakistan','China','Japan','South Korea','Philippines','Malaysia','Singapore','Australia','New Zealand','Other'];
   var STATES = ['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT Abuja','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'];
 
   var listeners = [];
@@ -39,8 +42,8 @@
 
   /* ---------- seed data (demo only) ---------- */
   function p(o) {
-    return Object.assign({ first: '', last: '', gender: '', dob: '', location: '', origin: '', lga: '', qual: '', job: '', religion: '', denom: '', worship: '',
-      marital: '', genotype: '', children: '', wantkids: '', intent: '', agemin: '', agemax: '', ploc: '', lookfor: '', dealbreakers: [], bio: '', photos: [] }, o);
+    return Object.assign({ first: '', last: '', gender: '', dob: '', location: '', nationality: 'Nigeria', heritage: '', openTo: 'both', origin: '', lga: '', qual: '', job: '', religion: '', denom: '', worship: '',
+      marital: '', genotype: '', children: '', wantkids: '', intent: '', agemin: '', agemax: '', ploc: '', lookfor: '', dealbreakers: [], bio: '', photos: [], circle: false }, o);
   }
   function m(id, email, status, profile, extra) {
     return Object.assign({ id: id, email: email, phone: '', pwHash: DEMO_HASH, createdAt: now() - 20 * D, status: status, adminNote: '',
@@ -51,15 +54,19 @@
   function seed() {
     var t = now();
     var members = [
-      m('m_tobi', 'tobi@example.com', 'approved', { first: 'Tobi', last: 'Adeyemi', gender: 'Man', dob: '1993-03-14', location: 'Abuja', origin: 'Ogun', lga: 'Ijebu-Ode', qual: "Bachelor's degree", job: 'Civil engineer', religion: 'Christianity', denom: 'RCCG', marital: 'Never married', genotype: 'AS', children: 'No', wantkids: 'Yes', intent: 'Marriage within 1 to 2 years', agemin: '25', agemax: '33', ploc: 'Abuja or Lagos', lookfor: 'Kind, prayerful and ambitious. Someone who laughs easily.', bio: 'I build bridges for a living and I want to build a home that is just as steady. Sunday jollof is non-negotiable.', photos: ['/assets/img/face-tobi.jpg'] }),
+      m('m_tobi', 'tobi@example.com', 'approved', { first: 'Tobi', openTo: 'nigerian', last: 'Adeyemi', gender: 'Man', dob: '1993-03-14', location: 'Abuja', origin: 'Ogun', lga: 'Ijebu-Ode', qual: "Bachelor's degree", job: 'Civil engineer', religion: 'Christianity', denom: 'RCCG', marital: 'Never married', genotype: 'AS', children: 'No', wantkids: 'Yes', intent: 'Marriage within 1 to 2 years', agemin: '25', agemax: '33', ploc: 'Abuja or Lagos', lookfor: 'Kind, prayerful and ambitious. Someone who laughs easily.', bio: 'I build bridges for a living and I want to build a home that is just as steady. Sunday jollof is non-negotiable.', photos: ['/assets/img/face-tobi.jpg'] }),
       m('m_emeka', 'emeka@example.com', 'approved', { first: 'Emeka', last: 'Nwosu', gender: 'Man', dob: '1990-07-02', location: 'Port Harcourt', origin: 'Imo', lga: 'Owerri North', qual: 'Professional certification', job: 'Chartered accountant', religion: 'Christianity', denom: 'Catholic', marital: 'Widowed', genotype: 'AA', children: 'No', wantkids: 'Yes', intent: 'Marriage within 1 year', agemin: '27', agemax: '36', ploc: 'Anywhere in Nigeria', lookfor: 'A patient, honest woman who values family.', bio: 'I lost my wife four years ago. I am ready to love again and to build something calm and faithful.', photos: ['/assets/img/face-emeka.jpg'] }),
       m('m_femi', 'femi@example.com', 'approved', { first: 'Femi', last: 'Okeke', gender: 'Man', dob: '1995-01-20', location: 'Lagos', origin: 'Enugu', lga: 'Udi', qual: "Master's degree", job: 'Software developer', religion: 'Christianity', denom: 'Pentecostal', marital: 'Never married', genotype: 'AA', children: 'No', wantkids: 'Yes', intent: 'Courtship first, then marriage', agemin: '24', agemax: '31', ploc: 'Lagos', bio: 'Quiet, curious and loyal. I play the keyboard in church and I make a mean pepper soup.' }, { privacy: 'nophoto' }),
-      m('m_ibrahim', 'ibrahim@example.com', 'approved', { first: 'Ibrahim', last: 'Musa', gender: 'Man', dob: '1992-05-11', location: 'Kaduna', origin: 'Kaduna', lga: 'Zaria', qual: "Master's degree", job: 'Architect', religion: 'Islam', denom: 'Sunni', marital: 'Never married', genotype: 'AA', children: 'No', wantkids: 'Yes', intent: 'Marriage within 1 year', agemin: '24', agemax: '32', ploc: 'Northern Nigeria or Abuja', bio: 'I design homes for other families. I would like to design one with my wife.' }, { privacy: 'name' }),
+      m('m_ibrahim', 'ibrahim@example.com', 'approved', { first: 'Ibrahim', openTo: 'nigerian', last: 'Musa', gender: 'Man', dob: '1992-05-11', location: 'Kaduna', origin: 'Kaduna', lga: 'Zaria', qual: "Master's degree", job: 'Architect', religion: 'Islam', denom: 'Sunni', marital: 'Never married', genotype: 'AA', children: 'No', wantkids: 'Yes', intent: 'Marriage within 1 year', agemin: '24', agemax: '32', ploc: 'Northern Nigeria or Abuja', bio: 'I design homes for other families. I would like to design one with my wife.' }, { privacy: 'name' }),
       m('m_chidi', 'chidi@example.com', 'approved', { first: 'Chidi', last: 'Eze', gender: 'Man', dob: '1991-09-30', location: 'Enugu', origin: 'Enugu', lga: 'Nsukka', qual: 'Doctorate', job: 'Medical doctor', religion: 'Christianity', denom: 'Anglican', marital: 'Divorced', genotype: 'AC', children: "Yes, they don't live with me", wantkids: 'Open to it', intent: 'Marriage within 1 to 2 years', agemin: '28', agemax: '38', ploc: 'South East', bio: 'Father of one. I work long hours but I always make time for the people I love.' }, { privacy: 'nophoto' }),
       m('m_chiamaka', 'chiamaka@example.com', 'approved', { first: 'Chiamaka', last: 'Okafor', gender: 'Woman', dob: '1997-02-08', location: 'Lagos', origin: 'Enugu', lga: 'Nsukka', qual: "Bachelor's degree", job: 'Hospital pharmacist', religion: 'Christianity', denom: 'Anglican', marital: 'Never married', genotype: 'AA', children: 'No', wantkids: 'Yes', intent: 'Marriage within 1 to 2 years', agemin: '29', agemax: '38', ploc: 'Lagos', lookfor: 'A God-fearing man who is kind to his mother and honest with his words.', bio: 'I sing in my parish choir, I cook for everyone I love, and I want a home that is calm, honest and full of laughter.', photos: ['/assets/img/face-chiamaka.jpg'] }),
-      m('m_funmi', 'funmi@example.com', 'approved', { first: 'Funmilayo', last: 'Bello', gender: 'Woman', dob: '1995-06-17', location: 'Ibadan', origin: 'Oyo', lga: 'Ibadan North', qual: "Bachelor's degree", job: 'Secondary school teacher', religion: 'Islam', denom: 'Sunni', marital: 'Never married', genotype: 'AA', children: 'No', wantkids: 'Yes', intent: 'Courtship first, then marriage', agemin: '29', agemax: '38', ploc: 'South West', bio: 'Teacher by day, baker by weekend. Family means everything to me.', photos: ['/assets/img/face-funmi.jpg'] }),
-      m('m_amina', 'amina@example.com', 'approved', { first: 'Amina', last: 'Yusuf', gender: 'Woman', dob: '1998-11-03', location: 'Abuja', origin: 'Kano', lga: 'Nassarawa', qual: "Bachelor's degree", job: 'Product designer', religion: 'Islam', denom: 'Sunni', marital: 'Never married', genotype: 'AA', children: 'No', wantkids: 'Yes', intent: 'Marriage within 1 year', agemin: '28', agemax: '36', ploc: 'Abuja', bio: 'Calm, creative and family-first.' }, { privacy: 'nophoto' }),
+      m('m_funmi', 'funmi@example.com', 'approved', { first: 'Funmilayo', openTo: 'nigerian', last: 'Bello', gender: 'Woman', dob: '1995-06-17', location: 'Ibadan', origin: 'Oyo', lga: 'Ibadan North', qual: "Bachelor's degree", job: 'Secondary school teacher', religion: 'Islam', denom: 'Sunni', marital: 'Never married', genotype: 'AA', children: 'No', wantkids: 'Yes', intent: 'Courtship first, then marriage', agemin: '29', agemax: '38', ploc: 'South West', bio: 'Teacher by day, baker by weekend. Family means everything to me.', photos: ['/assets/img/face-funmi.jpg'] }),
+      m('m_amina', 'amina@example.com', 'approved', { first: 'Amina', openTo: 'nigerian', last: 'Yusuf', gender: 'Woman', dob: '1998-11-03', location: 'Abuja', origin: 'Kano', lga: 'Nassarawa', qual: "Bachelor's degree", job: 'Product designer', religion: 'Islam', denom: 'Sunni', marital: 'Never married', genotype: 'AA', children: 'No', wantkids: 'Yes', intent: 'Marriage within 1 year', agemin: '28', agemax: '36', ploc: 'Abuja', bio: 'Calm, creative and family-first.' }, { privacy: 'nophoto' }),
       m('m_ngozi', 'ngozi@example.com', 'approved', { first: 'Ngozi', last: 'Obi', gender: 'Woman', dob: '1993-04-25', location: 'Lagos', origin: 'Anambra', lga: 'Onitsha North', qual: "Master's degree", job: 'Investment banker', religion: 'Christianity', denom: 'Catholic', marital: 'Never married', genotype: 'AS', children: 'No', wantkids: 'Yes', intent: 'Marriage within 1 to 2 years', agemin: '31', agemax: '40', ploc: 'Lagos', bio: 'Driven at work, soft at home.' }, { privacy: 'name' }),
+      m('m_james', 'james@example.com', 'approved', { first: 'James', last: 'Whitfield', gender: 'Man', dob: '1991-02-12', location: 'Manchester, United Kingdom', nationality: 'United Kingdom', heritage: 'No', openTo: 'nigerian', qual: "Master's degree", job: 'Architect', religion: 'Christianity', denom: 'Anglican', marital: 'Never married', genotype: 'AA', children: 'No', wantkids: 'Yes', intent: 'Marriage within 1 to 2 years', agemin: '27', agemax: '36', ploc: 'Lagos or the UK', lookfor: 'A warm, family-minded woman. I would happily split our time between Lagos and Manchester.', bio: 'I fell in love with Nigerian food, music and people while working on a project in Lagos. Now I would like to build a family that spans both places.', photos: ['/assets/img/face-james.webp'] }),
+      m('m_akosua', 'akosua@example.com', 'approved', { first: 'Akosua', last: 'Mensah', gender: 'Woman', dob: '1995-09-04', location: 'Accra, Ghana', nationality: 'Ghana', heritage: 'No', openTo: 'nigerian', qual: 'Doctorate', job: 'Medical doctor', religion: 'Christianity', denom: 'Methodist', marital: 'Never married', genotype: 'AA', children: 'No', wantkids: 'Yes', intent: 'Marriage within 1 to 2 years', agemin: '30', agemax: '39', ploc: 'Accra or Lagos', bio: 'Jollof debates aside, I have always admired Nigerian warmth. I am looking for a kind, ambitious man who loves God and family.', photos: ['/assets/img/face-akosua.webp'] }),
+      m('m_bayo', 'bayo@example.com', 'approved', { first: 'Bayo', last: 'Adewale', gender: 'Man', dob: '1989-10-21', location: 'Lagos', origin: 'Oyo', lga: 'Ogbomosho North', qual: "Bachelor's degree", job: 'Logistics manager', religion: 'Christianity', denom: 'Baptist', marital: 'Never married', genotype: 'AA', children: 'No', wantkids: 'Yes', intent: 'Marriage within 1 to 2 years', agemin: '28', agemax: '38', ploc: 'Lagos', bio: 'Healthy, undetectable and hopeful. I want an honest partner who understands, and a home full of peace.', circle: true }, { privacy: 'nophoto' }),
+      m('m_zainab', 'zainab@example.com', 'approved', { first: 'Zainab', last: 'Lawal', gender: 'Woman', dob: '1993-01-15', location: 'Abuja', origin: 'Kwara', lga: 'Ilorin West', qual: 'HND', job: 'Fashion designer', religion: 'Islam', denom: 'Sunni', marital: 'Divorced', genotype: 'AS', children: "Yes, they live with me", wantkids: 'Open to it', intent: 'Marriage within 1 to 2 years', agemin: '30', agemax: '42', ploc: 'Abuja or Lagos', bio: 'Mother of one, living well and looking forward. I would love to meet someone who will not need my story explained.', circle: true }, { privacy: 'name' }),
       m('m_kemi', 'kemi@example.com', 'pending', { first: 'Kemi', last: 'Alade', gender: 'Woman', dob: '1996-08-19', location: 'Lagos', origin: 'Ondo', lga: 'Akure South', qual: 'HND', job: 'Nurse', religion: 'Christianity', denom: 'Methodist', marital: 'Never married', genotype: 'AA', children: 'No', wantkids: 'Yes', intent: 'Marriage within 1 to 2 years', agemin: '28', agemax: '37', ploc: 'Lagos', lookfor: 'Someone patient and dependable.', bio: 'Night-shift nurse who still finds time for Sunday service and long phone calls with my mum.', photos: ['/assets/img/woman-phone.jpg'] },
         { submittedAt: t - 3 * H, payment: { status: 'uploaded', ref: 'NSC-KEMI1', file: { name: 'kemi-transfer.jpg', size: '214 KB', type: 'image/jpeg', dataUrl: null }, uploadedAt: t - 2 * H } }),
       m('m_uche', 'uche@example.com', 'pending', { first: 'Uche', last: 'Okonkwo', gender: 'Man', dob: '1994-12-01', location: 'Abuja', origin: 'Anambra', lga: 'Awka South', qual: "Bachelor's degree", job: 'Civil servant', religion: 'Christianity', denom: 'Catholic', marital: 'Never married', genotype: 'AA', children: 'No', wantkids: 'Yes', intent: 'Marriage within 1 year', agemin: '24', agemax: '31', ploc: 'Abuja', bio: 'Simple man, big heart.' },
@@ -132,6 +139,11 @@
     if (db_.indexOf('Incompatible genotype') >= 0 && genoRisk(a.genotype, b.genotype)) return true;
     return false;
   }
+  /* nationality: matches only appear when both people are open to each other's group */
+  function groupOf(mem) { var pr = mem.profile || {}; return (!pr.nationality || pr.nationality === 'Nigeria' || pr.heritage === 'Yes') ? 'nigerian' : 'international'; }
+  function accepts(a, b) { var o = (a.profile || {}).openTo || 'both'; return o === 'both' || o === groupOf(b); }
+  /* Private Circle: members living with HIV who opted in are matched only with each other */
+  function eligible(a, b) { return accepts(a, b) && accepts(b, a) && !!a.profile.circle === !!b.profile.circle; }
   function genoRisk(g1, g2) { return CARRIERS.indexOf(g1) >= 0 && CARRIERS.indexOf(g2) >= 0; }
   function inRange(ageV, min, max) { if (ageV == null) return true; return (!min || ageV >= +min) && (!max || ageV <= +max); }
   function compat(a, b) {
@@ -233,7 +245,7 @@
     var want = me.profile.gender === 'Man' ? 'Woman' : me.profile.gender === 'Woman' ? 'Man' : null;
     var notes = ['I liked what you wrote about the home you want to build. I would love to be introduced.', 'We seem to share a lot of the same values. Would you be open to an introduction?'];
     var picks = all('members').filter(function (x) {
-      return x.demo && x.status === 'approved' && x.id !== memberId && (!want || x.profile.gender === want) && (x.profile.photos || []).length && !introBetween(x.id, memberId);
+      return x.demo && x.status === 'approved' && x.id !== memberId && (!want || x.profile.gender === want) && eligible(me, x) && (me.profile.circle || (x.profile.photos || []).length) && !introBetween(x.id, memberId);
     }).slice(0, 2);
     picks.forEach(function (x, k) { insert('intros', { id: uid('i_'), from: x.id, to: memberId, status: 'pending', note: notes[k], createdAt: now() - k * 3600e3 }); });
   }
@@ -260,6 +272,7 @@
     uid: uid, all: all, get: get, insert: insert, update: update, tx: tx,
     on: function (f) { listeners.push(f); },
     reset: function () { try { localStorage.removeItem(KEY); } catch (e) {} cache = null; db(); },
+    COUNTRIES: COUNTRIES, groupOf: groupOf, accepts: accepts, eligible: eligible,
     hash: hash, age: age, fullName: fullName, initials: initials, compat: compat, breaks: breaks, genoRisk: genoRisk,
     view: view, connected: connected, introBetween: introBetween, religionLabel: religionLabel,
     supportThread: supportThread, threadMessages: threadMessages, threadsFor: threadsFor, send: send, unread: unread, markRead: markRead,

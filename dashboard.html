@@ -71,6 +71,9 @@
 .pv .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .pv .ph .ini{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:4rem;color:#F8F5F0}
 .pv .bd{padding:24px;display:grid;gap:12px;align-content:start}
+.circle-opt{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border:1.5px solid var(--line);border-radius:16px;cursor:pointer;background:var(--panel)}
+.circle-opt input{width:20px;height:20px;margin-top:3px;accent-color:var(--green);flex:none}
+.circle-opt b{display:block;margin-bottom:2px}
 .pv .nm{font-family:var(--display);font-size:2.2rem;font-weight:600;line-height:1}
 @media (max-width:980px){
   .journey{grid-template-columns:1fr 1fr}
@@ -181,6 +184,7 @@
             <button type="button" class="f" aria-pressed="false" data-f="80">80% and above</button>
             <button type="button" class="f" aria-pressed="false" data-f="faith">Same religion</button>
             <button type="button" class="f" aria-pressed="false" data-f="near">Same city</button>
+            <button type="button" class="f" aria-pressed="false" data-f="intl">From other countries</button>
           </div>
           <div id="matchWrap"></div>
         </div>
@@ -243,8 +247,11 @@
                 <div class="seg" role="group" aria-labelledby="l-gender" data-name="gender"><button type="button" aria-pressed="false" data-val="Woman">Woman</button><button type="button" aria-pressed="false" data-val="Man">Man</button></div></div>
               <div class="field"><label for="dob">Date of birth</label><input id="dob" name="dob" type="date"><span class="hint">Members see your age, not your birthday.</span></div>
               <div class="field"><label for="location">Where you live</label><input id="location" name="location" placeholder="City, State or Country"></div>
-              <div class="field"><label for="origin">State of origin</label><select id="origin" name="origin"><option value="">Select</option></select></div>
-              <div class="field"><label for="lga">LGA</label><input id="lga" name="lga" placeholder="e.g. Nsukka"></div>
+              <div class="field"><label for="nationality">Nationality</label><select id="nationality" name="nationality"><option value="">Select</option></select></div>
+              <div class="field full" id="heritageField" hidden><span class="lbl" id="l-her">Do you have Nigerian heritage?</span>
+                <div class="seg" role="group" aria-labelledby="l-her" data-name="heritage"><button type="button" aria-pressed="false" data-val="Yes">Yes, a parent or grandparent is Nigerian</button><button type="button" aria-pressed="false" data-val="No">No</button></div></div>
+              <div class="field ng-only"><label for="origin">State of origin</label><select id="origin" name="origin"><option value="">Select</option></select></div>
+              <div class="field ng-only"><label for="lga">LGA</label><input id="lga" name="lga" placeholder="e.g. Nsukka"></div>
               <div class="field"><label for="qual">Highest qualification</label>
                 <select id="qual" name="qual"><option value="">Select</option><option>SSCE</option><option>OND / NCE</option><option>HND</option><option>Bachelor's degree</option><option>Master's degree</option><option>Doctorate</option><option>Professional certification</option></select></div>
               <div class="field full"><label for="job">Occupation</label><input id="job" name="job" placeholder="e.g. Pharmacist"></div>
@@ -285,6 +292,13 @@
                   <button type="button" aria-pressed="false" data-val="Marriage within 1 to 2 years">Within 1 to 2 years</button>
                   <button type="button" aria-pressed="false" data-val="Courtship first, then marriage">Courtship first</button>
                 </div></div>
+              <div class="field full"><span class="lbl" id="l-open">I'm open to meeting</span>
+                <div class="seg" role="group" aria-labelledby="l-open" data-name="openTo">
+                  <button type="button" aria-pressed="false" data-val="nigerian">Nigerians</button>
+                  <button type="button" aria-pressed="false" data-val="international">People from other countries</button>
+                  <button type="button" aria-pressed="false" data-val="both">Both</button>
+                </div>
+                <span class="hint">You only see each other when you are both open to it.</span></div>
               <div class="field"><span class="lbl">Preferred age range</span>
                 <div class="range"><input id="agemin" name="agemin" type="number" min="21" max="80" placeholder="28" aria-label="Minimum age"><span>to</span><input id="agemax" name="agemax" type="number" min="21" max="80" placeholder="38" aria-label="Maximum age"></div></div>
               <div class="field"><label for="ploc">Preferred partner location</label><input id="ploc" name="ploc" placeholder="e.g. Lagos, anywhere in Nigeria"></div>
@@ -305,6 +319,15 @@
             <summary>In your own words <span class="pill off" data-sp="words"></span></summary>
             <div class="inner">
               <div class="field"><label for="bio">About me</label><textarea id="bio" name="bio" maxlength="600" placeholder="What does a good Saturday look like? What matters most to you?"></textarea><span class="hint" id="bioCount">0 / 600</span></div>
+            </div>
+          </details>
+
+          <details class="sect" id="circleSect">
+            <summary>Private Circle <span class="pill off" id="circlePill">Optional</span></summary>
+            <div class="inner">
+              <div class="banner ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><div><b>For members living with HIV</b><p>If you join, you will only be matched with other members who have joined too, and only they can see you. Your status is never shown to anyone outside the circle. Only our review team can see that you have joined.</p></div></div>
+              <label class="circle-opt" for="circleChk"><input type="checkbox" id="circleChk"><span><b>I am living with HIV and want to join the Private Circle</b><span class="sub">You can leave at any time. Leaving moves you back to general matching.</span></span></label>
+              <p class="sub">Questions about the circle? <a class="textbtn" href="#messages" data-support>Message our team privately</a>.</p>
             </div>
           </details>
 
@@ -398,16 +421,18 @@
 
   /* ---------- profile completion ---------- */
   var groups = {
-    about:['first','last','gender','dob','location','origin','lga','qual','job'],
+    about:['first','last','gender','dob','location','nationality','origin','lga','qual','job'],
     faith:['religion','denom'],
     family:['marital','genotype','children','wantkids'],
-    looking:['intent','agemin','agemax','ploc','lookfor'],
+    looking:['intent','openTo','agemin','agemax','ploc','lookfor'],
     words:['bio']
   };
   function filled(pr, k){ var v = pr[k]; return Array.isArray(v) ? v.length > 0 : v != null && String(v).trim() !== '' }
+  function intl(pr){ return pr.nationality && pr.nationality !== 'Nigeria' && pr.heritage !== 'Yes' }
+  function keys(g, pr){ return groups[g].filter(function(k){ return !(intl(pr) && (k === 'origin' || k === 'lga')) }) }
   function completion(pr){
     var total = 2, done = Math.min(2, (pr.photos || []).length);
-    Object.keys(groups).forEach(function(g){ groups[g].forEach(function(k){ total++; if (filled(pr, k)) done++ }) });
+    Object.keys(groups).forEach(function(g){ keys(g, pr).forEach(function(k){ total++; if (filled(pr, k)) done++ }) });
     return Math.round(done / total * 100);
   }
 
@@ -416,7 +441,7 @@
     var m = me(), want = m.profile.gender === 'Man' ? 'Woman' : m.profile.gender === 'Woman' ? 'Man' : null;
     return S.all('members').filter(function(x){
       return x.id !== ME && x.status === 'approved' && (!want || !x.profile.gender || x.profile.gender === want) &&
-        (m.blocked || []).indexOf(x.id) < 0 && (x.blocked || []).indexOf(ME) < 0 && !S.breaks(m, x);
+        (m.blocked || []).indexOf(x.id) < 0 && (x.blocked || []).indexOf(ME) < 0 && S.eligible(m, x) && !S.breaks(m, x);
     }).map(function(x){ return { m: x, score: S.compat(m, x) } }).sort(function(a, b){ return b.score - a.score });
   }
   function relation(otherId){
@@ -480,6 +505,7 @@
   }
 
   function statusBanner(m){
+    if (m.status === 'approved' && m.profile.circle) return '<div class="banner ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><div><b>You are in the Private Circle</b><p>Your matches are members who have also joined. Nobody outside the circle can see you. <a class="textbtn" href="#profile">Manage</a></p></div></div>';
     if (m.status === 'changes') return '<div class="banner">' + ICON.info + '<div><b>Our team asked for a few changes</b><p>' + esc(m.adminNote || 'Please review your profile.') + '</p><p><a class="textbtn" href="#profile">Update my profile</a></p></div></div>';
     if (m.status === 'rejected') return '<div class="banner bad">' + ICON.info + '<div><b>Your profile was not approved</b><p>' + esc(m.adminNote || '') + '</p><p><a class="textbtn" href="#messages" data-support>Message support</a></p></div></div>';
     if (m.status === 'suspended') return '<div class="banner bad">' + ICON.lock + '<div><b>Your account is paused</b><p>' + esc(m.adminNote || 'Our team has paused your account while we look into a report.') + ' Message support if you think this is a mistake.</p></div></div>';
@@ -558,7 +584,7 @@
     }
     return '<article class="m"><a href="#member/' + x.id + '" class="ph" style="display:block">' + ph + '<span class="score">' + c.score + '%</span></a><div class="bd">' +
       '<div class="nm">' + esc(v.name) + (v.age ? ', ' + v.age : '') + '</div><div class="mt">' + esc(pr.job) + ' · ' + esc(pr.location) + '</div>' +
-      '<div class="chips"><span class="chip">' + esc(S.religionLabel(pr.religion)) + '</span>' + (risk ? '<span class="chip w">Genotype check</span>' : '<span class="chip g">Genotype ' + esc(pr.genotype || '—') + '</span>') + '<span class="chip">' + esc(pr.marital) + '</span></div>' +
+      '<div class="chips">' + (pr.circle && m.profile.circle ? '<span class="chip g">Private Circle</span>' : '') + (S.groupOf(x) === 'international' ? '<span class="chip w">' + esc(pr.nationality) + '</span>' : '') + '<span class="chip">' + esc(S.religionLabel(pr.religion)) + '</span>' + (risk ? '<span class="chip w">Genotype check</span>' : '<span class="chip g">Genotype ' + esc(pr.genotype || '—') + '</span>') + '<span class="chip">' + esc(pr.marital) + '</span></div>' +
       '<div class="intent">' + esc(pr.intent) + '</div>' + (compact ? '' : '<div class="acts">' + btn + '</div>') + '</div></article>';
   }
   function lockMsg(m, small){
@@ -573,6 +599,7 @@
     var approved = m.status === 'approved', list = candidates().filter(function(c){
       var pr = c.m.profile;
       if (filter === '80') return c.score >= 80;
+      if (filter === 'intl') return S.groupOf(c.m) === 'international';
       if (filter === 'faith') return !m.profile.religion || pr.religion === m.profile.religion;
       if (filter === 'near') return !m.profile.location || (pr.location || '').split(',')[0].trim().toLowerCase() === m.profile.location.split(',')[0].trim().toLowerCase();
       return true;
@@ -595,7 +622,7 @@
       : rel.kind === 'received' ? '<a class="btn btn-gold" href="#introductions">Respond to their request</a>'
       : rel.kind === 'declined' ? '<button class="btn btn-ghost" disabled>Not available</button>'
       : '<button class="btn btn-primary" data-req="' + x.id + '"' + (approved ? '' : ' disabled') + '>Request introduction</button>';
-    var rows = [['Faith', S.religionLabel(pr.religion) + (pr.denom ? ' · ' + pr.denom : '')], ['Intent', pr.intent], ['Lives in', pr.location], ['From', (pr.lga ? pr.lga + ', ' : '') + pr.origin + ' State'],
+    var rows = [['Faith', S.religionLabel(pr.religion) + (pr.denom ? ' · ' + pr.denom : '')], ['Intent', pr.intent], ['Lives in', pr.location], ['From', S.groupOf(x) === 'international' ? pr.nationality : (pr.origin ? (pr.lga ? pr.lga + ', ' : '') + pr.origin + ' State' : pr.nationality)],
       ['Work', pr.job + (pr.qual ? ' · ' + pr.qual : '')], ['Marital status', pr.marital], ['Children', pr.children], ['Wants children', pr.wantkids],
       ['Genotype', v.open ? pr.genotype : (pr.genotype ? pr.genotype : '—')], ['Looking for', pr.agemin && pr.agemax ? 'Ages ' + pr.agemin + ' to ' + pr.agemax + (pr.ploc ? ' · ' + pr.ploc : '') : pr.ploc]];
     if (v.open && pr.worship) rows.push(['Place of worship', pr.worship]);
@@ -751,6 +778,28 @@
   /* ---------- profile form ---------- */
   var form = $('pform');
   S.STATES.forEach(function(s){ var o = document.createElement('option'); o.textContent = s; $('origin').appendChild(o) });
+  S.COUNTRIES.forEach(function(c){ var o = document.createElement('option'); o.textContent = c; $('nationality').appendChild(o) });
+  $('circleChk').addEventListener('change', function(){
+    var on = this.checked, chk = this;
+    if (on) {
+      chk.checked = false;
+      modal('<h3>Join the Private Circle?</h3><p class="sub">You will only be matched with members who have also joined, and you will disappear from general matching. Any pending introductions outside the circle will be closed.</p><p class="sub">Your status stays private. Only other circle members see that you are in the circle, and only our review team can see your choice.</p><div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-primary" id="circleGo">Join the circle</button></div>');
+      return;
+    }
+    S.update('members', ME, function(r){ r.profile.circle = false });
+    toast('You have left the Private Circle and returned to general matching.');
+  });
+  document.addEventListener('click', function(e){
+    if (e.target.id !== 'circleGo') return;
+    S.update('members', ME, function(r){ r.profile.circle = true });
+    S.all('intros').forEach(function(i){
+      if (i.status === 'pending' && (i.from === ME || i.to === ME)) {
+        var other = S.get('members', i.from === ME ? i.to : i.from);
+        if (other && !other.profile.circle) S.update('intros', i.id, { status: 'declined', respondedAt: Date.now() });
+      }
+    });
+    closeModal(); toast('Welcome to the Private Circle. Your matches now show circle members only.');
+  });
   (function fill(){
     var pr = me().profile;
     Array.prototype.forEach.call(form.elements, function(el){ if (el.name && typeof pr[el.name] === 'string') el.value = pr[el.name] });
@@ -785,12 +834,16 @@
   function renderProfileMeta(m){
     var pr = Object.assign({}, m.profile, pending);
     Object.keys(groups).forEach(function(g){
-      var n = groups[g].filter(function(k){ return filled(pr, k) }).length, all = groups[g].length, el = document.querySelector('[data-sp="' + g + '"]');
+      var ks = keys(g, pr), n = ks.filter(function(k){ return filled(pr, k) }).length, all = ks.length, el = document.querySelector('[data-sp="' + g + '"]');
       el.textContent = n === all ? 'Complete' : n + ' of ' + all; el.className = 'pill ' + (n === all ? 'ok' : n ? 'wait' : 'off');
     });
     var ph = (pr.photos || []).length, pe = document.querySelector('[data-sp="photos"]');
     pe.textContent = ph + ' of 3'; pe.className = 'pill ' + (ph >= 2 ? 'ok' : ph ? 'wait' : 'off');
     $('profileBanner').innerHTML = m.status === 'changes' || m.status === 'rejected' ? statusBanner(m) : '';
+    $('heritageField').hidden = !pr.nationality || pr.nationality === 'Nigeria';
+    document.querySelectorAll('.ng-only').forEach(function(f){ f.hidden = intl(pr) });
+    $('circleChk').checked = !!m.profile.circle;
+    $('circlePill').textContent = m.profile.circle ? 'You are in the circle' : 'Optional'; $('circlePill').className = 'pill ' + (m.profile.circle ? 'ok' : 'off');
     var btn = $('submitBtn');
     btn.textContent = m.status === 'approved' ? 'Saved' : m.status === 'pending' ? 'In review' : m.status === 'changes' ? 'Resubmit for review' : 'Submit for review';
     btn.disabled = m.status === 'approved' || m.status === 'pending' || m.status === 'suspended';
