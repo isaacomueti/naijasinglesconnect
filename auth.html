@@ -111,8 +111,34 @@ form{display:grid;gap:18px}
 .field.bad input{border-color:var(--err)}
 .field .err{font-size:.84rem;color:var(--err);font-weight:600}
 .field .hint{font-size:.84rem;color:var(--ink-2)}
-.phone input{padding-left:118px}
-.phone .cc{position:absolute;left:6px;top:6px;bottom:6px;width:104px;border:0;padding:0 8px;border-radius:10px;background:var(--paper-2);font:700 .9rem var(--body);color:var(--ink);cursor:pointer}
+.phone input{padding-left:122px}
+.phone .cc{position:absolute;left:6px;top:6px;bottom:6px;width:108px;display:flex;align-items:center;gap:7px;border:0;padding:0 10px;border-radius:10px;background:var(--paper-2);font:700 .92rem var(--body);color:var(--ink);cursor:pointer;z-index:2}
+.phone .cc:hover{background:color-mix(in srgb,var(--paper-2) 80%,var(--line))}
+.phone .cc svg{width:14px;height:14px;margin-left:auto;color:var(--ink-2);transition:transform .2s}
+.phone .cc[aria-expanded="true"] svg{transform:rotate(180deg)}
+.iso{display:inline-grid;place-items:center;min-width:28px;height:20px;padding:0 5px;border-radius:5px;background:var(--bg);border:1px solid var(--line);font:800 .66rem/1 var(--body);letter-spacing:.04em;color:var(--ink-2)}
+.ccwrap{position:relative}
+.ccpop{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:40;background:var(--bg);border:1px solid var(--line);border-radius:16px;box-shadow:0 30px 60px -24px rgba(19,38,29,.45);overflow:hidden;display:flex;flex-direction:column;max-height:380px}
+.ccsearch{padding:10px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center}
+.ccsearch svg{width:18px;height:18px;color:var(--ink-2);flex:none;margin-left:6px}
+.ccsearch input{flex:1;min-width:0;border:0;outline:0;font:500 1rem var(--body);padding:8px 4px;background:transparent;color:var(--ink)}
+.cclist{list-style:none;margin:0;padding:6px;overflow-y:auto;flex:1}
+.cclist .grp{position:sticky;top:-6px;z-index:1;background:var(--bg);padding:10px 10px 6px;font-size:.7rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink)}
+.cclist .opt{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px;border-radius:10px;cursor:pointer;font-size:.95rem}
+.cclist .opt b{font-weight:600}
+.cclist .opt span.d{color:var(--ink-2);font-weight:700;font-variant-numeric:tabular-nums}
+.cclist .opt[aria-selected="true"]{background:color-mix(in srgb,var(--green) 10%,transparent)}
+.cclist .opt[aria-selected="true"] .d{color:var(--green)}
+.cclist .opt.active{background:var(--paper-2)}
+.cclist .none{padding:22px 12px;text-align:center;color:var(--ink-2);font-size:.92rem}
+.cccount{padding:8px 12px 2px;font-size:.78rem;color:var(--ink-2);font-weight:700}
+.ccscrim{display:none}
+@media (max-width:560px){
+  .ccpop{position:fixed;left:0;right:0;bottom:0;top:auto;max-height:78vh;border-radius:22px 22px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .ccscrim{display:block;position:fixed;inset:0;background:rgba(10,25,18,.45);z-index:39}
+  .ccsearch{padding:14px}
+  .cclist .opt{padding:13px 10px}
+}
 .eye{position:absolute;right:8px;border:0;background:transparent;color:var(--ink-2);cursor:pointer;padding:8px;border-radius:10px;display:grid;place-items:center}
 .eye svg{width:20px;height:20px}
 .pw input{padding-right:52px}
@@ -221,7 +247,7 @@ form{display:grid;gap:18px}
           </div>
           <div class="field"><label for="su-email">Email address</label><input id="su-email" type="email" autocomplete="email" placeholder="you@example.com"><span class="err" hidden></span></div>
           <div class="field phone"><label for="su-phone">Phone number</label>
-            <div class="wrapin"><select class="cc" id="su-cc" aria-label="Country code"><option value="+234" selected>+234 Nigeria</option><option value="+44">+44 United Kingdom</option><option value="+1">+1 United States / Canada</option><option value="+233">+233 Ghana</option><option value="+254">+254 Kenya</option><option value="+27">+27 South Africa</option><option value="+237">+237 Cameroon</option><option value="+229">+229 Benin</option><option value="+353">+353 Ireland</option><option value="+49">+49 Germany</option><option value="+33">+33 France</option><option value="+31">+31 Netherlands</option><option value="+39">+39 Italy</option><option value="+34">+34 Spain</option><option value="+971">+971 UAE</option><option value="+966">+966 Saudi Arabia</option><option value="+974">+974 Qatar</option><option value="+61">+61 Australia</option><option value="+64">+64 New Zealand</option><option value="+55">+55 Brazil</option><option value="+91">+91 India</option><option value="+86">+86 China</option><option value="+1876">+1876 Jamaica</option></select><input id="su-phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="Phone number"></div>
+            <div class="ccwrap"><div class="wrapin"><button type="button" class="cc" id="ccBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="ccPop" aria-label="Country code: Nigeria +234"><span class="iso" id="ccIso">NG</span><span id="ccDial">+234</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button><input id="su-phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="Phone number"><input type="hidden" id="su-cc" value="+234" data-iso="NG" data-name="Nigeria"></div><div class="ccscrim" id="ccScrim" hidden></div><div class="ccpop" id="ccPop" hidden><div class="ccsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" id="ccSearch" placeholder="Search country or code, e.g. Ghana or +44" autocomplete="off" role="combobox" aria-expanded="true" aria-controls="ccList" aria-autocomplete="list" aria-label="Search countries"></div><div class="cccount" id="ccCount" aria-live="polite"></div><ul class="cclist" id="ccList" role="listbox" aria-label="Countries"></ul></div></div>
             <span class="hint">Used for WhatsApp support only. Never shown on your profile.</span></div>
           <div class="field pw"><label for="su-pass">Password</label>
             <div class="wrapin"><input id="su-pass" type="password" autocomplete="new-password" placeholder="At least 8 characters">
@@ -321,6 +347,7 @@ form{display:grid;gap:18px}
   </main>
 </div>
 
+<script src="/assets/js/countries.js"></script>
 <script src="/assets/js/nsc-store.js"></script>
 <script>
 (function(){
@@ -339,7 +366,7 @@ form{display:grid;gap:18px}
       S.insert('members', { id: id, email: d.email.toLowerCase(), phone: d.phone, pwHash: h, createdAt: Date.now(), status: 'draft', adminNote: '', submittedAt: null, approvedAt: null,
         privacy: 'full', blocked: [], demo: false,
         payment: { status: 'none', ref: 'NSC-' + String(Math.floor(10000 + Math.random() * 89999)), file: null, uploadedAt: null },
-        profile: { first: d.first, last: d.last, gender: '', dob: '', location: '', nationality: d.phone.indexOf('+234') === 0 ? 'Nigeria' : '', heritage: '', openTo: 'both', circle: false, origin: '', lga: '', qual: '', job: '', religion: '', denom: '', worship: '', marital: '', genotype: '',
+        profile: { first: d.first, last: d.last, gender: '', dob: '', location: '', nationality: d.country || '', heritage: '', openTo: 'both', circle: false, origin: '', lga: '', qual: '', job: '', religion: '', denom: '', worship: '', marital: '', genotype: '',
           children: '', wantkids: '', intent: '', agemin: '', agemax: '', ploc: '', lookfor: '', dealbreakers: [], bio: '', photos: [] } });
       S.insert('messages', { id: S.uid('msg_'), thread: S.supportThread(id), from: 'admin', at: Date.now(),
         body: 'Welcome to NaijaSinglesConnect, ' + d.first + '. Complete your profile and upload your payment receipt, and our team will review you, usually within 24 hours. Reply here any time if you need help.' });
@@ -405,7 +432,8 @@ form{display:grid;gap:18px}
     var msg = '';
     if (!first) msg = 'Enter your first name.';
     else if (!emailRe.test(em)) { msg = 'Enter a valid email address, like name@example.com.'; fieldErr('su-email', 'Check this email address.') }
-    else if (document.getElementById('su-phone').value.replace(/\D/g,'').length < 7) msg = 'Enter your phone number, without the country code.';
+    else if (document.getElementById('su-phone').value.replace(/\D/g,'').length < 6) msg = 'Enter your phone number, without the country code.';
+    else if ((document.getElementById('su-cc').value + document.getElementById('su-phone').value).replace(/\D/g,'').length > 15) msg = 'That phone number looks too long. Check the country code and number.';
     else if (pass.value.length < 8) msg = 'Your password needs at least 8 characters.';
     else if (!document.getElementById('su-age').checked) msg = 'Confirm that you are 21 or older and looking for marriage.';
     else if (!document.getElementById('su-terms').checked) msg = 'Agree to the terms and privacy policy to continue.';
@@ -415,7 +443,7 @@ form{display:grid;gap:18px}
     if (msg) return;
     var btn = document.getElementById('su-btn'); busy(btn, true, 'Creating account');
     createMember({ first: first, last: document.getElementById('su-last').value.trim(), email: em, password: pass.value,
-      phone: document.getElementById('su-cc').value + document.getElementById('su-phone').value.replace(/\D/g,'').replace(/^0/, '') }).then(function(id){
+      country: document.getElementById('su-cc').dataset.name, phone: document.getElementById('su-cc').value + document.getElementById('su-phone').value.replace(/\D/g,'').replace(/^0/, '') }).then(function(id){
       pending = id;
       busy(btn, false);
       if (!REQUIRE_EMAIL_VERIFICATION) { startSession(id, true); return; }
@@ -458,6 +486,80 @@ form{display:grid;gap:18px}
     if (code.length === 6) startSession(pending, true);
   });
   document.getElementById('resend').addEventListener('click', function(){ var b = this; b.textContent = 'Code sent again'; b.disabled = true; setTimeout(function(){ b.textContent = 'Resend code'; b.disabled = false }, 30000) });
+
+  /* ---------- country code picker ---------- */
+  (function(){
+    var C = window.NSC_COUNTRIES; if (!C) return;
+    var btn = document.getElementById('ccBtn'), pop = document.getElementById('ccPop'), scrim = document.getElementById('ccScrim'),
+        q = document.getElementById('ccSearch'), list = document.getElementById('ccList'), count = document.getElementById('ccCount'),
+        field = document.getElementById('su-cc'), phone = document.getElementById('su-phone');
+    var flat = [], active = -1;
+    function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c] }) }
+    function opt(c, i){ return '<li class="opt" role="option" id="cc-' + i + '" data-i="' + i + '" aria-selected="' + (c.iso === field.dataset.iso) + '"><span class="iso">' + c.iso + '</span><b>' + esc(c.name) + '</b><span class="d">' + c.dial + '</span></li>' }
+    function render(){
+      var term = q.value.trim(), html = ''; flat = [];
+      if (term) {
+        flat = C.search(term);
+        html = flat.length ? flat.map(opt).join('') : '<li class="none">No country matches “' + esc(term) + '”. Try the country name or its code, like +44.</li>';
+        count.textContent = flat.length ? flat.length + (flat.length === 1 ? ' country' : ' countries') : '';
+      } else {
+        count.textContent = '';
+        html += '<li class="grp" role="presentation">Popular</li>';
+        C.popular.forEach(function(c){ html += opt(c, flat.length); flat.push(c) });
+        C.regions.forEach(function(r){
+          html += '<li class="grp" role="presentation">' + r.name + '</li>';
+          r.countries.slice().sort(function(a, b){ return a.name.localeCompare(b.name) }).forEach(function(c){ html += opt(c, flat.length); flat.push(c) });
+        });
+      }
+      list.innerHTML = html;
+      setActive(term && flat.length ? 0 : -1);
+    }
+    function setActive(i){
+      var prev = list.querySelector('.opt.active'); if (prev) prev.classList.remove('active');
+      active = i;
+      if (i < 0) { q.removeAttribute('aria-activedescendant'); return }
+      var el = document.getElementById('cc-' + i); if (!el) return;
+      el.classList.add('active'); q.setAttribute('aria-activedescendant', el.id); el.scrollIntoView({ block: 'nearest' });
+    }
+    var home = pop.parentNode, sheet = window.matchMedia('(max-width: 560px)');
+    function open(){
+      /* on phones the list is a bottom sheet; lift it out of the animated form so it can cover the screen */
+      if (sheet.matches) { document.body.appendChild(scrim); document.body.appendChild(pop) }
+      else if (pop.parentNode !== home) { home.appendChild(scrim); home.appendChild(pop) }
+      pop.hidden = false; scrim.hidden = false; btn.setAttribute('aria-expanded', 'true'); q.value = ''; render();
+      var sel = list.querySelector('.opt[aria-selected="true"]'); if (sel) sel.scrollIntoView({ block: 'center' });
+      setTimeout(function(){ q.focus() }, 0);
+    }
+    function close(refocus){ pop.hidden = true; scrim.hidden = true; btn.setAttribute('aria-expanded', 'false'); if (refocus) btn.focus() }
+    function choose(c){
+      field.value = c.dial; field.dataset.iso = c.iso; field.dataset.name = c.name;
+      document.getElementById('ccIso').textContent = c.iso; document.getElementById('ccDial').textContent = c.dial;
+      btn.setAttribute('aria-label', 'Country code: ' + c.name + ' ' + c.dial);
+      close(); phone.focus();
+    }
+    btn.addEventListener('click', function(){ pop.hidden ? open() : close(true) });
+    scrim.addEventListener('click', function(){ close(true) });
+    q.addEventListener('input', render);
+    list.addEventListener('mousemove', function(e){ var o = e.target.closest('.opt'); if (o && +o.dataset.i !== active) setActive(+o.dataset.i) });
+    list.addEventListener('click', function(e){ var o = e.target.closest('.opt'); if (o) choose(flat[+o.dataset.i]) });
+    q.addEventListener('keydown', function(e){
+      if (e.key === 'ArrowDown') { e.preventDefault(); setActive(Math.min(flat.length - 1, active + 1)) }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(Math.max(0, active - 1)) }
+      else if (e.key === 'Enter') { e.preventDefault(); if (active >= 0) choose(flat[active]) }
+      else if (e.key === 'Escape') { e.preventDefault(); close(true) }
+    });
+    document.addEventListener('click', function(e){ if (!pop.hidden && !e.target.closest('.ccwrap') && !e.target.closest('.ccpop')) close() });
+    /* typing a full number like +44 7700... into the phone box picks the country for you */
+    phone.addEventListener('input', function(){
+      var v = phone.value.trim(); if (v[0] !== '+') return;
+      var digits = v.replace(/\D/g, ''), best = null;
+      C.all.forEach(function(c){ var d = c.dial.slice(1); if (digits.indexOf(d) !== 0) return;
+        var bl = best ? best.dial.length - 1 : -1;
+        var pop = function(x){ var i = C.popular.indexOf(x); return i < 0 ? 99 : i };
+        if (d.length > bl || (d.length === bl && best.iso !== field.dataset.iso && (c.iso === field.dataset.iso || pop(c) < pop(best)))) best = c });
+      if (best) { var keep = digits.slice(best.dial.length - 1); if (best.iso !== field.dataset.iso) { var p = phone; choose(best); p.value = keep } else phone.value = keep }
+    });
+  })();
 
   document.getElementById('f-forgot').addEventListener('submit', function(e){
     e.preventDefault();

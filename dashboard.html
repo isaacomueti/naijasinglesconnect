@@ -399,6 +399,7 @@
 <div id="layer"></div>
 <div class="toast" id="toast" role="status" hidden></div>
 
+<script src="/assets/js/countries.js"></script>
 <script src="/assets/js/nsc-store.js"></script>
 <script>
 (function(){
@@ -778,7 +779,14 @@
   /* ---------- profile form ---------- */
   var form = $('pform');
   S.STATES.forEach(function(s){ var o = document.createElement('option'); o.textContent = s; $('origin').appendChild(o) });
-  S.COUNTRIES.forEach(function(c){ var o = document.createElement('option'); o.textContent = c; $('nationality').appendChild(o) });
+  (function(){
+    var sel = $('nationality'), C = window.NSC_COUNTRIES;
+    function add(parent, name){ var o = document.createElement('option'); o.textContent = name; parent.appendChild(o) }
+    if (!C) { S.COUNTRIES.forEach(function(c){ add(sel, c) }); return }
+    var g = document.createElement('optgroup'); g.label = 'Popular'; C.popular.forEach(function(c){ add(g, c.name) }); sel.appendChild(g);
+    C.regions.forEach(function(r){ var og = document.createElement('optgroup'); og.label = r.name;
+      r.countries.slice().sort(function(a, b){ return a.name.localeCompare(b.name) }).forEach(function(c){ add(og, c.name) }); sel.appendChild(og) });
+  })();
   $('circleChk').addEventListener('change', function(){
     var on = this.checked, chk = this;
     if (on) {
