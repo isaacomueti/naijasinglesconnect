@@ -1,10 +1,10 @@
 /*
- * NSC local data layer.
- * Stands in for Supabase until the backend is wired. Every page (auth, dashboard, admin)
- * reads and writes through this file, so the member and admin sides share one dataset.
- * Data lives in localStorage under "nsc.db.v2" and syncs live between open tabs.
- *
- * Supabase mapping (one table each): members, intros, messages, reports, activity, reads.
+ * NSC data layer, shared by auth, dashboard and admin.
+ * Two backends sit behind the same API:
+ *   - cloud (default): Supabase, attached by assets/js/nsc-cloud.js via NSC._useBackend()
+ *   - demo (?demo=1):  sample data in this browser's localStorage under "nsc.db.v2",
+ *                      synced live between open tabs
+ * Pages read synchronously from an in-memory copy and listen with NSC.on().
  */
 (function () {
   'use strict';
@@ -34,7 +34,9 @@
   }
   function emit() { listeners.forEach(function (f) { try { f(); } catch (e) { console.error(e); } }); }
   window.addEventListener('storage', function (e) { if (e.key === KEY) { cache = null; emit(); } });
+  var backend = null;
   function db() {
+    if (backend) return backend.cache;
     if (!cache) cache = read();
     if (!cache) { cache = seed(); write(cache); }
     return cache;
@@ -102,8 +104,9 @@
   function tx(fn) { var d = db(); var r = fn(d); write(d); return r; }
   function all(t) { return db()[t] || []; }
   function get(t, id) { return all(t).filter(function (r) { return r.id === id; })[0] || null; }
-  function insert(t, row) { return tx(function (d) { d[t].push(row); return row; }); }
+  function insert(t, row) { if (backend) return backend.insert(t, row); return tx(function (d) { d[t].push(row); return row; }); }
   function update(t, id, patch) {
+    if (backend) return backend.update(t, id, patch);
     return tx(function (d) {
       var r = d[t].filter(function (x) { return x.id === id; })[0]; if (!r) return null;
       if (typeof patch === 'function') patch(r); else Object.assign(r, patch);
@@ -187,7 +190,7 @@
   function supportThread(id) { return 'support:' + id; }
   function threadMessages(thread) { return all('messages').filter(function (x) { return x.thread === thread; }).sort(function (a, b) { return a.at - b.at; }); }
   function lastRead(reader, thread) { return (db().reads || {})[reader + '|' + thread] || 0; }
-  function markRead(reader, thread) { tx(function (d) { d.reads = d.reads || {}; d.reads[reader + '|' + thread] = now(); }); }
+  function markRead(reader, thread) { if (backend) return backend.markRead(reader, thread); tx(function (d) { d.reads = d.reads || {}; d.reads[reader + '|' + thread] = now(); }); }
   function unread(reader, thread) {
     var lr = lastRead(reader, thread);
     return threadMessages(thread).filter(function (x) { return x.at > lr && x.from !== reader && x.from !== 'system'; }).length;
@@ -208,9 +211,9 @@
   }
   function send(thread, from, body) {
     body = String(body || '').trim(); if (!body) return null;
-    return insert('messages', { id: uid('msg_'), thread: thread, from: from, body: body.slice(0, 2000), at: now() });
+    return insert('messages', { id: NSC.uid('msg_'), thread: thread, from: from, body: body.slice(0, 2000), at: now() });
   }
-  function log(text) { tx(function (d) { d.activity.unshift({ at: now(), text: text }); d.activity = d.activity.slice(0, 200); }); }
+  function log(text) { if (backend) return backend.log(text); tx(function (d) { d.activity.unshift({ at: now(), text: text }); d.activity = d.activity.slice(0, 200); }); }
 
   /* demo behaviour: seeded members respond so the flow can be reviewed alone */
   var demoLines = [
@@ -220,6 +223,7 @@
     'I would like to keep talking. Have a blessed evening.'
   ];
   function demoReply(thread, demoId, delay) {
+    if (backend) return;
     var mem = get('members', demoId); if (!mem || !mem.demo) return;
     setTimeout(function () {
       var mine = threadMessages(thread).filter(function (x) { return x.from === demoId; }).length;
@@ -227,6 +231,7 @@
     }, delay || 2200);
   }
   function demoAccept(introId, delay) {
+    if (backend) return;
     setTimeout(function () {
       var i = get('intros', introId); if (!i || i.status !== 'pending') return;
       var to = get('members', i.to); if (!to || !to.demo) return;
@@ -236,11 +241,12 @@
   }
   function acceptIntro(id) {
     var i = update('intros', id, { status: 'accepted', respondedAt: now() });
-    if (i) insert('messages', { id: uid('msg_'), thread: id, from: 'system', body: 'You are now introduced. Be kind, take your time, and keep conversations on NSC until you are comfortable.', at: now() });
+    if (i && !backend) insert('messages', { id: uid('msg_'), thread: id, from: 'system', body: 'You are now introduced. Be kind, take your time, and keep conversations on NSC until you are comfortable.', at: now() });
     return i;
   }
   /* when admin approves a member, demo members of the opposite gender send two requests */
   function onApproved(memberId) {
+    if (backend) return;
     var me = get('members', memberId); if (!me) return;
     var want = me.profile.gender === 'Man' ? 'Woman' : me.profile.gender === 'Woman' ? 'Man' : null;
     var notes = ['I liked what you wrote about the home you want to build. I would love to be introduced.', 'We seem to share a lot of the same values. Would you be open to an introduction?'];
@@ -271,7 +277,17 @@
     STATES: STATES,
     uid: uid, all: all, get: get, insert: insert, update: update, tx: tx,
     on: function (f) { listeners.push(f); },
-    reset: function () { try { localStorage.removeItem(KEY); } catch (e) {} cache = null; db(); },
+    reset: function () { if (backend) return; try { localStorage.removeItem(KEY); } catch (e) {} cache = null; db(); },
+    mode: 'demo',
+    /* resolves once the signed-in person and their data are loaded */
+    ready: function () { return Promise.resolve(); },
+    _useBackend: function (b) { backend = b; NSC.mode = 'cloud'; },
+    _emit: emit,
+    /* images: demo keeps them as data URLs; cloud uploads to Supabase Storage */
+    uploadImage: function (dataUrl) { return Promise.resolve(dataUrl); },
+    uploadReceipt: function (file, dataUrl) { return Promise.resolve({ name: file.name, type: file.type, dataUrl: dataUrl || null }); },
+    receiptUrl: function (f) { return Promise.resolve(f && f.dataUrl || null); },
+    error: function (msg) { try { window.dispatchEvent(new CustomEvent('nsc:error', { detail: msg })); } catch (e) {} console.warn('NSC:', msg); },
     COUNTRIES: COUNTRIES, groupOf: groupOf, accepts: accepts, eligible: eligible,
     hash: hash, age: age, fullName: fullName, initials: initials, compat: compat, breaks: breaks, genoRisk: genoRisk,
     view: view, connected: connected, introBetween: introBetween, religionLabel: religionLabel,

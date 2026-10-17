@@ -399,13 +399,17 @@
 <div id="layer"></div>
 <div class="toast" id="toast" role="status" hidden></div>
 
+<script src="/assets/js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js"></script>
 <script src="/assets/js/countries.js"></script>
 <script src="/assets/js/nsc-store.js"></script>
+<script src="/assets/js/nsc-cloud.js"></script>
 <script>
-(function(){
+window.NSC.ready({ as: 'member' }).then(function(){
   var S = window.NSC, esc = S.esc, $ = function(id){ return document.getElementById(id) };
   var sess = S.session.get();
-  if (!sess || !S.get('members', sess.id)) { S.session.clear(); location.replace('/auth#login'); return; }
+  if (!sess || !S.get('members', sess.id)) { Promise.resolve(S.session.clear()).then(function(){ location.replace('/auth#login') }); return; }
+  window.addEventListener('nsc:error', function(e){ toast(e.detail) });
   var ME = sess.id;
   function me(){ return S.get('members', ME) }
   function toast(msg){ var t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(t._h); t._h = setTimeout(function(){ t.hidden = true }, 2800) }
@@ -474,7 +478,7 @@
 
   /* ---------- render ---------- */
   function render(){
-    var m = me(); if (!m) { S.session.clear(); location.replace('/auth#login'); return; }
+    var m = me(); if (!m) { location.replace('/auth#login'); return; }
     renderTop(m); renderOverview(m); renderBadges(m);
     if (view === 'matches') renderMatches(m);
     if (view === 'member') renderMember(m);
@@ -886,7 +890,13 @@
   $('photos').addEventListener('change', function(e){
     var f = e.target.files && e.target.files[0]; if (!f) return;
     if (!/^image\//.test(f.type)) { toast('Choose an image file, like a JPG or PNG.'); return }
-    shrink(f, 720, function(url){ S.update('members', ME, function(r){ r.profile.photos = (r.profile.photos || []).concat(url).slice(0, 3) }); toast(S.lastError ? 'Could not save the photo. Storage is full.' : 'Photo added') });
+    toast('Uploading photo…');
+    shrink(f, 720, function(dataUrl){
+      S.uploadImage(dataUrl).then(function(url){
+        S.update('members', ME, function(r){ r.profile.photos = (r.profile.photos || []).concat(url).slice(0, 3) });
+        toast(S.lastError ? 'Could not save the photo. Storage is full.' : 'Photo added');
+      }, function(err){ toast('Could not upload that photo. ' + (err && err.message || 'Try again.')) });
+    });
   });
   $('photos').addEventListener('click', function(e){
     var b = e.target.closest('[data-rm]'); if (!b) return; e.preventDefault();
@@ -921,8 +931,12 @@
     if (f.size > 5 * 1024 * 1024) { toast('That file is over 5 MB. Choose a smaller one.'); input.value = ''; return }
     var size = f.size / 1024 < 1024 ? Math.round(f.size / 1024) + ' KB' : (f.size / 1048576).toFixed(1) + ' MB';
     function done(url){
-      S.update('members', ME, function(r){ r.payment.status = 'uploaded'; r.payment.uploadedAt = Date.now(); r.payment.file = { name: f.name, size: size, type: f.type, dataUrl: url } });
-      S.log(S.fullName(me()) + ' uploaded a payment receipt'); toast('Receipt uploaded. Our team will confirm it.'); input.value = '';
+      toast('Uploading receipt…');
+      S.uploadReceipt(f, url).then(function(file){
+        file.size = size;
+        S.update('members', ME, function(r){ r.payment.status = 'uploaded'; r.payment.uploadedAt = Date.now(); r.payment.file = file });
+        S.log(S.fullName(me()) + ' uploaded a payment receipt'); toast('Receipt uploaded. Our team will confirm it.'); input.value = '';
+      }, function(err){ toast('Could not upload that receipt. ' + (err && err.message || 'Try again.')); input.value = '' });
     }
     if (/^image\//.test(f.type)) shrink(f, 1200, done); else done(null);
   });
@@ -934,10 +948,10 @@
   /* ---------- account menu ---------- */
   $('whoBtn').addEventListener('click', function(e){ e.stopPropagation(); var mn = $('whoMenu'); mn.hidden = !mn.hidden; this.setAttribute('aria-expanded', String(!mn.hidden)) });
   document.addEventListener('click', function(e){ if (!e.target.closest('.who')) $('whoMenu').hidden = true });
-  $('logout').addEventListener('click', function(){ S.session.clear(); location.href = '/auth#login' });
+  $('logout').addEventListener('click', function(){ Promise.resolve(S.session.clear()).then(function(){ location.href = '/auth#login' }) });
 
   route();
-})();
+});
 </script>
 </body>
 </html>

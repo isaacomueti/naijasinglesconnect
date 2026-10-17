@@ -163,11 +163,17 @@
 <div id="layer2"></div>
 <div class="toast" id="toast" role="status" hidden></div>
 
+<script src="/assets/js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js"></script>
+<script src="/assets/js/countries.js"></script>
 <script src="/assets/js/nsc-store.js"></script>
+<script src="/assets/js/nsc-cloud.js"></script>
 <script>
-(function(){
+window.NSC.ready({ as: 'admin' }).then(function(){
   var S = window.NSC, esc = S.esc, $ = function(id){ return document.getElementById(id) };
   function toast(msg){ var t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(t._h); t._h = setTimeout(function(){ t.hidden = true }, 2800) }
+  window.addEventListener('nsc:error', function(e){ toast(e.detail) });
+  if (S.mode === 'cloud') { var help = document.querySelector('.side .help'); if (help) help.hidden = true; }
 
   /* ---------- gate ---------- */
   function boot(){
@@ -180,9 +186,9 @@
     S.admin.check($('gEmail').value, $('gPass').value).then(function(ok){
       if (!ok) { $('gErr').hidden = false; $('gErr').textContent = 'That email and password don\'t match a team account.'; return; }
       S.admin.set(); boot();
-    });
+    }, function(){ $('gErr').hidden = false; $('gErr').textContent = 'Could not reach the server. Check your connection and try again.' });
   });
-  $('logout').addEventListener('click', function(){ S.admin.clear(); location.hash = ''; boot() });
+  $('logout').addEventListener('click', function(){ Promise.resolve(S.admin.clear()).then(function(){ location.hash = ''; boot() }) });
   $('resetDemo').addEventListener('click', function(){ modal('<h3>Reset demo data?</h3><p class="sub">This deletes every account, message and report stored in this browser and restores the sample members. Member tabs will be signed out.</p><div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-danger" id="resetGo">Reset</button></div>') });
   document.addEventListener('click', function(e){ if (e.target.id === 'resetGo') { S.reset(); closeModal(); toast('Demo data reset.'); render() } });
 
@@ -407,11 +413,23 @@
         '<div><b>Photos</b><div class="gallery" style="margin-top:10px">' + [0,1,2].map(function(i){ return pr.photos[i] ? '<img src="' + pr.photos[i] + '" alt="Photo ' + (i + 1) + '">' : '<div class="ph">No photo</div>' }).join('') + '</div></div>' +
         (pr.bio ? '<div><b>About me</b><p style="margin:6px 0 0">' + esc(pr.bio) + '</p></div>' : '') +
         (pr.lookfor ? '<div><b>The partner they hope for</b><p style="margin:6px 0 0">' + esc(pr.lookfor) + '</p></div>' : '') +
-        '<div><b>Payment</b><div class="receipt" style="margin-top:10px">' + (f && f.dataUrl ? '<img src="' + f.dataUrl + '" alt="Payment receipt">' : '') +
-          '<div class="meta"><span>Reference <b>' + esc(m.payment.ref) + '</b>' + (f ? ' · ' + esc(f.name) + ' · ' + esc(f.size) : ' · No receipt uploaded') + (f && !f.dataUrl ? ' <span class="sub">(preview not stored)</span>' : '') + '</span>' +
+        '<div><b>Payment</b><div class="receipt" style="margin-top:10px">' + (f && (f.dataUrl || f.path) ? '<div id="rcptBox"><p class="sub" style="padding:14px">Loading receipt…</p></div>' : '') +
+          '<div class="meta"><span>Reference <b>' + esc(m.payment.ref) + '</b>' + (f ? ' · ' + esc(f.name) + ' · ' + esc(f.size) : ' · No receipt uploaded') + (f && !f.dataUrl && !f.path ? ' <span class="sub">(preview not stored)</span>' : '') + '</span>' +
           (m.payment.status === 'uploaded' ? '<span style="display:flex;gap:8px"><button type="button" class="btn btn-ghost btn-sm" data-payrej="' + m.id + '">Reject receipt</button><button type="button" class="btn btn-primary btn-sm" data-payok="' + m.id + '">Confirm payment</button></span>' : pill(PAY, m.payment.status)) + '</div></div></div>' +
         '<div><b>Details</b><dl class="kv" style="margin-top:10px">' + rows.map(function(r){ return '<dt>' + r[0] + '</dt><dd>' + (r[1] ? esc(r[1]) : '<span class="sub">Not given</span>') + '</dd>' }).join('') + '</dl></div>' +
       '</div><div class="df">' + acts + '</div></aside>';
+    if (f && (f.dataUrl || f.path)) showReceipt(f, m.id);
+  }
+  /* receipts in Supabase are private: fetch a short-lived link and keep it while the drawer is open */
+  var rcptUrls = {};
+  function showReceipt(f, id){
+    var key = f.path || f.dataUrl, paint = function(u){
+      var box = $('rcptBox'); if (!box || drawerId !== id) return;
+      if (!u) { box.innerHTML = '<p class="sub" style="padding:14px">Could not load this receipt.</p>'; return }
+      box.innerHTML = /pdf/.test(f.type || '') ? '<p style="padding:14px"><a class="btn btn-ghost btn-sm" href="' + u + '" target="_blank" rel="noopener">Open PDF receipt</a></p>' : '<a href="' + u + '" target="_blank" rel="noopener"><img src="' + u + '" alt="Payment receipt"></a>';
+    };
+    if (rcptUrls[key]) return paint(rcptUrls[key]);
+    S.receiptUrl(f).then(function(u){ if (u) rcptUrls[key] = u; paint(u) }, function(){ paint(null) });
   }
   function closeDrawer(){ drawerId = null; $('layer2').innerHTML = '' }
   document.addEventListener('click', function(e){ if (e.target.closest('[data-closedrawer]')) closeDrawer() });
@@ -473,7 +491,7 @@
   document.addEventListener('click', function(e){ if (!e.target.closest('.who')) $('whoMenu').hidden = true });
 
   boot();
-})();
+});
 </script>
 </body>
 </html>

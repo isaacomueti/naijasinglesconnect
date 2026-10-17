@@ -327,6 +327,21 @@ form{display:grid;gap:18px}
       <div class="sent" id="fp-sent" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"/></svg><span>If that email has an account, a reset link is on its way. It expires in 30 minutes.</span></div>
     </div>
 
+    <!-- NEW PASSWORD (after a reset link) -->
+    <div class="pane" id="v-newpw" hidden>
+      <div class="head">
+        <h1>Choose a new password</h1>
+        <p>Use 8 or more characters with a number and a capital letter.</p>
+      </div>
+      <form id="f-newpw" novalidate>
+        <div class="field pw"><label for="np-pass">New password</label>
+          <div class="wrapin"><input id="np-pass" type="password" autocomplete="new-password" placeholder="At least 8 characters">
+            <button type="button" class="eye" aria-label="Show password" data-for="np-pass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+        <p class="err" id="np-err" style="margin:0;color:var(--err);font-weight:600;font-size:.9rem" hidden></p>
+        <button class="btn" type="submit" id="np-btn">Save new password</button>
+      </form>
+    </div>
+
     <!-- DONE -->
     <div class="pane" id="v-done" hidden>
       <div class="done">
@@ -347,19 +362,26 @@ form{display:grid;gap:18px}
   </main>
 </div>
 
+<script src="/assets/js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js"></script>
 <script src="/assets/js/countries.js"></script>
 <script src="/assets/js/nsc-store.js"></script>
+<script src="/assets/js/nsc-cloud.js"></script>
 <script>
-(function(){
-  // Email confirmation is off until Supabase Auth + Resend are wired in.
-  // Set to true to show the 6-digit code step after sign-up again.
+window.NSC.ready({ as: 'none' }).then(function(){
+  // Demo mode only: set to true to show the 6-digit code step after sign-up.
+  // With Supabase, email confirmation is controlled in Supabase > Authentication > Sign In / Providers > Email.
   var REQUIRE_EMAIL_VERIFICATION = false;
 
-  // Temporary local auth through assets/js/nsc-store.js.
-  // Replace with supabase.auth.signUp / signInWithPassword when the backend is wired.
-  var S = window.NSC;
-  if (S.session.get() && S.get('members', S.session.get().id) && location.hash !== '#login') { location.replace('/dashboard'); return; }
+  var S = window.NSC, CLOUD = S.mode === 'cloud';
+  var recovering = !!S._recovering || /[?&]reset=1/.test(location.search) || location.hash.indexOf('type=recovery') >= 0;
+  var signedIn = CLOUD ? !!S.session.get() : !!(S.session.get() && S.get('members', S.session.get().id));
+  if (signedIn && !recovering && location.hash !== '#login') { location.replace('/dashboard'); return; }
   function startSession(id, keep){ S.session.set(id, keep); location.href = '/dashboard'; }
+  if (CLOUD) {
+    document.querySelector('label[for="li-id"]').textContent = 'Email address';
+    document.getElementById('li-id').setAttribute('type', 'email'); document.getElementById('li-id').setAttribute('placeholder', 'you@example.com');
+  }
   function createMember(d){
     return S.hash(d.password).then(function(h){
       var id = S.uid('m_');
@@ -376,7 +398,7 @@ form{display:grid;gap:18px}
   }
   var pending = null;
 
-  var views = {auth:'v-auth', verify:'v-verify', forgot:'v-forgot', done:'v-done'};
+  var views = {auth:'v-auth', verify:'v-verify', forgot:'v-forgot', done:'v-done', newpw:'v-newpw'};
   function view(v){ Object.keys(views).forEach(function(k){ document.getElementById(views[k]).hidden = k !== v }); window.scrollTo(0,0); }
   function tab(t){
     view('auth');
@@ -438,12 +460,23 @@ form{display:grid;gap:18px}
     else if (!document.getElementById('su-age').checked) msg = 'Confirm that you are 21 or older and looking for marriage.';
     else if (!document.getElementById('su-terms').checked) msg = 'Agree to the terms and privacy policy to continue.';
     if (emailRe.test(em)) fieldErr('su-email', '');
-    if (!msg && S.memberByLogin(em)) { msg = 'An account with this email already exists. Log in instead.'; fieldErr('su-email', 'Already registered.') }
+    if (!msg && !CLOUD && S.memberByLogin(em)) { msg = 'An account with this email already exists. Log in instead.'; fieldErr('su-email', 'Already registered.') }
     err.hidden = !msg; err.textContent = msg;
     if (msg) return;
     var btn = document.getElementById('su-btn'); busy(btn, true, 'Creating account');
-    createMember({ first: first, last: document.getElementById('su-last').value.trim(), email: em, password: pass.value,
-      country: document.getElementById('su-cc').dataset.name, phone: document.getElementById('su-cc').value + document.getElementById('su-phone').value.replace(/\D/g,'').replace(/^0/, '') }).then(function(id){
+    var details = { first: first, last: document.getElementById('su-last').value.trim(), email: em, password: pass.value,
+      country: document.getElementById('su-cc').dataset.name, phone: document.getElementById('su-cc').value + document.getElementById('su-phone').value.replace(/\D/g,'').replace(/^0/, '') };
+    if (CLOUD) {
+      S.auth.signUp(details).then(function(r){
+        busy(btn, false);
+        if (!r.needsConfirm) { location.href = '/dashboard'; return; }
+        document.getElementById('doneTitle').textContent = 'Check your email, ' + first;
+        document.getElementById('doneText').textContent = 'We sent a confirmation link to ' + em + '. Open it to finish creating your account, then log in.';
+        view('done');
+      }, function(e2){ busy(btn, false); err.hidden = false; err.textContent = e2.message || 'Something went wrong creating your account. Try again.' });
+      return;
+    }
+    createMember(details).then(function(id){
       pending = id;
       busy(btn, false);
       if (!REQUIRE_EMAIL_VERIFICATION) { startSession(id, true); return; }
@@ -460,6 +493,11 @@ form{display:grid;gap:18px}
     err.hidden = !msg; err.textContent = msg;
     if (msg) return;
     var btn = document.getElementById('li-btn'); busy(btn, true, 'Logging in');
+    if (CLOUD) {
+      S.auth.signIn(document.getElementById('li-id').value, document.getElementById('li-pass').value).then(function(){ location.href = '/dashboard' },
+        function(e2){ busy(btn, false); err.hidden = false; err.textContent = e2.message });
+      return;
+    }
     var mem = S.memberByLogin(document.getElementById('li-id').value);
     S.hash(document.getElementById('li-pass').value).then(function(h){
       busy(btn, false);
@@ -565,9 +603,22 @@ form{display:grid;gap:18px}
     e.preventDefault();
     var ok = emailRe.test(document.getElementById('fp-email').value.trim()), err = document.getElementById('fp-err');
     err.hidden = ok; err.textContent = 'Enter a valid email address.';
-    document.getElementById('fp-sent').hidden = !ok;
+    if (!ok) return;
+    if (!CLOUD) { document.getElementById('fp-sent').hidden = false; return; }
+    S.auth.resetPassword(document.getElementById('fp-email').value).then(function(){ document.getElementById('fp-sent').hidden = false },
+      function(e2){ err.hidden = false; err.textContent = e2.message });
   });
-})();
+  function showNewPassword(){ view('newpw'); document.getElementById('np-pass').focus() }
+  window.addEventListener('nsc:recovery', showNewPassword);
+  if (CLOUD && recovering && S.session.get()) showNewPassword();
+  document.getElementById('f-newpw').addEventListener('submit', function(e){
+    e.preventDefault();
+    var v = document.getElementById('np-pass').value, err = document.getElementById('np-err'), btn = document.getElementById('np-btn');
+    if (v.length < 8) { err.hidden = false; err.textContent = 'Your password needs at least 8 characters.'; return }
+    busy(btn, true, 'Saving');
+    S.auth.updatePassword(v).then(function(){ location.replace('/dashboard') }, function(e2){ busy(btn, false); err.hidden = false; err.textContent = e2.message });
+  });
+});
 </script>
 </body>
 </html>
