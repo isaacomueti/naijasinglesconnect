@@ -7,6 +7,6 @@
  * and ?demo=0 to switch back to the live database.
  */
 window.NSC_CONFIG = {
-  supabaseUrl: 'https://iyzbrjrkbsepzicipwgd.supabase.co',
-  supabaseKey: 'sb_publishable_NcONnTgnBE1GVsFV22EXOA_PkIQOHhB'
+  supabaseUrl: 'https://mnojvwqrlagezgiirbpt.supabase.co',
+  supabaseKey: 'sb_publishable_gdBuJPqLhv-W3oRNW3lNrw_oR_L4QPY'
 };

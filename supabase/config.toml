@@ -1,0 +1,6 @@
+# Supabase CLI settings for this project (used by `supabase functions deploy`).
+project_id = "mnojvwqrlagezgiirbpt"
+
+[functions.send-email]
+# Supabase signs auth hook calls itself, so the function must not require a user JWT.
+verify_jwt = false
