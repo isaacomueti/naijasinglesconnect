@@ -71,6 +71,30 @@
 .pv .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .pv .ph .ini{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:4rem;color:#F8F5F0}
 .pv .bd{padding:24px;display:grid;gap:12px;align-content:start}
+.wbar{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;display:grid;gap:12px}
+.wtop{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.92rem}
+.wtop span{color:var(--ink-2);font-weight:600}
+.wprog{height:8px;border-radius:8px;background:var(--panel-2);overflow:hidden}
+.wprog i{display:block;height:100%;border-radius:8px;background:var(--green);width:0;transition:width .4s ease}
+.wsteps{list-style:none;margin:0;padding:0;display:flex;gap:6px;flex-wrap:wrap}
+.wsteps button{border:1.5px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;font:700 .8rem var(--body);color:var(--ink-2);cursor:pointer}
+.wsteps button.done{border-color:var(--green-tint);background:var(--green-tint);color:var(--green)}
+.wsteps button[aria-current="step"]{border-color:var(--green);color:var(--ink);background:var(--panel)}
+.wstep{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:clamp(20px,3vw,32px);display:grid;gap:20px}
+.whead{display:grid;gap:8px}
+.weye{margin:0;font-size:.76rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink);display:flex;gap:10px;align-items:center}
+.weye .pill{letter-spacing:0;text-transform:none}
+.wq{font-family:var(--display);font-size:clamp(1.8rem,3vw,2.4rem);font-weight:600;line-height:1.1}
+.seg.big{display:grid;gap:10px}
+.seg.big button{display:grid;gap:3px;text-align:left;padding:16px 18px;border-radius:16px;font-size:1rem}
+.seg.big button b{font-size:1.02rem}
+.seg.big button span{font-weight:500;font-size:.9rem;color:var(--ink-2)}
+.seg.big button[aria-pressed="true"]{background:var(--green-tint);color:var(--ink);border-color:var(--green)}
+.seg.big button[aria-pressed="true"] b{color:var(--green)}
+.wnav{justify-content:space-between}
+.wnav .btn-ghost{background:transparent;color:var(--on-green);border-color:rgba(248,245,240,.35)}
+.wnav .btn-primary{background:var(--gold);color:#241703}
+@media (max-width:560px){.wnav span{display:none}}
 .circle-opt{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border:1.5px solid var(--line);border-radius:16px;cursor:pointer;background:var(--panel)}
 .circle-opt input{width:20px;height:20px;margin-top:3px;accent-color:var(--green);flex:none}
 .circle-opt b{display:block;margin-bottom:2px}
@@ -225,85 +249,55 @@
       <section id="v-profile" data-view hidden>
         <form class="pform" id="pform" novalidate>
           <div class="hello">
-            <div><h2>My profile</h2><p>Everything here is private until our team approves you. You can edit it any time.</p></div>
+            <div><h2>My profile</h2><p>A few questions at a time. Everything is private until our team approves you, and you can change any answer later.</p></div>
             <div class="ring" id="ring2" style="width:72px;height:72px"><b id="ringNum2" style="width:56px;height:56px;font-size:1rem">0%</b></div>
           </div>
           <div id="profileBanner"></div>
+          <div class="wbar">
+            <div class="wtop"><b id="wCount">Step 1 of 8</b><span id="wPct">Your profile is 0% complete</span></div>
+            <div class="wprog"><i id="wFill"></i></div>
+            <ol class="wsteps" id="wSteps" aria-label="Profile steps"></ol>
+          </div>
 
-          <details class="sect" open>
-            <summary>Photos <span class="pill off" data-sp="photos"></span></summary>
-            <div class="inner">
-              <p class="sub">Add two or three clear, recent photos of yourself. The first one is your main photo.</p>
-              <div class="photos" id="photos"></div>
-            </div>
-          </details>
-
-          <details class="sect" open>
-            <summary>About you <span class="pill off" data-sp="about"></span></summary>
-            <div class="inner fields">
-              <div class="field"><label for="first">First name</label><input id="first" name="first" autocomplete="given-name"></div>
-              <div class="field"><label for="last">Last name</label><input id="last" name="last" autocomplete="family-name"><span class="hint">Never shown on your profile.</span></div>
-              <div class="field"><span class="lbl" id="l-gender">I am a</span>
-                <div class="seg" role="group" aria-labelledby="l-gender" data-name="gender"><button type="button" aria-pressed="false" data-val="Woman">Woman</button><button type="button" aria-pressed="false" data-val="Man">Man</button></div></div>
-              <div class="field"><label for="dob">Date of birth</label><input id="dob" name="dob" type="date"><span class="hint">Members see your age, not your birthday.</span></div>
-              <div class="field"><label for="location">Where you live</label><input id="location" name="location" placeholder="City, State or Country"></div>
-              <div class="field"><label for="nationality">Nationality</label><select id="nationality" name="nationality"><option value="">Select</option></select></div>
-              <div class="field full" id="heritageField" hidden><span class="lbl" id="l-her">Do you have Nigerian heritage?</span>
-                <div class="seg" role="group" aria-labelledby="l-her" data-name="heritage"><button type="button" aria-pressed="false" data-val="Yes">Yes, a parent or grandparent is Nigerian</button><button type="button" aria-pressed="false" data-val="No">No</button></div></div>
-              <div class="field ng-only"><label for="origin">State of origin</label><select id="origin" name="origin"><option value="">Select</option></select></div>
-              <div class="field ng-only"><label for="lga">LGA</label><input id="lga" name="lga" placeholder="e.g. Nsukka"></div>
-              <div class="field"><label for="qual">Highest qualification</label>
-                <select id="qual" name="qual"><option value="">Select</option><option>SSCE</option><option>OND / NCE</option><option>HND</option><option>Bachelor's degree</option><option>Master's degree</option><option>Doctorate</option><option>Professional certification</option></select></div>
-              <div class="field full"><label for="job">Occupation</label><input id="job" name="job" placeholder="e.g. Pharmacist"></div>
-            </div>
-          </details>
-
-          <details class="sect">
-            <summary>Faith <span class="pill off" data-sp="faith"></span></summary>
-            <div class="inner fields">
-              <div class="field"><label for="religion">Religion</label>
-                <select id="religion" name="religion"><option value="">Select</option><option>Christianity</option><option>Islam</option><option>Traditional religion</option><option>Other</option><option>Prefer not to say</option></select></div>
-              <div class="field"><label for="denom">Denomination or group</label><input id="denom" name="denom" placeholder="e.g. Anglican, Sunni, RCCG"></div>
-              <div class="field full"><label for="worship">Place of worship</label><input id="worship" name="worship" placeholder="Optional"><span class="hint">Only shown to members you accept.</span></div>
-            </div>
-          </details>
-
-          <details class="sect">
-            <summary>Family <span class="pill off" data-sp="family"></span></summary>
-            <div class="inner fields">
-              <div class="field"><label for="marital">Marital status</label>
-                <select id="marital" name="marital"><option value="">Select</option><option>Never married</option><option>Divorced</option><option>Widowed</option><option>Separated</option></select></div>
-              <div class="field"><label for="genotype">Genotype</label>
+          <section class="wstep" data-step="1" hidden>
+            <div class="whead"><p class="weye">Your intentions </p><h3 class="wq">What are you hoping for?</h3><p class="sub">NSC is for people who are looking for marriage. When would you like that to happen?</p></div>
+            <div class="seg big" role="group" aria-label="Relationship intent" data-name="intent"><button type="button" aria-pressed="false" data-val="Marriage within 1 year"><b>Marriage within a year</b><span>I'm ready and looking now</span></button><button type="button" aria-pressed="false" data-val="Marriage within 1 to 2 years"><b>Marriage within 1 to 2 years</b><span>I want to take the time to be sure</span></button><button type="button" aria-pressed="false" data-val="Courtship first, then marriage"><b>Courtship first, then marriage</b><span>Get to know each other well first</span></button></div>
+          </section>
+          <section class="wstep" data-step="2" hidden>
+            <div class="whead"><p class="weye">Faith <span class="pill off" data-sp="faith"></span></p><h3 class="wq">How important is shared faith to you?</h3><p class="sub">Choose "Essential" and you'll only be matched with people of your religion.</p></div>
+            <div class="seg big" role="group" aria-label="Importance of shared faith" data-name="faithImportance"><button type="button" aria-pressed="false" data-val="Essential"><b>Essential</b><span>Only show me people of my religion</span></button><button type="button" aria-pressed="false" data-val="Important"><b>Important</b><span>Strongly preferred</span></button><button type="button" aria-pressed="false" data-val="Preferable"><b>Preferable</b><span>Nice to have</span></button><button type="button" aria-pressed="false" data-val="Open"><b>Open</b><span>Faith doesn't need to match</span></button></div><div class="fields" style="margin-top:6px"><div class="field"><label for="religion">Religion</label>
+                <select id="religion" name="religion"><option value="">Select</option><option>Christianity</option><option>Islam</option><option>Traditional religion</option><option>Other</option><option>Prefer not to say</option></select></div><div class="field"><label for="denom">Denomination or group</label><input id="denom" name="denom" placeholder="e.g. Anglican, Sunni, RCCG"></div><div class="field full"><label for="worship">Place of worship</label><input id="worship" name="worship" placeholder="Optional"><span class="hint">Only shown to members you accept.</span></div></div>
+          </section>
+          <section class="wstep" data-step="3" hidden>
+            <div class="whead"><p class="weye">About you <span class="pill off" data-sp="about"></span></p><h3 class="wq">Tell us about yourself</h3><p class="sub">Members see your first name, age and city. Your last name and birthday stay private.</p></div>
+            <div class="fields"><div class="field"><label for="first">First name</label><input id="first" name="first" autocomplete="given-name"></div><div class="field"><label for="last">Last name</label><input id="last" name="last" autocomplete="family-name"><span class="hint">Never shown on your profile.</span></div><div class="field"><span class="lbl" id="l-gender">I am a</span>
+                <div class="seg" role="group" aria-labelledby="l-gender" data-name="gender"><button type="button" aria-pressed="false" data-val="Woman">Woman</button><button type="button" aria-pressed="false" data-val="Man">Man</button></div></div><div class="field"><label for="dob">Date of birth</label><input id="dob" name="dob" type="date"><span class="hint">Members see your age, not your birthday.</span></div><div class="field"><label for="location">Where you live</label><input id="location" name="location" placeholder="City, State or Country"></div><div class="field"><label for="nationality">Nationality</label><select id="nationality" name="nationality"><option value="">Select</option></select></div><div class="field full" id="heritageField" hidden><span class="lbl" id="l-her">Do you have Nigerian heritage?</span>
+                <div class="seg" role="group" aria-labelledby="l-her" data-name="heritage"><button type="button" aria-pressed="false" data-val="Yes">Yes, a parent or grandparent is Nigerian</button><button type="button" aria-pressed="false" data-val="No">No</button></div></div><div class="field ng-only"><label for="origin">State of origin</label><select id="origin" name="origin"><option value="">Select</option></select></div><div class="field ng-only"><label for="lga">LGA</label><input id="lga" name="lga" placeholder="e.g. Nsukka"></div></div>
+          </section>
+          <section class="wstep" data-step="4" hidden>
+            <div class="whead"><p class="weye">Family <span class="pill off" data-sp="family"></span></p><h3 class="wq">Your family and health</h3><p class="sub">These matter for marriage. Genotype is only shown to members you match with.</p></div>
+            <div class="fields"><div class="field"><label for="marital">Marital status</label>
+                <select id="marital" name="marital"><option value="">Select</option><option>Never married</option><option>Divorced</option><option>Widowed</option><option>Separated</option></select></div><div class="field"><label for="genotype">Genotype</label>
                 <select id="genotype" name="genotype"><option value="">Select</option><option>AA</option><option>AS</option><option>AC</option><option>SS</option><option>SC</option><option>Not sure yet</option></select>
-                <span class="hint">Only shown to members you are matched with.</span></div>
-              <div class="field"><label for="children">Do you have children?</label>
-                <select id="children" name="children"><option value="">Select</option><option>No</option><option>Yes, they live with me</option><option>Yes, they don't live with me</option></select></div>
-              <div class="field"><label for="wantkids">Do you want children?</label>
-                <select id="wantkids" name="wantkids"><option value="">Select</option><option>Yes</option><option>Open to it</option><option>No</option></select></div>
-            </div>
-          </details>
-
-          <details class="sect">
-            <summary>What you're looking for <span class="pill off" data-sp="looking"></span></summary>
-            <div class="inner fields">
-              <div class="field full"><span class="lbl" id="l-intent">Relationship intent</span>
-                <div class="seg" role="group" aria-labelledby="l-intent" data-name="intent">
-                  <button type="button" aria-pressed="false" data-val="Marriage within 1 year">Marriage within 1 year</button>
-                  <button type="button" aria-pressed="false" data-val="Marriage within 1 to 2 years">Within 1 to 2 years</button>
-                  <button type="button" aria-pressed="false" data-val="Courtship first, then marriage">Courtship first</button>
-                </div></div>
-              <div class="field full"><span class="lbl" id="l-open">I'm open to meeting</span>
+                <span class="hint">Only shown to members you are matched with.</span></div><div class="field"><label for="children">Do you have children?</label>
+                <select id="children" name="children"><option value="">Select</option><option>No</option><option>Yes, they live with me</option><option>Yes, they don't live with me</option></select></div><div class="field"><label for="wantkids">Do you want children?</label>
+                <select id="wantkids" name="wantkids"><option value="">Select</option><option>Yes</option><option>Open to it</option><option>No</option></select></div></div>
+          </section>
+          <section class="wstep" data-step="5" hidden>
+            <div class="whead"><p class="weye">Work </p><h3 class="wq">What do you do?</h3><p class="sub">Education and work help us suggest people with similar ambitions.</p></div>
+            <div class="fields"><div class="field"><label for="qual">Highest qualification</label>
+                <select id="qual" name="qual"><option value="">Select</option><option>SSCE</option><option>OND / NCE</option><option>HND</option><option>Bachelor's degree</option><option>Master's degree</option><option>Doctorate</option><option>Professional certification</option></select></div><div class="field full"><label for="job">Occupation</label><input id="job" name="job" placeholder="e.g. Pharmacist"></div></div>
+          </section>
+          <section class="wstep" data-step="6" hidden>
+            <div class="whead"><p class="weye">Your partner <span class="pill off" data-sp="looking"></span></p><h3 class="wq">Who are you hoping to meet?</h3><p class="sub">Your deal-breakers are applied first: anyone who fails one never appears in your matches.</p></div>
+            <div class="fields"><div class="field full"><span class="lbl" id="l-open">I'm open to meeting</span>
                 <div class="seg" role="group" aria-labelledby="l-open" data-name="openTo">
                   <button type="button" aria-pressed="false" data-val="nigerian">Nigerians</button>
                   <button type="button" aria-pressed="false" data-val="international">People from other countries</button>
                   <button type="button" aria-pressed="false" data-val="both">Both</button>
                 </div>
-                <span class="hint">You only see each other when you are both open to it.</span></div>
-              <div class="field"><span class="lbl">Preferred age range</span>
-                <div class="range"><input id="agemin" name="agemin" type="number" min="21" max="80" placeholder="28" aria-label="Minimum age"><span>to</span><input id="agemax" name="agemax" type="number" min="21" max="80" placeholder="38" aria-label="Maximum age"></div></div>
-              <div class="field"><label for="ploc">Preferred partner location</label><input id="ploc" name="ploc" placeholder="e.g. Lagos, anywhere in Nigeria"></div>
-              <div class="field full"><label for="lookfor">The partner you hope for</label><textarea id="lookfor" name="lookfor" placeholder="Their character, values and the home you want to build together"></textarea></div>
-              <div class="field full"><span class="lbl" id="l-db">Deal-breakers</span>
+                <span class="hint">You only see each other when you are both open to it.</span></div><div class="field"><span class="lbl">Preferred age range</span>
+                <div class="range"><input id="agemin" name="agemin" type="number" min="21" max="80" placeholder="28" aria-label="Minimum age"><span>to</span><input id="agemax" name="agemax" type="number" min="21" max="80" placeholder="38" aria-label="Maximum age"></div></div><div class="field"><label for="ploc">Preferred partner location</label><input id="ploc" name="ploc" placeholder="e.g. Lagos, anywhere in Nigeria"></div><div class="field full"><label for="lookfor">The partner you hope for</label><textarea id="lookfor" name="lookfor" placeholder="Their character, values and the home you want to build together"></textarea></div><div class="field full"><span class="lbl" id="l-db">Deal-breakers</span>
                 <div class="seg" role="group" aria-labelledby="l-db" data-name="dealbreakers" data-multi="1">
                   <button type="button" aria-pressed="false" data-val="Different religion">Different religion</button>
                   <button type="button" aria-pressed="false" data-val="Has children">Has children</button>
@@ -311,18 +305,16 @@
                   <button type="button" aria-pressed="false" data-val="Lives outside Nigeria">Lives outside Nigeria</button>
                   <button type="button" aria-pressed="false" data-val="Incompatible genotype">Incompatible genotype</button>
                 </div>
-                <span class="hint">Anyone who fails one of these never appears in your matches.</span></div>
-            </div>
-          </details>
-
-          <details class="sect">
-            <summary>In your own words <span class="pill off" data-sp="words"></span></summary>
-            <div class="inner">
-              <div class="field"><label for="bio">About me</label><textarea id="bio" name="bio" maxlength="600" placeholder="What does a good Saturday look like? What matters most to you?"></textarea><span class="hint" id="bioCount">0 / 600</span></div>
-            </div>
-          </details>
-
-          <details class="sect" id="circleSect">
+                <span class="hint">Anyone who fails one of these never appears in your matches.</span></div></div>
+          </section>
+          <section class="wstep" data-step="7" hidden>
+            <div class="whead"><p class="weye">Photos <span class="pill off" data-sp="photos"></span></p><h3 class="wq">Add your photos</h3><p class="sub">Two or three clear, recent photos of yourself. The first one is your main photo.</p></div>
+            <div class="photos" id="photos"></div>
+          </section>
+          <section class="wstep" data-step="8" hidden>
+            <div class="whead"><p class="weye">Last step <span class="pill off" data-sp="words"></span></p><h3 class="wq">In your own words</h3><p class="sub">A few sentences about you and the home you want to build. Then submit your profile for review.</p></div>
+            <div class="field"><label for="bio">About me</label><textarea id="bio" name="bio" maxlength="600" placeholder="What does a good Saturday look like? What matters most to you?"></textarea><span class="hint" id="bioCount">0 / 600</span></div>
+            <details class="sect" id="circleSect">
             <summary>Private Circle <span class="pill off" id="circlePill">Optional</span></summary>
             <div class="inner">
               <div class="banner ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><div><b>For members living with HIV</b><p>If you join, you will only be matched with other members who have joined too, and only they can see you. Your status is never shown to anyone outside the circle. Only our review team can see that you have joined.</p></div></div>
@@ -330,8 +322,14 @@
               <p class="sub">Questions about the circle? <a class="textbtn" href="#messages" data-support>Message our team privately</a>.</p>
             </div>
           </details>
+          </section>
 
-          <div class="savebar"><span id="saveText">Changes save as you type.</span><button class="btn btn-gold" type="submit" id="submitBtn">Submit for review</button></div>
+          <div class="savebar wnav">
+            <button type="button" class="btn btn-ghost" id="wBack">Back</button>
+            <span id="saveText">Changes save as you type.</span>
+            <button type="button" class="btn btn-primary" id="wNext">Continue</button>
+            <button class="btn btn-gold" type="submit" id="submitBtn" hidden>Submit for review</button>
+          </div>
         </form>
       </section>
 
@@ -427,7 +425,7 @@ window.NSC.ready({ as: 'member' }).then(function(){
   /* ---------- profile completion ---------- */
   var groups = {
     about:['first','last','gender','dob','location','nationality','origin','lga','qual','job'],
-    faith:['religion','denom'],
+    faith:['faithImportance','religion','denom'],
     family:['marital','genotype','children','wantkids'],
     looking:['intent','openTo','agemin','agemax','ploc','lookfor'],
     words:['bio']
@@ -484,7 +482,7 @@ window.NSC.ready({ as: 'member' }).then(function(){
     if (view === 'member') renderMember(m);
     if (view === 'introductions') renderIntros(m);
     if (view === 'messages') renderChat(m);
-    if (view === 'profile') renderProfileMeta(m);
+    if (view === 'profile') { renderProfileMeta(m); if (typeof wStart === 'function') { wStart(); wPaint() } }
     if (view === 'privacy') renderPrivacy(m);
     if (view === 'membership') renderMembership(m);
   }
@@ -861,6 +859,53 @@ window.NSC.ready({ as: 'member' }).then(function(){
     btn.disabled = m.status === 'approved' || m.status === 'pending' || m.status === 'suspended';
     if (!$('photos').dataset.n || +$('photos').dataset.n !== ph || $('photos').dataset.sig !== (pr.photos || []).map(function(p){ return p.length }).join(',')) paintPhotos(pr.photos || []);
   }
+  /* ---------- step-by-step profile ---------- */
+  var wsteps = Array.prototype.slice.call(document.querySelectorAll('.wstep')), wi = 0, wStarted = false;
+  var wNames = ['Intentions', 'Faith', 'About you', 'Family', 'Work', 'Your partner', 'Photos', 'In your words'];
+  var wNeeds = [['intent'], ['faithImportance','religion','denom'], ['first','last','gender','dob','location','nationality'], ['marital','genotype','children','wantkids'], ['qual','job'], ['openTo','agemin','agemax','ploc','lookfor'], ['photos'], ['bio']];
+  function wDone(pr, i){ return wNeeds[i].every(function(k){ return k === 'photos' ? (pr.photos || []).length >= 2 : filled(pr, k) }) }
+  $('wSteps').innerHTML = wNames.map(function(n, i){ return '<li><button type="button" data-ws="' + i + '">' + (i + 1) + '. ' + n + '</button></li>' }).join('');
+  function wShow(i, scroll){
+    wi = Math.max(0, Math.min(wsteps.length - 1, i));
+    wsteps.forEach(function(st, k){ st.hidden = k !== wi });
+    $('wBack').disabled = wi === 0;
+    var last = wi === wsteps.length - 1;
+    $('wNext').hidden = last; $('submitBtn').hidden = !last;
+    wPaint();
+    if (scroll) { var top = document.querySelector('.wbar').getBoundingClientRect().top + window.scrollY - 90; window.scrollTo({ top: top, behavior: 'smooth' }) }
+  }
+  function wPaint(){
+    var m = me(); if (!m) return;
+    var pr = Object.assign({}, m.profile, pending), pct = completion(pr);
+    $('wCount').textContent = 'Step ' + (wi + 1) + ' of ' + wsteps.length;
+    $('wPct').textContent = 'Your profile is ' + pct + '% complete';
+    $('wFill').style.width = pct + '%';
+    document.querySelectorAll('#wSteps button').forEach(function(b, k){
+      b.classList.toggle('done', wDone(pr, k));
+      if (k === wi) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+    });
+  }
+  $('wSteps').addEventListener('click', function(e){ var b = e.target.closest('[data-ws]'); if (b) wShow(+b.dataset.ws, true) });
+  $('wBack').addEventListener('click', function(){ wShow(wi - 1, true) });
+  $('wNext').addEventListener('click', function(){ wShow(wi + 1, true) });
+  /* "Essential" shared faith adds the matching deal-breaker; "Open" removes it */
+  document.querySelector('[data-name="faithImportance"]').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b) return;
+    var cur = (pending.dealbreakers || me().profile.dealbreakers || []).slice(), i = cur.indexOf('Different religion');
+    if (b.dataset.val === 'Essential' && i < 0) cur.push('Different religion');
+    if (b.dataset.val === 'Open' && i >= 0) cur.splice(i, 1);
+    setField('dealbreakers', cur);
+    document.querySelectorAll('[data-name="dealbreakers"] button').forEach(function(x){ x.setAttribute('aria-pressed', String(cur.indexOf(x.dataset.val) >= 0)) });
+  });
+  /* open on the first step that still needs answers */
+  function wStart(){
+    if (wStarted) return; var m = me(); if (!m) return; wStarted = true;
+    var pr = m.profile, first = 0;
+    while (first < wsteps.length - 1 && wDone(pr, first)) first++;
+    wShow(first, false);
+  }
+  S.on(function(){ if (view === 'profile') { wStart(); wPaint() } });
+
   form.addEventListener('submit', function(e){
     e.preventDefault(); clearTimeout(saveT);
     var m = me(), pr = Object.assign({}, m.profile, pending), pct = completion(pr);
