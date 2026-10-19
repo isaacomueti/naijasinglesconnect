@@ -99,6 +99,51 @@
 .circle-opt input{width:20px;height:20px;margin-top:3px;accent-color:var(--green);flex:none}
 .circle-opt b{display:block;margin-bottom:2px}
 .pv .nm{font-family:var(--display);font-size:2.2rem;font-weight:600;line-height:1}
+/* plan picker */
+.plans{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;padding:0 0 24px;overflow:hidden}
+.ptabs{display:grid;grid-template-columns:1fr 1fr}
+.ptabs button{border:0;background:none;font:800 1.02rem var(--body);color:var(--ink-3);padding:18px 10px 14px;cursor:pointer;border-bottom:4px solid var(--panel-2)}
+.ptabs button[aria-selected="true"]{color:var(--green);border-bottom-color:var(--green)}
+.ptabs button[data-plan="gold"][aria-selected="true"]{color:var(--gold-ink);border-bottom-color:var(--gold)}
+.terms{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:12px 24px 0}
+.term{position:relative;min-width:0;border:1.5px solid var(--line);border-radius:20px;background:var(--panel);padding:22px 6px 16px;display:grid;gap:4px;justify-items:center;text-align:center;cursor:pointer;font:inherit;color:var(--ink)}
+.term .len{font-size:2rem;font-weight:800;line-height:1}
+.term .unit{font-size:.92rem;color:var(--ink-2);margin-bottom:8px}
+.term .wk{font-size:1.15rem;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.term .per{font-size:.85rem;color:var(--ink-3)}
+.term .save{margin-top:10px;font-size:.74rem;font-weight:800;letter-spacing:.04em;padding:5px 10px;border-radius:999px;background:var(--panel-2);color:var(--ink-2);white-space:nowrap}
+.term .tag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:.68rem;font-weight:800;letter-spacing:.08em;padding:4px 12px;border-radius:999px;background:var(--ink-3);color:#fff;white-space:nowrap}
+.term[aria-checked="true"]{border-color:var(--green);background:var(--green-tint);box-shadow:0 0 0 1px var(--green)}
+.term[aria-checked="true"] .wk{color:var(--green)}
+.term[aria-checked="true"] .save{background:var(--green);color:var(--on-green)}
+.plans.gold .term[aria-checked="true"]{border-color:var(--gold);background:var(--gold-soft);box-shadow:0 0 0 1px var(--gold)}
+.plans.gold .term[aria-checked="true"] .wk{color:var(--gold-ink)}
+.plans.gold .term[aria-checked="true"] .save{background:var(--gold);color:#241703}
+.feat{padding:0 24px}
+.fhead{display:flex;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.fhead span{font-weight:800;color:var(--green)}
+.plans.gold .fhead span{color:var(--gold-ink)}
+.feat ul{list-style:none;margin:0;padding:0}
+.feat li{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);font-size:.95rem}
+.feat li:last-child{border-bottom:0}
+.feat li b{font-size:.88rem;text-align:right;white-space:nowrap}
+.feat li .yes{color:var(--green);width:22px;height:22px;flex:none}
+.feat li .no{color:var(--ink-3);font-size:.84rem;font-weight:700;white-space:nowrap}
+.plans.gold .feat li .yes{color:var(--gold-ink)}
+.plancta{margin:0 24px;padding:17px 22px;font-size:1rem}
+.plans.gold .plancta{background:var(--gold);color:#241703}
+.parent{margin-top:16px;padding:12px 14px;border-radius:12px;background:var(--panel-2)}
+.hist{list-style:none;margin:12px 0 0;padding:0}
+.hist li{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);font-size:.93rem;flex-wrap:wrap}
+.hist li:last-child{border-bottom:0}
+.memcard{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:var(--green-deep);color:var(--on-green);border-radius:var(--r);padding:22px 24px}
+.memcard.gold{background:linear-gradient(135deg,#8C5E0E,#B9832A)}
+.memcard b{font-family:var(--display);font-size:1.9rem;font-weight:600;line-height:1}
+.memcard p{margin:4px 0 0;opacity:.85;font-size:.93rem}
+.memcard .sp{flex:1}
+.memcard .days{font-size:2rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;text-align:right}
+.memcard .days small{display:block;font-size:.75rem;font-weight:700;opacity:.8}
+@media (max-width:560px){.terms{gap:8px;padding:12px 12px 0}.term{border-radius:16px}.term .len{font-size:1.6rem}.term .wk{font-size:.95rem}.term .save{font-size:.66rem;padding:4px 7px;letter-spacing:0}.term .tag{font-size:.6rem;padding:3px 8px}.feat{padding:0 16px}.plancta{margin:0 16px;white-space:normal;line-height:1.3}}
 @media (max-width:980px){
   .journey{grid-template-columns:1fr 1fr}
   .jstep:nth-child(3){border-left:0}
@@ -353,32 +398,44 @@
       <!-- MEMBERSHIP -->
       <section id="v-membership" data-view hidden>
         <div style="display:grid;gap:22px">
-          <div class="hello"><div><h2>Membership</h2><p>Pay by bank transfer, upload your receipt, and our team approves you, usually the same day.</p></div><span class="pill off" id="payPill"></span></div>
-          <div class="grid2">
+          <div class="hello"><div><h2>Membership</h2><p>Choose a plan, pay by bank transfer and upload your receipt. Your membership starts once our team confirms the payment and approves your profile.</p></div><span class="pill off" id="payPill"></span></div>
+          <div id="memStatus"></div>
+
+          <div class="card plans" id="planCard">
+            <div class="ptabs" role="tablist" aria-label="Plan">
+              <button type="button" role="tab" data-plan="gold" aria-selected="false">Gold</button>
+              <button type="button" role="tab" data-plan="platinum" aria-selected="true">Platinum</button>
+            </div>
+            <div class="terms" id="termCards" role="radiogroup" aria-label="How long"></div>
+            <div class="feat"><div class="fhead"><b>Features</b><span id="featPlan">Platinum</span></div><ul id="featList"></ul></div>
+            <button type="button" class="btn btn-primary plancta" id="planGo"></button>
+          </div>
+
+          <div class="grid2" id="payStep" hidden>
             <div class="card">
-              <h2>1. Transfer your membership fee</h2>
-              <p class="sub">Use your reference so we can match your payment.</p>
+              <h2>1. Transfer <span id="payAmt"></span></h2>
+              <p class="sub" id="payFor"></p>
               <dl class="acct" style="margin-top:20px">
-                <dt>Amount</dt><dd id="payFee">To be confirmed by NSC</dd><span></span>
-                <dt>Bank</dt><dd id="payBank">To be confirmed</dd><span></span>
-                <dt>Account name</dt><dd id="payName">NaijaSinglesConnect</dd><span></span>
-                <dt>Account number</dt><dd id="acctNo">To be confirmed</dd><button type="button" class="copy" data-copy="acctNo" id="acctCopy" hidden>Copy</button>
+                <dt>Bank</dt><dd id="payBank"></dd><span></span>
+                <dt>Account name</dt><dd id="payName"></dd><span></span>
+                <dt>Account number</dt><dd id="acctNo"></dd><button type="button" class="copy" data-copy="acctNo">Copy</button>
                 <dt>Reference</dt><dd id="payRef"></dd><button type="button" class="copy" data-copy="payRef">Copy</button>
               </dl>
-              <p class="sub" style="margin-top:18px"><span class="pill wait">Coming soon</span> Card and USSD payments through Paystack or Flutterwave.</p>
+              <p class="sub parent" id="payParent"></p>
             </div>
             <div class="card" style="display:grid;gap:16px;align-content:start">
-              <div><h2>2. Upload your receipt</h2><p class="sub">A screenshot or PDF of the transfer.</p></div>
+              <div><h2>2. Upload your receipt</h2><p class="sub">A screenshot or PDF of the transfer showing the amount and your reference.</p></div>
               <label class="drop" id="drop" for="receipt">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
                 <b style="color:var(--ink)">Choose a file</b><span>JPG, PNG or PDF, up to 5 MB</span>
                 <input type="file" id="receipt" accept="image/*,application/pdf">
               </label>
-              <div class="file" id="fileRow" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg><div style="min-width:0"><b id="fileName" style="display:block;overflow-wrap:anywhere"></b><span class="sub" id="fileMeta"></span></div><button type="button" class="textbtn" id="fileRemove" style="margin-left:auto;color:var(--err)">Remove</button></div>
-              <div><h2 style="margin-top:6px">3. Let us know</h2><p class="sub">Send the team a message with your reference after uploading. It helps us approve you faster.</p></div>
-              <a class="btn btn-ghost" href="#messages" data-support>Message support</a>
+              <p class="sub">Our team is notified straight away and checks receipts, usually within 24 hours. You'll get an email when it's confirmed.</p>
+              <button type="button" class="textbtn" id="changePlan" style="justify-self:start">Choose a different plan</button>
             </div>
           </div>
+
+          <div class="card" id="payHist" hidden></div>
         </div>
       </section>
 
@@ -496,7 +553,9 @@ window.NSC.ready({ as: 'member' }).then(function(){
     $('topName').textContent = pr.first || 'Member';
     var pill = $('statusPill'), st = m.status;
     var map = { approved:['ok','Approved member'], pending:['wait','In review'], changes:['wait','Changes requested'], rejected:['bad','Not approved'], suspended:['bad','Account paused'], draft:['wait','Profile in progress'] };
-    pill.className = 'pill ' + map[st][0]; pill.textContent = map[st][1];
+    var v = map[st];
+    if (st === 'approved') v = S.active(m) ? ['ok', S.PLAN_NAMES[m.plan] + ' member'] : S.membership(m).paid ? ['bad', 'Membership ended'] : ['wait', 'Choose a plan'];
+    pill.className = 'pill ' + v[0]; pill.textContent = v[1];
   }
 
   function renderBadges(m){
@@ -508,6 +567,11 @@ window.NSC.ready({ as: 'member' }).then(function(){
   }
 
   function statusBanner(m){
+    if (m.status === 'approved' && !S.active(m)) {
+      var ms = S.membership(m);
+      if (ms.pending) return '<div class="banner ok">' + ICON.check + '<div><b>You\'re approved, and your receipt is with our team</b><p>Your matches open as soon as we confirm your payment.</p></div></div>';
+      return '<div class="banner">' + ICON.lock + '<div><b>' + (ms.paid ? 'Your membership has ended' : 'You\'re approved! Choose a plan to see your matches') + '</b><p>' + (ms.paid ? 'Renew to see your matches, accept introductions and keep chatting. Your conversations are saved.' : 'Pick Gold or Platinum, pay by bank transfer and upload your receipt.') + '</p><p><a class="textbtn" href="#membership">See plans</a></p></div></div>';
+    }
     if (m.status === 'approved' && m.profile.circle) return '<div class="banner ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><div><b>You are in the Private Circle</b><p>Your matches are members who have also joined. Nobody outside the circle can see you. <a class="textbtn" href="#profile">Manage</a></p></div></div>';
     if (m.status === 'changes') return '<div class="banner">' + ICON.info + '<div><b>Our team asked for a few changes</b><p>' + esc(m.adminNote || 'Please review your profile.') + '</p><p><a class="textbtn" href="#profile">Update my profile</a></p></div></div>';
     if (m.status === 'rejected') return '<div class="banner bad">' + ICON.info + '<div><b>Your profile was not approved</b><p>' + esc(m.adminNote || '') + '</p><p><a class="textbtn" href="#messages" data-support>Message support</a></p></div></div>';
@@ -517,11 +581,11 @@ window.NSC.ready({ as: 'member' }).then(function(){
   }
 
   function renderOverview(m){
-    var pr = m.profile, pct = completion(pr), approved = m.status === 'approved';
+    var pr = m.profile, pct = completion(pr), approved = m.status === 'approved', on = S.active(m), mem = S.membership(m);
     var h = new Date().getHours();
     $('greet').textContent = (h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening') + (pr.first ? ', ' + pr.first : '');
     $('statusBanner').innerHTML = statusBanner(m);
-    var paid = m.payment.status === 'uploaded' || m.payment.status === 'confirmed';
+    var paid = !!(mem.pending || mem.paid || on);
     var submitted = ['pending','approved'].indexOf(m.status) >= 0;
     var steps = { profile: submitted, pay: paid, review: approved };
     var nowStep = !steps.profile ? 'profile' : !steps.pay ? 'pay' : !steps.review ? 'review' : null;
@@ -532,16 +596,17 @@ window.NSC.ready({ as: 'member' }).then(function(){
       var b = el.querySelector('.btn'); if (b) b.hidden = steps[k];
     });
     document.querySelector('[data-jt="profile"]').textContent = steps.profile ? 'Submitted for review.' : m.status === 'changes' ? 'Changes requested. ' + pct + '% done.' : pct + '% done. About 10 minutes.';
-    document.querySelector('[data-jt="pay"]').textContent = m.payment.status === 'confirmed' ? 'Payment confirmed.' : paid ? 'Receipt received. We are checking it.' : m.payment.status === 'rejected' ? 'We could not confirm that receipt. Upload it again.' : 'Bank transfer, then add your receipt.';
+    document.querySelector('[data-jt="pay"]').textContent = mem.paid ? 'Payment confirmed.' : mem.pending ? 'Receipt received. We are checking it.' : mem.last && mem.last.status === 'rejected' ? 'We could not confirm that receipt. Upload it again.' : 'Choose Gold or Platinum and pay by bank transfer.';
     document.querySelector('[data-jt="review"]').textContent = approved ? 'Approved.' : steps.profile && paid ? 'In review. Usually within 24 hours.' : 'Usually within 24 hours of payment.';
     $('journey').hidden = approved;
-    $('stats').hidden = !approved;
-    $('introPreview').hidden = !approved;
-    $('greetSub').textContent = approved ? 'Here is what is new since your last visit.' : 'Finish these steps and our team will review your profile.';
+    $('stats').hidden = !on;
+    $('introPreview').hidden = !on;
+    $('greetSub').textContent = on ? 'Here is what is new since your last visit.' : approved ? 'One step left before your matches open.' : 'Finish these steps and our team will review your profile.';
 
     var cta = $('heroCta'), label = cta.querySelector('span');
     cta.removeAttribute('data-support');
-    if (approved) { cta.href = '#matches'; label.textContent = 'See my matches' }
+    if (on) { cta.href = '#matches'; label.textContent = 'See my matches' }
+    else if (approved) { cta.href = '#membership'; label.textContent = mem.pending ? 'View my membership' : mem.paid ? 'Renew my membership' : 'Choose a plan' }
     else if (!steps.profile) { cta.href = '#profile'; label.textContent = m.status === 'changes' ? 'Update my profile' : 'Continue my profile' }
     else if (!paid) { cta.href = '#membership'; label.textContent = 'Pay and upload receipt' }
     else { cta.href = '#messages'; cta.setAttribute('data-support', ''); label.textContent = 'Message support' }
@@ -556,11 +621,11 @@ window.NSC.ready({ as: 'member' }).then(function(){
     ].map(function(t){ return '<li class="' + (t[1] ? 'ok' : '') + '">' + t[0] + '</li>' }).join('');
 
     var list = candidates();
-    $('topSub').textContent = approved ? list.length + ' members match what you are looking for' : 'Unlocks after approval';
+    $('topSub').textContent = on ? list.length + ' members match what you are looking for' : approved ? 'Unlocks with a Gold or Platinum plan' : 'Unlocks after approval';
     var top = list.slice(0, 3).map(function(c){ return card(c, true) }).join('') || '<div class="empty"><b>No matches yet</b><span>New members are approved every day.</span></div>';
-    $('topMatches').innerHTML = approved ? '<div class="mgrid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">' + top + '</div>'
+    $('topMatches').innerHTML = on ? '<div class="mgrid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">' + top + '</div>'
       : '<div class="locked" style="min-height:300px"><div class="mgrid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">' + top + '</div>' + lockMsg(m, true) + '</div>';
-    if (approved) {
+    if (on) {
       $('sMatches').textContent = list.length;
       $('sMatchesHi').textContent = list.filter(function(c){ return c.score >= 80 }).length + ' above 80%';
       var recv = S.all('intros').filter(function(i){ return i.to === ME && i.status === 'pending' });
@@ -573,7 +638,7 @@ window.NSC.ready({ as: 'member' }).then(function(){
   }
 
   function card(c, compact){
-    var x = c.m, v = S.view(x, ME), pr = x.profile, rel = relation(x.id), m = me(), approved = m.status === 'approved';
+    var x = c.m, v = S.view(x, ME), pr = x.profile, rel = relation(x.id), m = me(), approved = S.active(m);
     var ph = v.photo ? '<img src="' + v.photo + '" alt="' + esc(v.name) + '">' : '<span class="ini">' + esc(v.initials) + (v.hiddenPhoto ? '<small>Photos after introduction</small>' : '') + '</span>';
     var risk = S.genoRisk(m.profile.genotype, pr.genotype);
     var btn = '';
@@ -592,14 +657,20 @@ window.NSC.ready({ as: 'member' }).then(function(){
   }
   function lockMsg(m, small){
     var t = m.status === 'pending' ? 'Your profile is in review' : 'Your matches unlock after approval';
-    var s = m.status === 'pending' ? 'Matches open as soon as our team approves you.' : 'Complete your profile and upload your payment receipt. Our team reviews every member before matches open.';
+    var s = m.status === 'pending' ? 'Matches open as soon as our team approves you.' : 'Complete your profile, choose a plan and upload your payment receipt. Our team reviews every member before matches open.';
     var a = m.status === 'pending' ? '' : '<a class="btn btn-primary btn-sm" href="#profile">Finish my profile</a>';
+    if (m.status === 'approved') {
+      var ms = S.membership(m);
+      t = ms.pending ? 'Your receipt is being checked' : ms.paid ? 'Your membership has ended' : 'Choose a plan to see your matches';
+      s = ms.pending ? 'Your matches open as soon as our team confirms your payment.' : 'Gold and Platinum both include your matches, introductions and chat.';
+      a = ms.pending ? '' : '<a class="btn btn-primary btn-sm" href="#membership">' + (ms.paid ? 'Renew' : 'See plans') + '</a>';
+    }
     return '<div class="lockmsg"><div>' + ICON.lock + '<b>' + t + '</b>' + (small ? '' : '<p class="sub">' + s + '</p>') + a + '</div></div>';
   }
 
   var filter = 'all';
   function renderMatches(m){
-    var approved = m.status === 'approved', list = candidates().filter(function(c){
+    var approved = S.active(m), list = candidates().filter(function(c){
       var pr = c.m.profile;
       if (filter === '80') return c.score >= 80;
       if (filter === 'intl') return S.groupOf(c.m) === 'international';
@@ -608,8 +679,10 @@ window.NSC.ready({ as: 'member' }).then(function(){
       return true;
     });
     var grid = '<div class="mgrid">' + (list.length ? list.map(function(c){ return card(c) }).join('') : '<div class="empty card" style="grid-column:1/-1"><b>No matches for this filter yet</b><span>Try another filter. New members are approved every day.</span></div>') + '</div>';
+    var left = S.introsLeft(m);
+    var note = approved && left !== Infinity ? '<div class="banner" style="margin-bottom:18px">' + ICON.info + '<div><b>' + left + ' of ' + (+S.settings().goldIntroLimit || 5) + ' introduction requests left this month</b><p>Gold includes a set number each month. <a class="textbtn" href="#membership">Upgrade to Platinum</a> for unlimited requests.</p></div></div>' : '';
     $('matchWrap').className = approved ? '' : 'locked';
-    $('matchWrap').innerHTML = approved ? grid : grid + lockMsg(m);
+    $('matchWrap').innerHTML = approved ? note + grid : grid + lockMsg(m);
   }
   $('filters').addEventListener('click', function(e){
     var b = e.target.closest('button'); if (!b) return; filter = b.dataset.f;
@@ -619,7 +692,7 @@ window.NSC.ready({ as: 'member' }).then(function(){
   function renderMember(m){
     var x = S.get('members', viewing);
     if (!x || x.status !== 'approved') { $('memberView').innerHTML = '<div class="empty card"><b>This profile is not available</b></div>'; return; }
-    var v = S.view(x, ME), pr = x.profile, rel = relation(x.id), score = S.compat(m, x), approved = m.status === 'approved';
+    var v = S.view(x, ME), pr = x.profile, rel = relation(x.id), score = S.compat(m, x), approved = S.active(m);
     var action = rel.kind === 'connected' ? '<a class="btn btn-primary" href="#messages/' + rel.intro.id + '">Message ' + esc(v.name) + '</a>'
       : rel.kind === 'sent' ? '<button class="btn btn-ghost" disabled>Request sent</button>'
       : rel.kind === 'received' ? '<a class="btn btn-gold" href="#introductions">Respond to their request</a>'
@@ -641,7 +714,8 @@ window.NSC.ready({ as: 'member' }).then(function(){
 
   document.addEventListener('click', function(e){
     var b = e.target.closest('[data-req]'); if (!b) return;
-    var m = me(); if (m.status !== 'approved') return;
+    var m = me(); if (!S.active(m)) { toast('Choose a plan to request introductions.'); go('#membership'); return; }
+    if (S.introsLeft(m) <= 0) { toast('You have used this month\'s introduction requests on Gold. Upgrade to Platinum for unlimited requests.'); go('#membership'); return; }
     var to = S.get('members', b.dataset.req); if (!to || S.introBetween(ME, to.id)) return;
     var intro = S.insert('intros', { id: S.uid('i_'), from: ME, to: to.id, status: 'pending', note: '', createdAt: Date.now() });
     S.log(S.fullName(m) + ' requested an introduction to ' + S.fullName(to));
@@ -656,6 +730,7 @@ window.NSC.ready({ as: 'member' }).then(function(){
     var v = S.view(x, ME), pr = x.profile, score = S.compat(me(), x), acts;
     if (i.from === ME) acts = i.status === 'accepted' ? '<a class="btn btn-primary btn-sm" href="#messages/' + i.id + '">Message</a>' : i.status === 'declined' ? '<span class="pill off">Not accepted</span>' : '<span class="pill wait">Waiting for reply</span>';
     else acts = i.status === 'accepted' ? '<a class="btn btn-primary btn-sm" href="#messages/' + i.id + '">Message</a>' : i.status === 'declined' ? '<span class="pill off">Declined</span>'
+      : !S.active(me()) ? '<a class="btn btn-primary btn-sm" href="#membership">Renew to reply</a>'
       : '<button type="button" class="btn btn-ghost btn-sm" data-dec="' + i.id + '">Decline</button><button type="button" class="btn btn-primary btn-sm" data-acc="' + i.id + '">Accept</button>';
     return '<div class="irow"><a class="ph" href="#member/' + x.id + '">' + (v.photo ? '<img src="' + v.photo + '" alt="">' : esc(v.initials)) + '</a><div style="min-width:0"><b>' + esc(v.name) + (v.age ? ', ' + v.age : '') + '</b> <span class="pill ok" style="margin-left:6px">' + score + '%</span>' +
       '<p>' + esc(pr.job) + ' · ' + esc(pr.location) + ' · ' + S.ago(i.createdAt) + '</p>' + (!mini && i.note ? '<p class="note">“' + esc(i.note) + '”</p>' : '') + '</div><div class="acts">' + acts + '</div></div>';
@@ -671,6 +746,7 @@ window.NSC.ready({ as: 'member' }).then(function(){
   });
   document.addEventListener('click', function(e){
     var a = e.target.closest('[data-acc]'), d = e.target.closest('[data-dec]');
+    if (a && !S.active(me())) { toast('Renew your membership to accept introductions.'); go('#membership'); return }
     if (a) { var i = S.acceptIntro(a.dataset.acc); var x = S.get('members', i.from); S.log(S.fullName(me()) + ' accepted an introduction from ' + S.fullName(x)); toast('Introduction accepted. You can now message each other.'); go('#messages/' + i.id) }
     if (d) { S.update('intros', d.dataset.dec, { status: 'declined', respondedAt: Date.now() }); toast('Request declined. They won\'t be told why.') }
   });
@@ -715,7 +791,7 @@ window.NSC.ready({ as: 'member' }).then(function(){
       (meta.other ? '<a class="btn btn-ghost btn-sm" href="#member/' + meta.other.id + '">Profile</a><button type="button" class="iconbtn" id="threadMore" aria-label="More options">' + ICON.more + '</button><div class="menu" id="threadMenu" hidden style="top:60px;right:14px"><button type="button" data-report="' + meta.other.id + '" data-thread-id="' + th.id + '">Report ' + esc(meta.name) + '</button><button type="button" class="out" data-block="' + meta.other.id + '">Block ' + esc(meta.name) + '</button></div>' : '') + '</div>' +
       (th.kind === 'intro' ? '<div class="safety">' + ICON.shield + '<span>Never send money or share bank details. Keep chatting on NSC until you are comfortable.</span></div>' : '') +
       '<div class="msgs" id="msgs">' + html + '</div>' +
-      '<form class="compose" id="compose"><textarea id="composeText" rows="1" placeholder="Write a message" aria-label="Message"' + (m.status === 'suspended' && th.kind !== 'support' ? ' disabled' : '') + '></textarea><button class="btn btn-primary" type="submit" aria-label="Send">' + ICON.send + '</button></form>';
+      '<form class="compose" id="compose"><textarea id="composeText" rows="1" placeholder="' + (!S.active(m) && th.kind !== 'support' ? 'Renew your membership to keep chatting' : 'Write a message') + '" aria-label="Message"' + (!S.active(m) && th.kind !== 'support' ? ' disabled' : '') + '></textarea><button class="btn btn-primary" type="submit" aria-label="Send">' + ICON.send + '</button></form>';
     $('composeText').value = draft;
     if (hadFocus) $('composeText').focus();
     box = $('msgs'); if (nearBottom || !draft) box.scrollTop = box.scrollHeight;
@@ -914,8 +990,9 @@ window.NSC.ready({ as: 'member' }).then(function(){
     var patch = pending; pending = {};
     S.update('members', ME, function(r){ Object.assign(r.profile, patch); r.status = 'pending'; r.submittedAt = Date.now() });
     S.log(S.fullName(me()) + (m.status === 'changes' ? ' resubmitted' : ' submitted') + ' a profile for review');
-    toast(m.payment.status === 'none' || m.payment.status === 'rejected' ? 'Profile submitted. Next, pay and upload your receipt.' : 'Profile submitted. Our team will review it soon.');
-    if (m.payment.status === 'none' || m.payment.status === 'rejected') go('#membership');
+    var mem = S.membership(m), unpaid = !mem.pending && !mem.paid;
+    toast(unpaid ? 'Profile submitted. Next, choose a plan and upload your receipt.' : 'Profile submitted. Our team will review it soon.');
+    if (unpaid) go('#membership');
   });
 
   function paintPhotos(ph){
@@ -962,34 +1039,91 @@ window.NSC.ready({ as: 'member' }).then(function(){
   });
 
   /* ---------- membership ---------- */
-  function renderMembership(m){
-    var p = m.payment, cfg = S.settings();
-    $('payRef').textContent = p.ref;
-    $('payFee').textContent = cfg.fee ? '₦' + Number(String(cfg.fee).replace(/[^\d.]/g, '')).toLocaleString('en-NG') + (cfg.feeNote ? ' · ' + cfg.feeNote : '') : 'To be confirmed by NSC';
-    $('payBank').textContent = cfg.bank || 'To be confirmed';
-    $('payName').textContent = cfg.accountName || 'NaijaSinglesConnect';
-    $('acctNo').textContent = cfg.accountNumber || 'To be confirmed'; $('acctCopy').hidden = !cfg.accountNumber;
-    var map = { none:['off','Payment not received'], uploaded:['wait','Receipt in review'], confirmed:['ok','Payment confirmed'], rejected:['bad','Receipt not accepted'] };
-    $('payPill').className = 'pill ' + map[p.status][0]; $('payPill').textContent = map[p.status][1];
-    var has = p.file && p.status !== 'rejected';
-    $('fileRow').hidden = !has; $('drop').hidden = !!has;
-    if (has) { $('fileName').textContent = p.file.name; $('fileMeta').textContent = p.file.size + ' · Uploaded ' + S.ago(p.uploadedAt) + ' · ' + map[p.status][1]; $('fileRemove').hidden = p.status === 'confirmed' }
+  var selPlan = 'platinum', selMonths = 3, paying = false;
+  function naira(n){ return '₦' + Number(n || 0).toLocaleString('en-NG') }
+  function term(n){ return n === 1 ? '1 month' : n + ' months' }
+  function longDate(t){ return new Date(t).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }) }
+  function features(plan){
+    var lim = +S.settings().goldIntroLimit || 5;
+    return [
+      ['See your matches and full profiles', true, true],
+      ['Chat with members you are introduced to', true, true],
+      ['Introduction requests', lim + ' a month', 'Unlimited'],
+      ['Personal match suggestions from our team', false, true],
+      ['Priority review and support', false, true]
+    ].map(function(f){ var v = plan === 'gold' ? f[1] : f[2];
+      return '<li><span>' + f[0] + '</span>' + (v === true ? ICON.check.replace('<svg ', '<svg class="yes" ') : v === false ? '<span class="no">Platinum only</span>' : '<b>' + v + '</b>') + '</li>' }).join('');
   }
+  function renderMembership(m){
+    var cfg = S.settings(), ms = S.membership(m), name = S.PLAN_NAMES;
+    var pill = ms.active ? ['ok', name[ms.plan] + ' · active'] : ms.pending ? ['wait', 'Receipt in review'] : ms.credit ? ['ok', 'Paid · starts on approval'] : ms.paid ? ['bad', 'Membership ended'] : ['off', 'No plan yet'];
+    $('payPill').className = 'pill ' + pill[0]; $('payPill').textContent = pill[1];
+
+    /* where they stand */
+    var st = '';
+    if (ms.active) {
+      var left = Math.max(1, Math.ceil((ms.until - Date.now()) / 864e5));
+      st = '<div class="memcard ' + (ms.plan === 'gold' ? 'gold' : '') + '"><div><b>' + name[ms.plan] + ' member</b><p>Active until ' + longDate(ms.until) + '. Renewing adds time to the end of your current membership.</p></div><span class="sp"></span><div class="days">' + left + '<small>' + (left === 1 ? 'day' : 'days') + ' left</small></div></div>';
+    }
+    if (ms.pending) st += '<div class="banner ok">' + ICON.check + '<div><b>Receipt received for ' + name[ms.pending.plan] + ', ' + term(ms.pending.months) + ' (' + naira(ms.pending.amount) + ')</b><p>Our team has been notified and is checking it, ' + esc(cfg.reviewTime || 'usually within 24 hours') + '. We\'ll email you when it\'s confirmed.</p><p><button type="button" class="textbtn" id="cancelPay" style="color:var(--err)">Cancel and choose another plan</button></p></div></div>';
+    else if (ms.credit) st += '<div class="banner ok">' + ICON.check + '<div><b>Payment confirmed: ' + name[ms.plan] + ', ' + term(ms.credit) + '</b><p>Your membership starts the day our team approves your profile, so you don\'t lose any time.</p></div></div>';
+    else if (!ms.active && ms.last && ms.last.status === 'rejected') st += '<div class="banner bad">' + ICON.info + '<div><b>We couldn\'t confirm your last receipt</b><p>' + esc(ms.last.note || 'Please check the amount and reference, then upload it again.') + '</p></div></div>';
+    else if (!ms.active && ms.paid && m.status === 'approved') st += '<div class="banner bad">' + ICON.lock + '<div><b>Your membership ended on ' + longDate(ms.until) + '</b><p>Your profile and conversations are saved. Choose a plan to see your matches and keep chatting.</p></div></div>';
+    $('memStatus').innerHTML = st;
+
+    /* plan picker */
+    var showPicker = !ms.pending;
+    $('planCard').hidden = !showPicker || paying; $('payStep').hidden = !showPicker || !paying;
+    $('planCard').classList.toggle('gold', selPlan === 'gold');
+    document.querySelectorAll('.ptabs [data-plan]').forEach(function(b){ b.setAttribute('aria-selected', String(b.dataset.plan === selPlan)) });
+    $('termCards').innerHTML = S.TERMS.map(function(n){
+      var pr = S.planPrice(selPlan, n);
+      return '<button type="button" class="term" role="radio" data-months="' + n + '" aria-checked="' + (n === selMonths) + '">' + (n === 3 ? '<span class="tag">POPULAR</span>' : '') +
+        '<span class="len">' + n + '</span><span class="unit">' + (n === 1 ? 'month' : 'months') + '</span><span class="wk">' + naira(pr.weekly) + '</span><span class="per">a week</span>' +
+        (pr.save ? '<span class="save">SAVE ' + pr.save + '%</span>' : '<span class="save" style="visibility:hidden">SAVE</span>') + '</button>' }).join('');
+    $('featPlan').textContent = name[selPlan]; $('featList').innerHTML = features(selPlan);
+    var price = S.planPrice(selPlan, selMonths);
+    $('planGo').textContent = (ms.active ? 'Renew with ' : 'Get ') + term(selMonths) + ' of ' + name[selPlan] + ' for ' + naira(price.total);
+
+    /* bank transfer step */
+    $('payAmt').textContent = naira(price.total);
+    $('payFor').textContent = name[selPlan] + ', ' + term(selMonths) + ' (' + naira(price.weekly) + ' a week). Use your reference so we can match your payment.';
+    $('payBank').textContent = cfg.bank; $('payName').textContent = cfg.accountName; $('acctNo').textContent = cfg.accountNumber; $('payRef').textContent = m.payment.ref || '';
+    $('payParent').textContent = (cfg.parentCompany || 'Best of Nature Ventures') + ' is the parent company of NaijaSinglesConnect. Transfers to this account are payments to NSC.';
+
+    /* history */
+    $('payHist').hidden = !ms.list.length;
+    var PS = { uploaded:['wait','In review'], confirmed:['ok','Confirmed'], rejected:['bad','Not accepted'] };
+    $('payHist').innerHTML = '<h2>Payment history</h2><ul class="hist">' + ms.list.map(function(x){
+      return '<li><span><b>' + name[x.plan] + ', ' + term(x.months) + '</b><br><span class="sub">' + longDate(x.createdAt) + ' · ' + (x.amount ? naira(x.amount) : esc(x.note || 'Added by the NSC team')) + '</span></span><span class="pill ' + PS[x.status][0] + '">' + PS[x.status][1] + '</span></li>' }).join('') + '</ul>';
+  }
+  document.querySelector('.ptabs').addEventListener('click', function(e){ var b = e.target.closest('[data-plan]'); if (b) { selPlan = b.dataset.plan; render() } });
+  $('termCards').addEventListener('click', function(e){ var b = e.target.closest('[data-months]'); if (b) { selMonths = +b.dataset.months; render() } });
+  $('planGo').addEventListener('click', function(){ paying = true; render(); $('payStep').scrollIntoView({ behavior:'smooth', block:'start' }) });
+  $('changePlan').addEventListener('click', function(){ paying = false; render() });
+  document.addEventListener('click', function(e){
+    if (e.target.id !== 'cancelPay') return;
+    var p = S.membership(me()).pending; if (!p) return;
+    S.remove('payments', p.id); paying = false; toast('Receipt cancelled. Choose your plan again.');
+  });
   $('receipt').addEventListener('change', function(){
     var f = this.files && this.files[0], input = this; if (!f) return;
     if (f.size > 5 * 1024 * 1024) { toast('That file is over 5 MB. Choose a smaller one.'); input.value = ''; return }
     var size = f.size / 1024 < 1024 ? Math.round(f.size / 1024) + ' KB' : (f.size / 1048576).toFixed(1) + ' MB';
+    var plan = selPlan, months = selMonths, price = S.planPrice(plan, months);
     function done(url){
       toast('Uploading receipt…');
       S.uploadReceipt(f, url).then(function(file){
         file.size = size;
-        S.update('members', ME, function(r){ r.payment.status = 'uploaded'; r.payment.uploadedAt = Date.now(); r.payment.file = file });
-        S.log(S.fullName(me()) + ' uploaded a payment receipt'); toast('Receipt uploaded. Our team will confirm it.'); input.value = '';
+        S.insert('payments', { id: S.uid('p_'), member: ME, plan: plan, months: months, amount: price.total, ref: me().payment.ref || '', file: file, status: 'uploaded', note: '', createdAt: Date.now(), reviewedAt: null });
+        if (S.mode !== 'cloud') S.log(S.fullName(me()) + ' uploaded a receipt for ' + S.PLAN_NAMES[plan] + ', ' + months + ' months');
+        paying = false; input.value = '';
+        toast('Receipt uploaded. Our team has been notified.');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }, function(err){ toast('Could not upload that receipt. ' + (err && err.message || 'Try again.')); input.value = '' });
     }
     if (/^image\//.test(f.type)) shrink(f, 1200, done); else done(null);
   });
-  $('fileRemove').addEventListener('click', function(){ S.update('members', ME, function(r){ r.payment.status = 'none'; r.payment.file = null; r.payment.uploadedAt = null }) });
   document.querySelectorAll('[data-copy]').forEach(function(b){
     b.addEventListener('click', function(){ var t = $(b.dataset.copy).textContent; (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function(){ toast('Copied ' + t) }, function(){ toast(t) }) });
   });

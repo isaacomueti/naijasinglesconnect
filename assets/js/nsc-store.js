@@ -8,7 +8,7 @@
  */
 (function () {
   'use strict';
-  var KEY = 'nsc.db.v2';
+  var KEY = 'nsc.db.v3';
   var DEMO_HASH = '390c1fb37a84bbebd6425a08804081187b63492d8dc0756b8855f0c8df923b12';
   var ADMIN = { email: 'admin@naijasinglesconnect.com', hash: 'ecd4997df9fba0697cb6f4b59160343da463d79736865db4bb08bb95cfc56ea9' };
   var CARRIERS = ['AS', 'AC', 'SS', 'SC'];
@@ -40,14 +40,20 @@
     if (!cache) cache = read();
     if (!cache) { cache = seed(); write(cache); }
     if (!cache.notes) cache.notes = [];
+    if (!cache.payments) cache.payments = [];
     if (!cache.settings) cache.settings = defaultSettings();
     return cache;
   }
 
   /* site settings the team edits in /admin and members see in their dashboard */
+  /* plans: weekly price by term in months; a month counts as 4 weeks */
   function defaultSettings() {
-    return { fee: '', feeNote: '', bank: '', accountName: 'NaijaSinglesConnect', accountNumber: '', reviewTime: 'usually within 24 hours', supportEmail: 'support@naijasinglesconnect.com' };
+    return { bank: 'Zenith Bank', accountName: 'Best of Nature Ventures', accountNumber: '1012169172', parentCompany: 'Best of Nature Ventures',
+      reviewTime: 'usually within 24 hours', supportEmail: 'support@naijasinglesconnect.com', alertEmail: 'justlynnonme@yahoo.com', goldIntroLimit: 5,
+      plans: { gold: { '1': 1500, '3': 1000, '12': 500 }, platinum: { '1': 2250, '3': 1500, '12': 750 } } };
   }
+  var PLAN_NAMES = { gold: 'Gold', platinum: 'Platinum' }, TERMS = [12, 3, 1];
+  function addMonths(ts, n) { var d = new Date(ts); d.setMonth(d.getMonth() + n); return +d; }
 
   /* ---------- seed data (demo only) ---------- */
   function p(o) {
@@ -57,7 +63,8 @@
   function m(id, email, status, profile, extra) {
     return Object.assign({ id: id, email: email, phone: '', pwHash: DEMO_HASH, createdAt: now() - 20 * D, status: status, adminNote: '',
       submittedAt: now() - 10 * D, approvedAt: status === 'approved' ? now() - 8 * D : null, privacy: 'full', blocked: [], demo: true,
-      payment: { status: status === 'approved' ? 'confirmed' : 'none', ref: 'NSC-' + id.slice(2, 7).toUpperCase(), file: null, uploadedAt: null },
+      payment: { ref: 'NSC-' + id.slice(2, 7).toUpperCase() },
+      plan: status === 'approved' ? 'platinum' : null, paidUntil: status === 'approved' ? now() + 75 * D : null, creditMonths: 0,
       profile: p(profile) }, extra || {});
   }
   function seed() {
@@ -77,15 +84,24 @@
       m('m_bayo', 'bayo@example.com', 'approved', { first: 'Bayo', last: 'Adewale', gender: 'Man', dob: '1989-10-21', location: 'Lagos', origin: 'Oyo', lga: 'Ogbomosho North', qual: "Bachelor's degree", job: 'Logistics manager', religion: 'Christianity', denom: 'Baptist', marital: 'Never married', genotype: 'AA', children: 'No', wantkids: 'Yes', intent: 'Marriage within 1 to 2 years', agemin: '28', agemax: '38', ploc: 'Lagos', bio: 'Healthy, undetectable and hopeful. I want an honest partner who understands, and a home full of peace.', circle: true }, { privacy: 'nophoto' }),
       m('m_zainab', 'zainab@example.com', 'approved', { first: 'Zainab', last: 'Lawal', gender: 'Woman', dob: '1993-01-15', location: 'Abuja', origin: 'Kwara', lga: 'Ilorin West', qual: 'HND', job: 'Fashion designer', religion: 'Islam', denom: 'Sunni', marital: 'Divorced', genotype: 'AS', children: "Yes, they live with me", wantkids: 'Open to it', intent: 'Marriage within 1 to 2 years', agemin: '30', agemax: '42', ploc: 'Abuja or Lagos', bio: 'Mother of one, living well and looking forward. I would love to meet someone who will not need my story explained.', circle: true }, { privacy: 'name' }),
       m('m_kemi', 'kemi@example.com', 'pending', { first: 'Kemi', last: 'Alade', gender: 'Woman', dob: '1996-08-19', location: 'Lagos', origin: 'Ondo', lga: 'Akure South', qual: 'HND', job: 'Nurse', religion: 'Christianity', denom: 'Methodist', marital: 'Never married', genotype: 'AA', children: 'No', wantkids: 'Yes', intent: 'Marriage within 1 to 2 years', agemin: '28', agemax: '37', ploc: 'Lagos', lookfor: 'Someone patient and dependable.', bio: 'Night-shift nurse who still finds time for Sunday service and long phone calls with my mum.', photos: ['/assets/img/woman-phone.jpg'] },
-        { submittedAt: t - 3 * H, payment: { status: 'uploaded', ref: 'NSC-KEMI1', file: { name: 'kemi-transfer.jpg', size: '214 KB', type: 'image/jpeg', dataUrl: null }, uploadedAt: t - 2 * H } }),
+        { submittedAt: t - 3 * H, payment: { ref: 'NSC-KEMI1' } }),
       m('m_uche', 'uche@example.com', 'pending', { first: 'Uche', last: 'Okonkwo', gender: 'Man', dob: '1994-12-01', location: 'Abuja', origin: 'Anambra', lga: 'Awka South', qual: "Bachelor's degree", job: 'Civil servant', religion: 'Christianity', denom: 'Catholic', marital: 'Never married', genotype: 'AA', children: 'No', wantkids: 'Yes', intent: 'Marriage within 1 year', agemin: '24', agemax: '31', ploc: 'Abuja', bio: 'Simple man, big heart.' },
         { submittedAt: t - 26 * H }),
       m('m_seun', 'seun@example.com', 'changes', { first: 'Seun', last: 'Bakare', gender: 'Man', dob: '1997-03-09', location: 'Lagos', origin: 'Lagos', lga: 'Ikeja', qual: 'OND / NCE', job: 'Entrepreneur', religion: 'Christianity', denom: '', marital: 'Never married', genotype: '', intent: 'Marriage within 1 to 2 years', bio: 'hi' },
         { submittedAt: t - 2 * D, adminNote: 'Please add a clear photo of your face, your genotype, and a few sentences about yourself.' })
     ];
+    /* a third of approved members are on Gold; each has a confirmed 3-month payment */
+    var prices = defaultSettings().plans, payments = [];
+    members.filter(function (x) { return x.status === 'approved'; }).forEach(function (x, k) {
+      if (k % 3 === 0) x.plan = 'gold';
+      payments.push({ id: 'p_' + x.id, member: x.id, plan: x.plan, months: 3, amount: prices[x.plan]['3'] * 12, ref: x.payment.ref, file: null, status: 'confirmed', note: '', createdAt: t - 16 * D, reviewedAt: t - 15 * D });
+    });
+    payments.push({ id: 'p_kemi', member: 'm_kemi', plan: 'platinum', months: 3, amount: prices.platinum['3'] * 12, ref: 'NSC-KEMI1',
+      file: { name: 'kemi-transfer.jpg', size: '214 KB', type: 'image/jpeg', dataUrl: null }, status: 'uploaded', note: '', createdAt: t - 2 * H, reviewedAt: null });
     return {
       version: 1,
       members: members,
+      payments: payments,
       intros: [
         { id: 'i_seed1', from: 'm_tobi', to: 'm_chiamaka', status: 'accepted', note: 'Hello Chiamaka', createdAt: t - 6 * D, respondedAt: t - 6 * D + 3 * H }
       ],
@@ -123,6 +139,11 @@
     });
   }
 
+  function remove(t, id) {
+    if (backend) return backend.remove(t, id);
+    return tx(function (d) { d[t] = d[t].filter(function (x) { return x.id !== id; }); });
+  }
+
   /* ---------- helpers ---------- */
   function hash(pw) {
     var data = new TextEncoder().encode('nsc:' + pw);
@@ -155,7 +176,45 @@
   function groupOf(mem) { var pr = mem.profile || {}; return (!pr.nationality || pr.nationality === 'Nigeria' || pr.heritage === 'Yes') ? 'nigerian' : 'international'; }
   function accepts(a, b) { var o = (a.profile || {}).openTo || 'both'; return o === 'both' || o === groupOf(b); }
   /* Private Circle: members living with HIV who opted in are matched only with each other */
-  function eligible(a, b) { return accepts(a, b) && accepts(b, a) && !!a.profile.circle === !!b.profile.circle; }
+  function eligible(a, b) { return active(a) && active(b) && accepts(a, b) && accepts(b, a) && !!a.profile.circle === !!b.profile.circle; }
+
+  /* ---------- membership ---------- */
+  function active(mem) { return !!mem && mem.status === 'approved' && (mem.paidUntil || 0) > now(); }
+  function planPrice(plan, months) {
+    var s = NSC.settings(), d = defaultSettings().plans[plan] || {}, pp = (s.plans || {})[plan] || {};
+    var w = +pp[months] || +d[months] || 0, base = +pp['1'] || +d['1'] || w;
+    return { weekly: w, total: w * months * 4, save: base > w ? Math.round((1 - w / base) * 100) : 0 };
+  }
+  function paymentsOf(id) { return all('payments').filter(function (x) { return x.member === id; }).sort(function (a, b) { return b.createdAt - a.createdAt; }); }
+  function membership(mem) {
+    var ps = paymentsOf(mem.id);
+    return { active: active(mem), plan: mem.plan || null, until: mem.paidUntil || null, credit: mem.creditMonths || 0,
+      pending: ps.filter(function (x) { return x.status === 'uploaded'; })[0] || null, last: ps[0] || null,
+      paid: ps.some(function (x) { return x.status === 'confirmed'; }), list: ps };
+  }
+  /* the same rules the database applies (schema.sql: payment_after, member_membership) */
+  function applyPayment(r, pay) {
+    r.plan = pay.plan;
+    if (r.status === 'approved') r.paidUntil = addMonths(Math.max(r.paidUntil || 0, now()), pay.months);
+    else r.creditMonths = (r.creditMonths || 0) + pay.months;
+  }
+  function applyCredit(r) { if (r.creditMonths > 0) { r.paidUntil = addMonths(Math.max(r.paidUntil || 0, now()), r.creditMonths); r.creditMonths = 0; } }
+  function confirmPayment(pid) {
+    var pay = update('payments', pid, { status: 'confirmed', reviewedAt: now() }); if (!pay) return null;
+    update('members', pay.member, function (r) { applyPayment(r, pay); });
+    return pay;
+  }
+  function grantMembership(memberId, plan, months, note) {
+    var mem = get('members', memberId); if (!mem) return null;
+    var pay = insert('payments', { id: uid('p_'), member: memberId, plan: plan, months: months, amount: 0, ref: mem.payment.ref, file: null, status: 'confirmed', note: note || 'Added by the NSC team', createdAt: now(), reviewedAt: now() });
+    if (pay) update('members', memberId, function (r) { applyPayment(r, pay); });
+    return pay;
+  }
+  function introsLeft(mem) {
+    if (!mem || mem.plan !== 'gold') return Infinity;
+    var used = all('intros').filter(function (i) { return i.from === mem.id && now() - i.createdAt < 30 * D; }).length;
+    return Math.max(0, (+NSC.settings().goldIntroLimit || 5) - used);
+  }
   function genoRisk(g1, g2) { return CARRIERS.indexOf(g1) >= 0 && CARRIERS.indexOf(g2) >= 0; }
   function inRange(ageV, min, max) { if (ageV == null) return true; return (!min || ageV >= +min) && (!max || ageV <= +max); }
   function compat(a, b) {
@@ -316,11 +375,16 @@
         d.messages = d.messages.filter(function (x) { return x.thread !== supportThread(id) && x.from !== id && intros.indexOf(x.thread) < 0; });
         d.reports = d.reports.filter(function (r) { return r.by !== id && r.about !== id; });
         d.notes = d.notes.filter(function (n) { return n.member !== id; });
+        d.payments = d.payments.filter(function (x) { return x.member !== id; });
       });
       log('A member account was permanently deleted');
       return Promise.resolve();
     },
     needsUpgrade: false,
+    PLAN_NAMES: PLAN_NAMES, TERMS: TERMS, active: active, planPrice: planPrice, paymentsOf: paymentsOf, membership: membership,
+    applyCredit: applyCredit, confirmPayment: confirmPayment, grantMembership: grantMembership, introsLeft: introsLeft,
+    rejectPayment: function (pid, note) { return update('payments', pid, { status: 'rejected', note: note || '', reviewedAt: now() }); },
+    remove: remove,
     COUNTRIES: COUNTRIES, groupOf: groupOf, accepts: accepts, eligible: eligible,
     hash: hash, age: age, fullName: fullName, initials: initials, compat: compat, breaks: breaks, genoRisk: genoRisk,
     view: view, connected: connected, introBetween: introBetween, religionLabel: religionLabel,

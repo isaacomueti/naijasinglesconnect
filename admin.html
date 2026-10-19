@@ -192,7 +192,7 @@ table.t.plain tbody tr{cursor:default}
             <button role="tab" aria-selected="false" data-t="changes">Changes requested</button>
             <button role="tab" aria-selected="false" data-t="draft">Not submitted yet</button>
           </div>
-          <div class="tablewrap"><table class="t"><thead><tr><th>Member</th><th>Profile</th><th>Photos</th><th>Payment</th><th>Submitted</th><th></th></tr></thead><tbody id="rvBody"></tbody></table></div>
+          <div class="tablewrap"><table class="t"><thead><tr><th>Member</th><th>Profile</th><th>Photos</th><th>Membership</th><th>Submitted</th><th></th></tr></thead><tbody id="rvBody"></tbody></table></div>
         </div>
       </section>
 
@@ -206,7 +206,7 @@ table.t.plain tbody tr{cursor:default}
               <button type="button" aria-pressed="false" data-f="pending">In review</button><button type="button" aria-pressed="false" data-f="draft">Not submitted</button><button type="button" aria-pressed="false" data-f="suspended">Paused</button><button type="button" aria-pressed="false" data-f="rejected">Rejected</button><button type="button" aria-pressed="false" data-f="intl">From other countries</button><button type="button" aria-pressed="false" data-f="circle">Private Circle</button>
             </div>
           </div>
-          <div class="tablewrap"><table class="t"><thead><tr><th>Member</th><th>Status</th><th>Faith</th><th>Lives in</th><th>Genotype</th><th>Joined</th><th>Payment</th></tr></thead><tbody id="mbBody"></tbody></table></div>
+          <div class="tablewrap"><table class="t"><thead><tr><th>Member</th><th>Status</th><th>Faith</th><th>Lives in</th><th>Genotype</th><th>Joined</th><th>Membership</th></tr></thead><tbody id="mbBody"></tbody></table></div>
         </div>
       </section>
 
@@ -219,7 +219,7 @@ table.t.plain tbody tr{cursor:default}
             <button role="tab" aria-selected="false" data-t="confirmed">Confirmed</button>
             <button role="tab" aria-selected="false" data-t="rejected">Rejected</button>
           </div>
-          <div class="tablewrap"><table class="t"><thead><tr><th>Member</th><th>Reference</th><th>File</th><th>Uploaded</th><th>Status</th><th></th></tr></thead><tbody id="pyBody"></tbody></table></div>
+          <div class="tablewrap"><table class="t"><thead><tr><th>Member</th><th>Plan</th><th>Amount</th><th>Reference</th><th>Receipt</th><th>Uploaded</th><th></th></tr></thead><tbody id="pyBody"></tbody></table></div>
         </div>
       </section>
 
@@ -256,9 +256,9 @@ table.t.plain tbody tr{cursor:default}
 
       <section id="v-matchmaker" data-view hidden>
         <div style="display:grid;gap:20px">
-          <div class="hello"><div><h2>Matchmaker</h2><p>Pick an approved member to see who suits them best. Suggestions go to their support inbox, and they decide whether to send a request.</p></div></div>
+          <div class="hello"><div><h2>Matchmaker</h2><p>Pick an active member to see who suits them best. Personal suggestions are a Platinum benefit, so start with Platinum members. Suggestions go to their support inbox, and they decide whether to send a request.</p></div></div>
           <div class="mm">
-            <div class="card pick"><input class="input" id="mmSearch" type="search" placeholder="Search approved members" aria-label="Search approved members" style="border-radius:999px;padding:10px 16px"><div class="plist" id="mmList"></div></div>
+            <div class="card pick"><input class="input" id="mmSearch" type="search" placeholder="Search active members" aria-label="Search active members" style="border-radius:999px;padding:10px 16px"><div class="plist" id="mmList"></div></div>
             <div id="mmBody" style="display:grid;gap:14px;min-width:0"></div>
           </div>
         </div>
@@ -319,16 +319,18 @@ table.t.plain tbody tr{cursor:default}
           <div class="hello"><div><h2>Settings</h2><p>What members see on their Membership page. Changes show straight away.</p></div></div>
           <div class="grid2">
             <form class="card" id="stForm" style="display:grid;gap:18px" novalidate>
-              <div><h2>Membership fee</h2><p class="sub">Members only see this inside their dashboard, never on the public website.</p></div>
+              <div><h2>Plan prices</h2><p class="sub">Price per week, in naira. A month counts as 4 weeks. Members only see prices inside their dashboard, never on the public website. A change applies to receipts uploaded after you save.</p></div>
+              <div class="tablewrap"><table class="t plain" style="min-width:0"><thead><tr><th>Length</th><th>Gold</th><th>Platinum</th></tr></thead><tbody id="stPrices"></tbody></table></div>
               <div class="fields">
-                <div class="field"><label for="stFee">Amount (₦)</label><input id="stFee" inputmode="numeric" placeholder="e.g. 25000"></div>
-                <div class="field"><label for="stFeeNote">What it covers</label><input id="stFeeNote" placeholder="e.g. 12 months' membership"></div>
+                <div class="field"><label for="stLimit">Gold introduction requests per month</label><input id="stLimit" inputmode="numeric"></div>
+                <div class="field"><label for="stAlert">Send receipt and support alerts to</label><input id="stAlert" type="email"></div>
               </div>
               <div><h2>Bank transfer details</h2></div>
               <div class="fields">
                 <div class="field"><label for="stBank">Bank</label><input id="stBank" placeholder="e.g. Zenith Bank"></div>
                 <div class="field"><label for="stName">Account name</label><input id="stName"></div>
-                <div class="field full"><label for="stNo">Account number</label><input id="stNo" inputmode="numeric" maxlength="10" placeholder="10 digits"></div>
+                <div class="field"><label for="stNo">Account number</label><input id="stNo" inputmode="numeric" maxlength="10" placeholder="10 digits"></div>
+                <div class="field"><label for="stParent">Parent company</label><input id="stParent"><span class="hint">Shown under the bank details so members know who the account belongs to.</span></div>
               </div>
               <div><h2>Messages to members</h2></div>
               <div class="fields">
@@ -338,7 +340,7 @@ table.t.plain tbody tr{cursor:default}
               <p class="err" id="stErr" style="color:var(--err);font-weight:700;margin:0" hidden></p>
               <div style="display:flex;justify-content:flex-end"><button class="btn btn-primary" type="submit">Save settings</button></div>
             </form>
-            <div class="card" style="align-self:start"><h2>What members see</h2><p class="sub">Membership page, step 1</p><dl class="acct" id="stPrev"></dl></div>
+            <div class="card" style="align-self:start"><h2>What members see</h2><p class="sub">Membership page</p><dl class="acct" id="stPrev"></dl></div>
           </div>
         </div>
       </section>
@@ -392,8 +394,21 @@ window.NSC.ready({ as: 'admin' }).then(function(){
 
   /* ---------- helpers ---------- */
   var STATUS = { draft:['off','Not submitted'], pending:['wait','In review'], changes:['wait','Changes requested'], approved:['ok','Approved'], rejected:['bad','Rejected'], suspended:['bad','Paused'] };
-  var PAY = { none:['off','No receipt'], uploaded:['wait','To confirm'], confirmed:['ok','Confirmed'], rejected:['bad','Rejected'] };
+  var PAY = { uploaded:['wait','To confirm'], confirmed:['ok','Confirmed'], rejected:['bad','Rejected'] };
   function pill(map, k){ var v = map[k] || ['off', k]; return '<span class="pill ' + v[0] + '">' + v[1] + '</span>' }
+  var PN = S.PLAN_NAMES;
+  function term(n){ return n === 1 ? '1 month' : n + ' months' }
+  /* one pill that says where a member's membership stands */
+  function memPill(m){
+    var ms = S.membership(m);
+    if (ms.active) return '<span class="pill ok">' + PN[ms.plan] + ' · until ' + date(ms.until) + '</span>';
+    if (ms.pending) return '<span class="pill wait">Receipt to confirm</span>';
+    if (ms.credit) return '<span class="pill ok">' + PN[ms.plan] + ' · starts on approval</span>';
+    if (ms.paid) return '<span class="pill bad">' + PN[ms.plan] + ' · ended</span>';
+    return '<span class="pill off">No plan</span>';
+  }
+  function memText(m){ var ms = S.membership(m); return ms.active ? PN[ms.plan] + ' until ' + new Date(ms.until).toISOString().slice(0, 10) : ms.pending ? 'Receipt to confirm' : ms.credit ? PN[ms.plan] + ', starts on approval' : ms.paid ? 'Ended' : 'No plan' }
+  function payments(){ return S.all('payments').filter(function(p){ return member(p.member) }) }
   function av(m){ var ph = (m.profile.photos || [])[0]; return '<span class="av">' + (ph ? '<img alt="" src="' + esc(ph) + '">' : esc(S.initials(m))) + '</span>' }
   function person(m, sub){ return '<div class="person">' + av(m) + '<div><b>' + esc(S.fullName(m)) + '</b><span>' + esc(sub == null ? m.email : sub) + '</span></div></div>' }
   var groups = ['first','last','gender','dob','location','origin','lga','qual','job','religion','denom','marital','genotype','children','wantkids','intent','agemin','agemax','ploc','lookfor','bio'];
@@ -408,7 +423,6 @@ window.NSC.ready({ as: 'admin' }).then(function(){
       return { id: id, m: m, last: ms[ms.length - 1] || null, unread: S.unread('admin', id) };
     }).filter(function(t){ return t.last });
   }
-  function feeNum(){ return Number(String(S.settings().fee || '').replace(/[^\d.]/g, '')) || 0 }
   function naira(n){ return '₦' + Number(n || 0).toLocaleString('en-NG') }
   function date(ts, long){ return ts ? new Date(ts).toLocaleDateString('en-GB', { day:'numeric', month: long ? 'long' : 'short', year:'numeric' }) : '—' }
   function pct(a, b){ return b ? Math.round(a / b * 100) : 0 }
@@ -452,7 +466,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   function badges(){
     var all = members();
     var n = { review: all.filter(function(m){ return m.status === 'pending' }).length,
-      payments: all.filter(function(m){ return m.payment.status === 'uploaded' }).length,
+      payments: payments().filter(function(p){ return p.status === 'uploaded' }).length,
       support: supportThreads().reduce(function(a, t){ return a + t.unread }, 0),
       reports: S.all('reports').filter(function(r){ return r.status === 'open' }).length,
       intros: staleIntros().length };
@@ -468,7 +482,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     var h = new Date().getHours(); $('greet').textContent = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
     var n = badges(), all = members(), cfg = S.settings();
     var week = all.filter(function(m){ return Date.now() - m.createdAt < 7 * D }).length;
-    $('ovSetup').innerHTML = (!cfg.fee || !cfg.accountNumber) && !S.needsUpgrade ? '<div class="banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div><b>Add the membership fee and bank details</b><p>Members currently see "To be confirmed" on their Membership page. <a href="#settings" style="color:var(--green);font-weight:800">Open Settings</a></p></div></div>' : '';
+    $('ovSetup').innerHTML = !cfg.accountNumber && !S.needsUpgrade ? '<div class="banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div><b>Add the bank details</b><p>Members need an account number to pay. <a href="#settings" style="color:var(--green);font-weight:800">Open Settings</a></p></div></div>' : '';
     $('ovStats').innerHTML = [
       ['#review', 'Waiting for review', n.review, 'Oldest ' + oldest()],
       ['#payments', 'Receipts to confirm', n.payments, 'Check against bank statement'],
@@ -479,7 +493,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     ].map(function(s){ return '<a class="stat" href="' + s[0] + '"><span>' + s[1] + '</span><b>' + s[2] + '</b><small>' + s[3] + '</small></a>' }).join('');
     var q = all.filter(function(m){ return m.status === 'pending' }).sort(function(a, b){ return a.submittedAt - b.submittedAt });
     $('ovQueue').innerHTML = q.length ? q.slice(0, 6).map(function(m){
-      return '<div class="qrow" data-open="' + m.id + '">' + av(m) + '<div><b>' + esc(S.fullName(m)) + '</b><span>' + esc(m.profile.location || '—') + ' · submitted ' + S.ago(m.submittedAt).toLowerCase() + '</span></div>' + pill(PAY, m.payment.status) + '</div>' }).join('')
+      return '<div class="qrow" data-open="' + m.id + '">' + av(m) + '<div><b>' + esc(S.fullName(m)) + '</b><span>' + esc(m.profile.location || '—') + ' · submitted ' + S.ago(m.submittedAt).toLowerCase() + '</span></div>' + memPill(m) + '</div>' }).join('')
       : '<div class="empty"><b>All caught up</b><span>No profiles are waiting for review.</span></div>';
     $('ovFeed').innerHTML = S.all('activity').slice(0, 10).map(function(a){ return '<li><span>' + esc(a.text) + '</span><time>' + S.ago(a.at) + '</time></li>' }).join('') || '<li><span>No activity yet</span></li>';
   }
@@ -494,7 +508,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     $('rvBody').innerHTML = list.length ? list.map(function(m){
       var p = completion(m.profile);
       return '<tr data-open="' + m.id + '"><td>' + person(m) + '</td><td><div style="display:flex;gap:10px;align-items:center"><div class="meter"><i style="width:' + p + '%"></i></div>' + p + '%</div></td>' +
-        '<td>' + (m.profile.photos || []).length + ' of 3</td><td>' + pill(PAY, m.payment.status) + '</td><td>' + (m.submittedAt ? S.ago(m.submittedAt) : '—') + '</td><td><button type="button" class="btn btn-primary btn-sm" data-open="' + m.id + '">Review</button></td></tr>' }).join('')
+        '<td>' + (m.profile.photos || []).length + ' of 3</td><td>' + memPill(m) + '</td><td>' + (m.submittedAt ? S.ago(m.submittedAt) : '—') + '</td><td><button type="button" class="btn btn-primary btn-sm" data-open="' + m.id + '">Review</button></td></tr>' }).join('')
       : '<tr><td colspan="6"><div class="empty"><b>Nothing here</b><span>' + { pending:'No profiles are waiting for review.', changes:'No members are making changes.', draft:'Every account has submitted a profile.' }[rvTab] + '</span></div></td></tr>';
   }
 
@@ -516,14 +530,14 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     $('mbCount').textContent = all.length + ' accounts · ' + all.filter(function(m){ return m.status === 'approved' }).length + ' approved' + (list.length !== all.length ? ' · ' + list.length + ' shown' : '');
     $('mbBody').innerHTML = list.length ? list.map(function(m){
       var a = S.age(m.profile.dob);
-      return '<tr data-open="' + m.id + '"><td>' + person(m, [m.profile.gender, a].filter(Boolean).join(', ') || m.email) + '</td><td>' + pill(STATUS, m.status) + '</td><td>' + esc(S.religionLabel(m.profile.religion) || '—') + '</td><td>' + esc(m.profile.location || '—') + (S.groupOf(m) === 'international' ? ' <span class="pill wait">' + esc(m.profile.nationality) + '</span>' : '') + (m.profile.circle ? ' <span class="pill ok" title="Private Circle">Circle</span>' : '') + '</td><td>' + esc(m.profile.genotype || '—') + '</td><td>' + date(m.createdAt) + '</td><td>' + pill(PAY, m.payment.status) + '</td></tr>' }).join('')
+      return '<tr data-open="' + m.id + '"><td>' + person(m, [m.profile.gender, a].filter(Boolean).join(', ') || m.email) + '</td><td>' + pill(STATUS, m.status) + '</td><td>' + esc(S.religionLabel(m.profile.religion) || '—') + '</td><td>' + esc(m.profile.location || '—') + (S.groupOf(m) === 'international' ? ' <span class="pill wait">' + esc(m.profile.nationality) + '</span>' : '') + (m.profile.circle ? ' <span class="pill ok" title="Private Circle">Circle</span>' : '') + '</td><td>' + esc(m.profile.genotype || '—') + '</td><td>' + date(m.createdAt) + '</td><td>' + memPill(m) + '</td></tr>' }).join('')
       : '<tr><td colspan="7"><div class="empty"><b>No members found</b><span>Try another search or filter.</span></div></td></tr>';
   }
   /* contact list only: religion, genotype and circle membership stay out of exported files */
   $('mbCsv').addEventListener('click', function(){
     var cell = function(v){ v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v };
-    var rows = [['First name','Last name','Email','Phone','Status','Lives in','Nationality','Joined','Payment','Reference']].concat(memberList().map(function(m){
-      return [m.profile.first, m.profile.last, m.email, m.phone, STATUS[m.status][1], m.profile.location, m.profile.nationality, new Date(m.createdAt).toISOString().slice(0, 10), PAY[m.payment.status][1], m.payment.ref] }));
+    var rows = [['First name','Last name','Email','Phone','Status','Lives in','Nationality','Joined','Membership','Reference']].concat(memberList().map(function(m){
+      return [m.profile.first, m.profile.last, m.email, m.phone, STATUS[m.status][1], m.profile.location, m.profile.nationality, new Date(m.createdAt).toISOString().slice(0, 10), memText(m), m.payment.ref] }));
     download('nsc-members-' + new Date().toISOString().slice(0, 10) + '.csv', rows.map(function(r){ return r.map(cell).join(',') }).join('\n'), 'text/csv');
     S.log('Member list downloaded (' + (rows.length - 1) + ' members)');
   });
@@ -532,33 +546,36 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   var pyTab = 'uploaded';
   tabs('pyTabs', function(t){ pyTab = t });
   function rPayments(){
-    var all = members(), conf = all.filter(function(m){ return m.payment.status === 'confirmed' });
+    var all = payments(), conf = all.filter(function(p){ return p.status === 'confirmed' });
     var month = new Date(); month.setDate(1); month.setHours(0, 0, 0, 0);
-    var sum = function(l){ return l.reduce(function(a, m){ return a + (+m.payment.amount || 0) }, 0) };
-    var thisMonth = conf.filter(function(m){ return (m.payment.confirmedAt || 0) >= +month });
+    var sum = function(l){ return l.reduce(function(a, p){ return a + (+p.amount || 0) }, 0) };
+    var thisMonth = conf.filter(function(p){ return (p.reviewedAt || 0) >= +month });
+    var activeNow = members().filter(S.active);
     $('pyStats').innerHTML = [
-      ['To confirm', all.filter(function(m){ return m.payment.status === 'uploaded' }).length, 'Receipts waiting'],
-      ['Confirmed payments', conf.length, conf.length ? pct(conf.length, all.length) + '% of accounts' : 'None yet'],
-      ['Recorded this month', naira(sum(thisMonth)), thisMonth.length + ' payments'],
-      ['Recorded in total', naira(sum(conf)), feeNum() ? 'Current fee ' + naira(feeNum()) : 'Set the fee in Settings']
+      ['To confirm', all.filter(function(p){ return p.status === 'uploaded' }).length, 'Receipts waiting'],
+      ['Active members', activeNow.length, activeNow.filter(function(m){ return m.plan === 'platinum' }).length + ' Platinum · ' + activeNow.filter(function(m){ return m.plan === 'gold' }).length + ' Gold'],
+      ['Confirmed this month', naira(sum(thisMonth)), thisMonth.length + ' payments'],
+      ['Confirmed in total', naira(sum(conf)), conf.length + ' payments']
     ].map(function(s){ return '<div class="stat"><span>' + s[0] + '</span><b>' + s[1] + '</b><small>' + s[2] + '</small></div>' }).join('');
-    var list = all.filter(function(m){ return m.payment.status === pyTab }).sort(function(a, b){ return (b.payment.uploadedAt || 0) - (a.payment.uploadedAt || 0) });
-    $('pyBody').innerHTML = list.length ? list.map(function(m){
-      var f = m.payment.file;
-      return '<tr data-open="' + m.id + '"><td>' + person(m) + '</td><td><b>' + esc(m.payment.ref) + '</b></td><td>' + (f ? esc(f.name) + '<br><span class="sub">' + esc(f.size) + '</span>' : '<span class="sub">—</span>') + '</td><td>' + (m.payment.uploadedAt ? S.ago(m.payment.uploadedAt) : '—') + '</td><td>' + pill(PAY, m.payment.status) + (m.payment.amount ? '<br><span class="sub">' + naira(m.payment.amount) + '</span>' : '') + '</td>' +
-        '<td>' + (pyTab === 'uploaded' ? '<div style="display:flex;gap:8px"><button type="button" class="btn btn-ghost btn-sm" data-payrej="' + m.id + '">Reject</button><button type="button" class="btn btn-primary btn-sm" data-payok="' + m.id + '">Confirm</button></div>' : '') + '</td></tr>' }).join('')
-      : '<tr><td colspan="6"><div class="empty"><b>Nothing here</b><span>' + (pyTab === 'uploaded' ? 'No receipts are waiting.' : 'No payments in this list yet.') + '</span></div></td></tr>';
+    var list = all.filter(function(p){ return p.status === pyTab }).sort(function(a, b){ return pyTab === 'uploaded' ? a.createdAt - b.createdAt : (b.reviewedAt || b.createdAt) - (a.reviewedAt || a.createdAt) });
+    $('pyBody').innerHTML = list.length ? list.map(function(p){
+      var m = member(p.member), f = p.file;
+      return '<tr data-open="' + m.id + '"><td>' + person(m) + '</td><td><b>' + PN[p.plan] + '</b><br><span class="sub">' + term(p.months) + '</span></td><td><b>' + (p.amount ? naira(p.amount) : '—') + '</b>' + (p.note && p.status !== 'uploaded' ? '<br><span class="sub">' + esc(p.note) + '</span>' : '') + '</td><td>' + esc(p.ref || m.payment.ref) + '</td>' +
+        '<td>' + (f ? esc(f.name) + '<br><span class="sub">' + esc(f.size || '') + '</span>' : '<span class="sub">—</span>') + '</td><td>' + S.ago(p.createdAt) + '</td>' +
+        '<td>' + (p.status === 'uploaded' ? '<div style="display:flex;gap:8px"><button type="button" class="btn btn-ghost btn-sm" data-payrej="' + p.id + '">Reject</button><button type="button" class="btn btn-primary btn-sm" data-payok="' + p.id + '">Confirm</button></div>' : pill(PAY, p.status)) + '</td></tr>' }).join('')
+      : '<tr><td colspan="7"><div class="empty"><b>Nothing here</b><span>' + (pyTab === 'uploaded' ? 'No receipts are waiting.' : 'No payments in this list yet.') + '</span></div></td></tr>';
   }
-  /* records the fee in force when the payment is confirmed, so totals stay right if the fee changes later */
-  function markPaid(r){ var fee = feeNum(); r.payment.status = 'confirmed'; r.payment.confirmedAt = Date.now(); if (fee && !r.payment.amount) r.payment.amount = fee }
-  function confirmPay(id){
-    var m = S.update('members', id, markPaid);
-    S.send(S.supportThread(id), 'admin', 'We have confirmed your payment (' + m.payment.ref + '). Thank you.' + (m.status === 'pending' ? ' Your profile review is next.' : ''));
-    S.log('Payment confirmed for ' + S.fullName(m)); toast('Payment confirmed for ' + m.profile.first);
+  function confirmPay(pid, approving){
+    var p = S.get('payments', pid), m = member(p.member);
+    var willStart = approving || m.status === 'approved';
+    S.confirmPayment(pid);
+    S.send(S.supportThread(m.id), 'admin', 'We have confirmed your payment of ' + naira(p.amount) + ' for ' + PN[p.plan] + ', ' + term(p.months) + '. Thank you.' + (willStart ? ' Your membership is active now.' : ' Your membership starts the day your profile is approved.'));
+    S.log('Payment confirmed for ' + S.fullName(m) + ': ' + PN[p.plan] + ', ' + term(p.months)); toast('Payment confirmed for ' + m.profile.first);
   }
-  function rejectPay(id, note){
-    var m = S.update('members', id, function(r){ r.payment.status = 'rejected' });
-    S.send(S.supportThread(id), 'admin', note); S.log('Receipt rejected for ' + S.fullName(m)); toast('Receipt rejected. ' + m.profile.first + ' has been told why.');
+  function rejectPay(pid, note){
+    var p = S.get('payments', pid), m = member(p.member);
+    S.rejectPayment(pid, note);
+    S.send(S.supportThread(m.id), 'admin', note); S.log('Receipt rejected for ' + S.fullName(m)); toast('Receipt rejected. ' + m.profile.first + ' has been told why.');
   }
 
   /* ---------- support inbox ---------- */
@@ -715,13 +732,13 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   $('mmList').addEventListener('click', function(e){ var b = e.target.closest('[data-mm]'); if (b) go('#matchmaker/' + b.dataset.mm) });
   function rMatchmaker(){
     var q = $('mmSearch').value.trim().toLowerCase();
-    var pool = members().filter(function(m){ return m.status === 'approved' });
+    var pool = members().filter(S.active);
     if (mmId && !member(mmId)) mmId = null;
     var list = pool.filter(function(m){ return !q || (S.fullName(m) + ' ' + (m.profile.location || '')).toLowerCase().indexOf(q) >= 0 })
       .sort(function(a, b){ return S.fullName(a).localeCompare(S.fullName(b)) });
     $('mmList').innerHTML = list.length ? list.map(function(m){
-      return '<button type="button" data-mm="' + m.id + '" aria-current="' + (m.id === mmId) + '">' + av(m) + '<span style="min-width:0"><b>' + esc(S.fullName(m)) + '</b><span>' + esc([m.profile.gender, S.age(m.profile.dob), m.profile.location].filter(Boolean).join(' · ')) + '</span></span></button>' }).join('')
-      : '<p class="sub" style="padding:8px">No approved members match.</p>';
+      return '<button type="button" data-mm="' + m.id + '" aria-current="' + (m.id === mmId) + '">' + av(m) + '<span style="min-width:0"><b>' + esc(S.fullName(m)) + (m.plan === 'platinum' ? ' <span class="pill ok" style="padding:2px 8px">Platinum</span>' : '') + '</b><span>' + esc([m.profile.gender, S.age(m.profile.dob), m.profile.location].filter(Boolean).join(' · ')) + '</span></span></button>' }).join('')
+      : '<p class="sub" style="padding:8px">No active members match.</p>';
     if (!mmId) { $('mmBody').innerHTML = '<div class="card"><div class="empty"><b>Choose a member</b><span>Their best matches appear here, ranked by compatibility both ways.</span></div></div>'; return; }
     var a = member(mmId), c = candidates(a), pr = a.profile;
     $('mmBody').innerHTML = '<div class="card" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">' + av(a).replace('class="av"', 'class="av lg"') +
@@ -768,7 +785,10 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     ['approved', 'Approved members', function(m){ return m.status === 'approved' }],
     ['waiting', 'In review or making changes', function(m){ return m.status === 'pending' || m.status === 'changes' }],
     ['draft', 'Haven\'t submitted a profile yet', function(m){ return m.status === 'draft' }],
-    ['unpaid', 'Haven\'t paid yet', function(m){ return ['approved','rejected','suspended'].indexOf(m.status) < 0 && (m.payment.status === 'none' || m.payment.status === 'rejected') }],
+    ['unpaid', 'Haven\'t paid yet', function(m){ var ms = S.membership(m); return ['rejected','suspended'].indexOf(m.status) < 0 && !ms.paid && !ms.pending }],
+    ['ended', 'Membership ended', function(m){ var ms = S.membership(m); return m.status === 'approved' && ms.paid && !ms.active && !ms.pending }],
+    ['platinum', 'Active Platinum members', function(m){ return S.active(m) && m.plan === 'platinum' }],
+    ['gold', 'Active Gold members', function(m){ return S.active(m) && m.plan === 'gold' }],
     ['women', 'Approved women', function(m){ return m.status === 'approved' && m.profile.gender === 'Woman' }],
     ['men', 'Approved men', function(m){ return m.status === 'approved' && m.profile.gender === 'Man' }],
     ['intl', 'Members from other countries', function(m){ return m.status !== 'rejected' && S.groupOf(m) === 'international' }],
@@ -816,9 +836,9 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   function rInsights(){
     var all = members(), intros = S.all('intros');
     var submitted = all.filter(function(m){ return m.status !== 'draft' }), approved = all.filter(function(m){ return m.status === 'approved' });
-    var paid = all.filter(function(m){ return m.payment.status === 'confirmed' });
+    var paid = all.filter(function(m){ return S.membership(m).paid });
     var introduced = all.filter(function(m){ return intros.some(function(i){ return i.status === 'accepted' && (i.from === m.id || i.to === m.id) }) });
-    var revenue = paid.reduce(function(a, m){ return a + (+m.payment.amount || 0) }, 0);
+    var revenue = payments().filter(function(p){ return p.status === 'confirmed' }).reduce(function(a, p){ return a + (+p.amount || 0) }, 0);
     $('isStats').innerHTML = [
       ['Accounts', all.length, all.filter(function(m){ return Date.now() - m.createdAt < 7 * D }).length + ' new this week'],
       ['Approved', approved.length, pct(approved.length, submitted.length) + '% of submitted profiles'],
@@ -884,18 +904,35 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   });
 
   /* ---------- settings ---------- */
-  var ST = { stFee:'fee', stFeeNote:'feeNote', stBank:'bank', stName:'accountName', stNo:'accountNumber', stReview:'reviewTime', stEmail:'supportEmail' };
-  function fillSettings(){ var s = S.settings(); Object.keys(ST).forEach(function(id){ $(id).value = s[ST[id]] || '' }); $('stErr').hidden = true }
-  function formSettings(){ var o = {}; Object.keys(ST).forEach(function(id){ o[ST[id]] = $(id).value.trim() }); o.fee = o.fee.replace(/[^\d]/g, ''); o.accountNumber = o.accountNumber.replace(/\D/g, ''); return o }
+  var ST = { stBank:'bank', stName:'accountName', stNo:'accountNumber', stParent:'parentCompany', stReview:'reviewTime', stEmail:'supportEmail', stAlert:'alertEmail', stLimit:'goldIntroLimit' };
+  function fillSettings(){
+    var s = S.settings();
+    Object.keys(ST).forEach(function(id){ $(id).value = s[ST[id]] == null ? '' : s[ST[id]] });
+    $('stPrices').innerHTML = S.TERMS.map(function(n){
+      return '<tr><td><b>' + term(n) + '</b></td>' + ['gold','platinum'].map(function(pl){ return '<td><input class="input" style="max-width:140px" inputmode="numeric" data-price="' + pl + ':' + n + '" value="' + S.planPrice(pl, n).weekly + '" aria-label="' + PN[pl] + ', ' + term(n) + ', price per week"><div class="sub" data-total="' + pl + ':' + n + '" style="margin-top:6px"></div></td>' }).join('') + '</tr>' }).join('');
+    $('stErr').hidden = true;
+  }
+  function formSettings(){
+    var o = {}; Object.keys(ST).forEach(function(id){ o[ST[id]] = $(id).value.trim() });
+    o.accountNumber = o.accountNumber.replace(/\D/g, ''); o.goldIntroLimit = Math.max(1, parseInt(o.goldIntroLimit, 10) || 5);
+    o.plans = { gold: {}, platinum: {} };
+    document.querySelectorAll('[data-price]').forEach(function(i){ var k = i.dataset.price.split(':'); o.plans[k[0]][k[1]] = parseInt(i.value.replace(/\D/g, ''), 10) || 0 });
+    return o;
+  }
   function rSettings(){
     var s = formSettings();
-    $('stPrev').innerHTML = '<dt>Amount</dt><dd>' + (s.fee ? naira(s.fee) + (s.feeNote ? ' · ' + esc(s.feeNote) : '') : 'To be confirmed by NSC') + '</dd><dt>Bank</dt><dd>' + esc(s.bank || 'To be confirmed') + '</dd><dt>Account name</dt><dd>' + esc(s.accountName || 'NaijaSinglesConnect') + '</dd><dt>Account number</dt><dd>' + esc(s.accountNumber || 'To be confirmed') + '</dd><dt>Reference</dt><dd>NSC-XXXXXX</dd>';
+    document.querySelectorAll('[data-total]').forEach(function(d){ var k = d.dataset.total.split(':'), w = s.plans[k[0]][k[1]], base = s.plans[k[0]]['1'];
+      d.textContent = naira(w * k[1] * 4) + ' in total' + (base > w && +k[1] !== 1 ? ' · save ' + Math.round((1 - w / base) * 100) + '%' : '') });
+    $('stPrev').innerHTML = '<dt>Platinum, 1 month</dt><dd>' + naira(s.plans.platinum['1'] * 4) + '</dd><dt>Gold, 1 month</dt><dd>' + naira(s.plans.gold['1'] * 4) + '</dd><dt>Bank</dt><dd>' + esc(s.bank || 'To be confirmed') + '</dd><dt>Account name</dt><dd>' + esc(s.accountName) + '</dd><dt>Account number</dt><dd>' + esc(s.accountNumber || 'To be confirmed') + '</dd><dt>Reference</dt><dd>NSC-XXXXXX</dd>' +
+      (s.parentCompany ? '<dt>Note</dt><dd style="font-weight:600">' + esc(s.parentCompany) + ' is the parent company of NaijaSinglesConnect.</dd>' : '');
   }
   $('stForm').addEventListener('input', rSettings);
   $('stForm').addEventListener('submit', function(e){
     e.preventDefault(); var s = formSettings(), err = '';
     if (s.accountNumber && s.accountNumber.length !== 10) err = 'Nigerian account numbers have 10 digits.';
     if (s.supportEmail && !/.+@.+\..+/.test(s.supportEmail)) err = 'Check the support email address.';
+    if (!/.+@.+\..+/.test(s.alertEmail)) err = 'Enter the email address that should receive receipt alerts.';
+    ['gold','platinum'].forEach(function(pl){ S.TERMS.forEach(function(n){ if (!(s.plans[pl][n] > 0)) err = 'Every plan needs a weekly price.' }) });
     $('stErr').hidden = !err; $('stErr').textContent = err; if (err) return;
     S.saveSettings(s).then(function(){ S.log('Settings updated'); toast('Saved. Members see the new details straight away.') }, function(e2){ $('stErr').hidden = false; $('stErr').textContent = 'Could not save: ' + errMsg(e2) });
   });
@@ -921,7 +958,10 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     var m = member(drawerId); if (!m) { closeDrawer(); return; }
     var keepNote = $('noteText') ? $('noteText').value : '', noteFocus = document.activeElement && document.activeElement.id === 'noteText';
     var keepScroll = document.querySelector('.drawer .db') ? document.querySelector('.drawer .db').scrollTop : 0;
-    var pr = m.profile, p = completion(pr), f = m.payment.file, a = S.age(pr.dob);
+    var pr = m.profile, p = completion(pr), a = S.age(pr.dob);
+    var ms = S.membership(m), shown = ms.pending || ms.list.filter(function(x){ return x.file }) [0] || null, f = shown && shown.file;
+    var memLine = ms.active ? 'Active until ' + date(ms.until, true) + ' (' + Math.ceil((ms.until - Date.now()) / D) + ' days left)'
+      : ms.credit ? term(ms.credit) + ' paid. It starts the day the profile is approved.' : ms.paid ? 'Ended on ' + date(ms.until, true) : 'No payment confirmed yet';
     var rows = [['Email', m.email], ['Phone', m.phone], ['Gender', pr.gender], ['Age', a ? a + ' (born ' + pr.dob + ')' : ''], ['Lives in', pr.location], ['Nationality', (pr.nationality || '') + (pr.heritage === 'Yes' ? ' (Nigerian heritage)' : '')], ['Open to', { nigerian:'Nigerians', international:'People from other countries', both:'Nigerians and people from other countries' }[pr.openTo || 'both']], ['State of origin', pr.origin], ['LGA', pr.lga], ['Qualification', pr.qual], ['Occupation', pr.job],
       ['Religion', pr.religion], ['Denomination', pr.denom], ['Faith importance', pr.faithImportance], ['Place of worship', pr.worship], ['Marital status', pr.marital], ['Genotype', pr.genotype], ['Children', pr.children], ['Wants children', pr.wantkids],
       ['Intent', pr.intent], ['Preferred ages', pr.agemin || pr.agemax ? pr.agemin + ' to ' + pr.agemax : ''], ['Partner location', pr.ploc], ['Deal-breakers', (pr.dealbreakers || []).join(', ')], ['Privacy', { full:'Full profile', nophoto:'Without photographs', name:'Name-restricted' }[m.privacy || 'full']]];
@@ -934,7 +974,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     if (m.status === 'suspended') acts = '<button type="button" class="btn btn-primary" data-act="reactivate">Reactivate</button>';
     acts = '<a class="btn btn-ghost" href="#support/' + encodeURIComponent(S.supportThread(m.id)) + '" data-closedrawer>Message</a>' + acts;
     $('layer2').innerHTML = '<div class="scrim" data-closedrawer></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="Member profile">' +
-      '<div class="dh">' + av(m).replace('class="av"', 'class="av lg"') + '<div style="min-width:0"><b style="font-size:1.15rem">' + esc(S.fullName(m)) + '</b><div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">' + pill(STATUS, m.status) + pill(PAY, m.payment.status) + '</div></div><span class="sp"></span><button type="button" class="iconbtn" data-closedrawer aria-label="Close">✕</button></div>' +
+      '<div class="dh">' + av(m).replace('class="av"', 'class="av lg"') + '<div style="min-width:0"><b style="font-size:1.15rem">' + esc(S.fullName(m)) + '</b><div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">' + pill(STATUS, m.status) + memPill(m) + '</div></div><span class="sp"></span><button type="button" class="iconbtn" data-closedrawer aria-label="Close">✕</button></div>' +
       '<div class="db">' +
         (m.adminNote && ['changes','rejected','suspended'].indexOf(m.status) >= 0 ? '<div class="banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><div><b>Last note to member</b><p>' + esc(m.adminNote) + '</p></div></div>' : '') +
         (pr.circle ? '<div class="banner ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><div><b>Private Circle member · sensitive</b><p>This member is living with HIV and has opted into the Private Circle. Never mention this outside the circle or in messages that other people could see.</p></div></div>' : '') +
@@ -942,9 +982,12 @@ window.NSC.ready({ as: 'admin' }).then(function(){
         '<div><b>Photos</b><div class="gallery" style="margin-top:10px">' + [0,1,2].map(function(i){ return pr.photos[i] ? '<img src="' + esc(pr.photos[i]) + '" alt="Photo ' + (i + 1) + '">' : '<div class="ph">No photo</div>' }).join('') + '</div></div>' +
         (pr.bio ? '<div><b>About me</b><p style="margin:6px 0 0">' + esc(pr.bio) + '</p></div>' : '') +
         (pr.lookfor ? '<div><b>The partner they hope for</b><p style="margin:6px 0 0">' + esc(pr.lookfor) + '</p></div>' : '') +
-        '<div><b>Payment</b><div class="receipt" style="margin-top:10px">' + (f && (f.dataUrl || f.path) ? '<div id="rcptBox"><p class="sub" style="padding:14px">Loading receipt…</p></div>' : '') +
-          '<div class="meta"><span>Reference <b>' + esc(m.payment.ref) + '</b>' + (f ? ' · ' + esc(f.name) + ' · ' + esc(f.size) : ' · No receipt uploaded') + (m.payment.amount ? ' · ' + naira(m.payment.amount) : '') + (f && !f.dataUrl && !f.path ? ' <span class="sub">(preview not stored)</span>' : '') + '</span>' +
-          (m.payment.status === 'uploaded' ? '<span style="display:flex;gap:8px"><button type="button" class="btn btn-ghost btn-sm" data-payrej="' + m.id + '">Reject receipt</button><button type="button" class="btn btn-primary btn-sm" data-payok="' + m.id + '">Confirm payment</button></span>' : pill(PAY, m.payment.status)) + '</div></div></div>' +
+        '<div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b>Membership</b>' + memPill(m) + '</div><p class="sub" style="margin:6px 0 0">' + memLine + ' · Reference <b>' + esc(m.payment.ref) + '</b></p>' +
+          (shown ? '<div class="receipt" style="margin-top:10px">' + (f && (f.dataUrl || f.path) ? '<div id="rcptBox"><p class="sub" style="padding:14px">Loading receipt…</p></div>' : '') +
+            '<div class="meta"><span><b>' + PN[shown.plan] + ', ' + term(shown.months) + '</b> · ' + (shown.amount ? naira(shown.amount) : 'no charge') + (f ? ' · ' + esc(f.name) : '') + (f && !f.dataUrl && !f.path ? ' <span class="sub">(preview not stored)</span>' : '') + '</span>' +
+            (shown.status === 'uploaded' ? '<span style="display:flex;gap:8px"><button type="button" class="btn btn-ghost btn-sm" data-payrej="' + shown.id + '">Reject receipt</button><button type="button" class="btn btn-primary btn-sm" data-payok="' + shown.id + '">Confirm payment</button></span>' : pill(PAY, shown.status)) + '</div></div>' : '') +
+          (ms.list.length > 1 || (ms.list.length && !shown) ? '<ul class="feed" style="margin-top:8px">' + ms.list.filter(function(x){ return x !== shown }).map(function(x){ return '<li><span>' + PN[x.plan] + ', ' + term(x.months) + ' · ' + (x.amount ? naira(x.amount) : esc(x.note || 'Added by the team')) + ' · ' + PAY[x.status][1] + '</span><time>' + date(x.createdAt) + '</time></li>' }).join('') + '</ul>' : '') +
+          '<button type="button" class="btn btn-ghost btn-sm" id="grantAsk" style="margin-top:12px">Add months manually</button></div>' +
         '<div><b>Team notes</b> <span class="sub">Only the team sees these.</span>' +
           (notes.length ? '<div class="notes">' + notes.map(function(n){ return '<div class="note"><p>' + esc(n.body) + '</p><span>' + esc(n.by || 'Team') + ' · ' + S.ago(n.at) + '</span></div>' }).join('') + '</div>' : '') +
           '<div class="noteadd"><textarea id="noteText" rows="2" maxlength="2000" placeholder="Add a note, e.g. called to confirm details" aria-label="New team note"></textarea><button type="button" class="btn btn-ghost btn-sm" id="noteAdd">Add note</button></div></div>' +
@@ -955,6 +998,23 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     document.querySelector('.drawer .db').scrollTop = keepScroll;
     if (f && (f.dataUrl || f.path)) showReceipt(f, m.id);
   }
+  /* for cash payments, gifts or corrections: adds a confirmed, no-charge payment */
+  document.addEventListener('click', function(e){
+    if (e.target.id === 'grantAsk') {
+      var gm = member(drawerId);
+      modal('<h3>Add months for ' + esc(gm.profile.first) + '</h3><div class="fields"><div class="field"><label for="gPlan">Plan</label><select id="gPlan"><option value="platinum">Platinum</option><option value="gold">Gold</option></select></div>' +
+        '<div class="field"><label for="gMonths">Length</label><select id="gMonths"><option value="1">1 month</option><option value="3">3 months</option><option value="12">12 months</option></select></div>' +
+        '<div class="field full"><label for="gNote">Reason</label><input id="gNote" placeholder="e.g. Paid in cash at the office"></div></div>' +
+        '<p class="sub">' + (gm.status === 'approved' ? 'The months are added to the end of their current membership.' : 'The months start the day their profile is approved.') + '</p>' +
+        '<div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-primary" id="grantGo">Add months</button></div>');
+    }
+    if (e.target.id === 'grantGo') {
+      var who = member(drawerId), plan = $('gPlan').value, months = +$('gMonths').value, note = $('gNote').value.trim() || 'Added by the NSC team';
+      S.grantMembership(who.id, plan, months, note);
+      S.send(S.supportThread(who.id), 'admin', 'Hi ' + who.profile.first + ', we have added ' + term(months) + ' of ' + PN[plan] + ' to your membership.');
+      S.log('Added ' + term(months) + ' of ' + PN[plan] + ' for ' + S.fullName(who) + ' (' + note + ')'); closeModal(); toast('Membership updated');
+    }
+  });
   document.addEventListener('click', function(e){
     if (e.target.id === 'noteAdd') { var t = $('noteText'), body = t.value.trim(); if (!body) { t.focus(); return } t.value = ''; addNote(drawerId, body); toast('Note added') }
   });
@@ -979,7 +1039,8 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     var data = {
       exportedAt: new Date().toISOString(), service: 'NaijaSinglesConnect',
       account: { email: m.email, phone: m.phone, status: m.status, joined: iso(m.createdAt), submitted: iso(m.submittedAt), approved: iso(m.approvedAt), privacySetting: m.privacy,
-        payment: { status: m.payment.status, reference: m.payment.ref, uploaded: iso(m.payment.uploadedAt), confirmed: iso(m.payment.confirmedAt), amount: m.payment.amount || null } },
+        paymentReference: m.payment.ref, membership: { plan: m.plan, activeUntil: iso(m.paidUntil), monthsWaitingForApproval: m.creditMonths || 0 },
+        payments: S.paymentsOf(m.id).map(function(x){ return { plan: x.plan, months: x.months, amount: x.amount, status: x.status, note: x.note, uploaded: iso(x.createdAt), reviewed: iso(x.reviewedAt) } }) },
       profile: Object.assign({}, m.profile),
       introductions: S.all('intros').filter(function(i){ return i.from === m.id || i.to === m.id }).map(function(i){ return { direction: i.from === m.id ? 'sent' : 'received', status: i.status, note: i.from === m.id ? i.note : '', created: iso(i.createdAt), answered: iso(i.respondedAt) } }),
       messagesTheySent: S.all('messages').filter(function(x){ return x.from === m.id && x.thread !== S.supportThread(m.id) }).map(function(x){ return { at: iso(x.at), body: x.body } }),
@@ -1014,8 +1075,10 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     var b = e.target.closest('[data-act]'); if (!b) return;
     var m = member(drawerId), act = b.dataset.act;
     if (act === 'approve') {
-      var payTxt = m.payment.status === 'confirmed' ? '' : '<label style="display:flex;gap:10px;align-items:center;font-size:.95rem"><input type="checkbox" id="apPay"' + (m.payment.status === 'uploaded' ? ' checked' : '') + ' style="width:18px;height:18px;accent-color:var(--green)">Also mark payment ' + esc(m.payment.ref) + ' as confirmed</label>' + (m.payment.status === 'none' ? '<div class="banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div><b>No receipt yet</b><p>This member hasn\'t uploaded a payment receipt.</p></div></div>' : '');
-      modal('<h3>Approve ' + esc(m.profile.first) + '?</h3><p class="sub">They will see their matches straight away and other approved members will be able to find them.</p>' + payTxt + '<div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-primary" id="apGo">Approve</button></div>');
+      var ms = S.membership(m), payTxt = '';
+      if (ms.pending) payTxt = '<label style="display:flex;gap:10px;align-items:center;font-size:.95rem"><input type="checkbox" id="apPay" checked style="width:18px;height:18px;accent-color:var(--green)">Also confirm the receipt for ' + PN[ms.pending.plan] + ', ' + term(ms.pending.months) + ' (' + naira(ms.pending.amount) + ')</label>';
+      else if (!ms.paid) payTxt = '<div class="banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div><b>No payment yet</b><p>They can be approved now, but they\'ll only see matches once they choose a plan and you confirm the receipt.</p></div></div>';
+      modal('<h3>Approve ' + esc(m.profile.first) + '?</h3><p class="sub">' + (ms.paid || ms.pending ? 'Their membership starts today, and other active members will be able to find them.' : 'Their profile is approved. Matches open once they pay.') + '</p>' + payTxt + '<div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-primary" id="apGo">Approve</button></div>');
       return;
     }
     if (act === 'reactivate') {
@@ -1029,8 +1092,9 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   document.addEventListener('click', function(e){
     var m = drawerId && member(drawerId);
     if (e.target.id === 'apGo') {
-      var pay = $('apPay') && $('apPay').checked;
-      S.update('members', m.id, function(r){ r.status = 'approved'; r.approvedAt = Date.now(); r.adminNote = ''; if (pay) markPaid(r) });
+      var pay = $('apPay') && $('apPay').checked, pend = S.membership(m).pending;
+      if (pay && pend) confirmPay(pend.id, true);
+      S.update('members', m.id, function(r){ r.status = 'approved'; r.approvedAt = Date.now(); r.adminNote = ''; S.applyCredit(r) });
       S.send(S.supportThread(m.id), 'admin', 'Good news, ' + m.profile.first + '! Your profile has been approved. Your matches are ready on your dashboard.');
       S.onApproved(m.id); S.log(S.fullName(m) + ' was approved'); closeModal(); toast(m.profile.first + ' is approved');
     }
@@ -1045,10 +1109,10 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     var ok = e.target.closest('[data-payok]'), rj = e.target.closest('[data-payrej]');
     if (ok) confirmPay(ok.dataset.payok);
     if (rj) {
-      var who = member(rj.dataset.payrej);
-      modal('<h3>Reject receipt</h3><div class="field"><label for="pyNote">Message to ' + esc(who.profile.first) + '</label><textarea id="pyNote">We could not match your receipt to a payment in our account. Please check the reference ' + esc(who.payment.ref) + ' and upload the receipt again.</textarea></div><div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-danger" id="pyGo" data-who="' + who.id + '">Reject receipt</button></div>');
+      var rp = S.get('payments', rj.dataset.payrej), who = member(rp.member);
+      modal('<h3>Reject receipt</h3><p class="sub">' + PN[rp.plan] + ', ' + term(rp.months) + ' · ' + naira(rp.amount) + ' due</p><div class="field"><label for="pyNote">Message to ' + esc(who.profile.first) + '</label><textarea id="pyNote">We could not match your receipt to a payment of ' + naira(rp.amount) + ' in our account. Please check the amount and the reference ' + esc(rp.ref || who.payment.ref) + ', then upload the receipt again.</textarea></div><div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-danger" id="pyGo" data-pid="' + rp.id + '">Reject receipt</button></div>');
     }
-    if (e.target.id === 'pyGo') { rejectPay(e.target.dataset.who, $('pyNote').value.trim()); closeModal() }
+    if (e.target.id === 'pyGo') { rejectPay(e.target.dataset.pid, $('pyNote').value.trim()); closeModal() }
   });
 
   /* mobile: every section from the "More" tab */

@@ -79,9 +79,27 @@ Add `?demo=1` to any address (for example `/admin?demo=1`) to switch that browse
 - Demo team login at `/admin?demo=1`: `admin@naijasinglesconnect.com`, password `Admin1234`
 - "Reset demo data" in the admin sidebar (demo mode only) restores the sample data.
 
+## Memberships
+- Gold and Platinum, for 1, 3 or 12 months, priced per week (a month counts as 4 weeks). Prices, the Gold introduction limit and the bank details are edited in `/admin` > Settings.
+- Members pay by bank transfer to Best of Nature Ventures (NSC's parent company) and upload the receipt. Each receipt is a row in `payments`; the database sets the amount from the current prices.
+- When the team confirms a receipt, the database extends `members.paid_until`. Months paid before approval are held in `credit_months` and start on approval day.
+- Matches, introductions and messages between members need an active membership (`private.is_active`). Support messages always work.
+- Gold members can send a set number of introduction requests every 30 days; Platinum is unlimited. The database enforces both.
+
+## Email notifications (Resend)
+The database sends each event to the `notify` Edge Function, which emails through Resend:
+- to the team (Settings > alert email): every receipt upload, and new support messages (at most one per conversation an hour)
+- to members: payment confirmed or rejected, profile approved / changes requested / rejected / paused, new match, introduction request, introduction accepted, new message (at most one per conversation every 6 hours), a message from the team, membership ending in 3 days, and membership ended. Broadcasts never send email.
+
+To switch it on:
+1. Verify `naijasinglesconnect.com` in Resend (the DNS records go in Cloudflare).
+2. In the SQL Editor run `select value from private.config where key = 'notify_secret';` and copy the value.
+3. Supabase > Edge Functions > Secrets: add `RESEND_API_KEY` (your Resend key) and `NOTIFY_SECRET` (the value from step 2).
+4. Deploy: `npx supabase login`, then `npx supabase functions deploy notify --project-ref mnojvwqrlagezgiirbpt --no-verify-jwt`.
+
 ## Still to connect
-- **Resend:** confirmation, approval and password-reset emails. Until then, Supabase's built-in email sends reset links, with a low hourly limit.
-- **Payments:** Paystack or Flutterwave, when the client is ready.
+- **Branded sign-up emails:** deploy `send-email` the same way and turn on the Send Email hook. Until then, Supabase's built-in email sends the codes.
+- **Card payments:** Paystack or Flutterwave, when the client is ready.
 
 ## Run locally
 ```

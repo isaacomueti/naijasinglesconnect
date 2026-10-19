@@ -101,6 +101,30 @@ create table if not exists public.admins (
   user_id uuid primary key references auth.users(id) on delete cascade
 );
 
+-- Membership: plan bought, when it runs out, and months paid for before approval
+-- (they start counting on the day the profile is approved).
+alter table public.members add column if not exists plan text check (plan in ('gold','platinum'));
+alter table public.members add column if not exists paid_until timestamptz;
+alter table public.members add column if not exists credit_months int not null default 0;
+-- quiet messages (broadcasts) never trigger an email
+alter table public.messages add column if not exists quiet boolean not null default false;
+
+-- One row per bank transfer receipt. The amount is set by the database from the plan prices.
+create table if not exists public.payments (
+  id           uuid primary key default gen_random_uuid(),
+  member_id    uuid not null references public.members(id) on delete cascade,
+  plan         text not null check (plan in ('gold','platinum')),
+  months       int  not null check (months in (1,3,12)),
+  amount       int  not null default 0,
+  ref          text not null default '',
+  file         jsonb,
+  status       text not null default 'uploaded' check (status in ('uploaded','confirmed','rejected')),
+  note         text not null default '',
+  created_at   timestamptz not null default now(),
+  reviewed_at  timestamptz
+);
+create index if not exists payments_member_idx on public.payments(member_id, created_at);
+
 -- ---------------------------------------------------------------------
 -- Helper functions (security definer so policies can use them safely)
 -- ---------------------------------------------------------------------
@@ -112,6 +136,12 @@ $$;
 create or replace function private.is_approved(uid uuid) returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (select 1 from public.members where id = uid and status = 'approved');
+$$;
+
+-- approved and inside a paid membership period
+create or replace function private.is_active(uid uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.members where id = uid and status = 'approved' and paid_until > now());
 $$;
 
 create or replace function private.in_circle(uid uuid) returns boolean
@@ -130,7 +160,7 @@ $$;
 create or replace function private.eligible(a uuid, b uuid) returns boolean
 language sql stable security definer set search_path = public as $$
   select a <> b
-     and private.is_approved(a) and private.is_approved(b)
+     and private.is_active(a) and private.is_active(b)
      and private.in_circle(a) = private.in_circle(b)
      and exists (
        select 1 from public.profiles pa, public.profiles pb
@@ -183,7 +213,8 @@ begin
   if new.status <> old.status and not (old.status in ('draft','changes','rejected') and new.status = 'pending') then
     raise exception 'Only the NSC team can change your status';
   end if;
-  if new.admin_note is distinct from old.admin_note or new.approved_at is distinct from old.approved_at or new.email <> old.email then
+  if new.admin_note is distinct from old.admin_note or new.approved_at is distinct from old.approved_at or new.email <> old.email
+     or new.plan is distinct from old.plan or new.paid_until is distinct from old.paid_until or new.credit_months <> old.credit_months then
     raise exception 'That field can only be changed by the NSC team';
   end if;
   if (new.payment->>'status') = 'confirmed' and (old.payment->>'status') is distinct from 'confirmed' then
@@ -207,11 +238,20 @@ begin
     if not private.is_admin() and not private.eligible(new.from_id, new.to_id) then
       raise exception 'You can only request introductions to your matches';
     end if;
+    -- Gold includes a set number of requests every 30 days; Platinum is unlimited
+    if not private.is_admin() and (select plan from public.members where id = new.from_id) = 'gold'
+       and (select count(*) from public.intros where from_id = new.from_id and created_at > now() - interval '30 days')
+           >= coalesce((select (data->>'goldIntroLimit')::int from public.settings where id = 1), 5) then
+      raise exception 'You have used this month''s introduction requests on Gold. Upgrade to Platinum for unlimited requests.';
+    end if;
     new.status := 'pending';
     return new;
   end if;
   if not private.is_admin() and auth.uid() <> old.to_id then
     raise exception 'Only the person who received this request can answer it';
+  end if;
+  if new.status = 'accepted' and old.status <> 'accepted' and not private.is_admin() and not private.is_active(auth.uid()) then
+    raise exception 'Renew your membership to accept introductions';
   end if;
   if new.status = 'accepted' and old.status <> 'accepted' then
     insert into public.messages(thread, from_id, body)
@@ -294,7 +334,7 @@ create policy "messages: write your threads" on public.messages for insert with 
   or (from_id = auth.uid()::text and (
         thread = 'support:' || auth.uid()
         or exists (select 1 from public.intros i where i.id::text = messages.thread and i.status = 'accepted' and auth.uid() in (i.from_id, i.to_id)
-                   and not exists (select 1 from public.members m where m.id = auth.uid() and m.status = 'suspended'))
+                   and private.is_active(auth.uid()))
   ))
 );
 
@@ -320,6 +360,7 @@ do $$ begin
   begin alter publication supabase_realtime add table public.reports;  exception when others then null; end;
   begin alter publication supabase_realtime add table public.profiles; exception when others then null; end;
   begin alter publication supabase_realtime add table public.circle_members; exception when others then null; end;
+  begin alter publication supabase_realtime add table public.payments; exception when others then null; end;
 end $$;
 
 -- ---------------------------------------------------------------------
@@ -449,6 +490,241 @@ drop policy if exists "storage: team read"   on storage.objects;
 drop policy if exists "storage: team delete" on storage.objects;
 create policy "storage: team read"   on storage.objects for select to authenticated using (bucket_id in ('photos','receipts') and private.is_admin());
 create policy "storage: team delete" on storage.objects for delete to authenticated using (bucket_id in ('photos','receipts') and private.is_admin());
+
+-- ---------------------------------------------------------------------
+-- Memberships and payments
+-- Gold and Platinum, for 1, 3 or 12 months, priced per week (a month counts
+-- as 4 weeks). Prices live in settings so the team can change them in /admin.
+-- ---------------------------------------------------------------------
+update public.settings set data = data || jsonb_build_object(
+    'bank', 'Zenith Bank', 'accountName', 'Best of Nature Ventures', 'accountNumber', '1012169172',
+    'parentCompany', 'Best of Nature Ventures', 'alertEmail', 'justlynnonme@yahoo.com', 'goldIntroLimit', 5,
+    'plans', jsonb_build_object('gold',     jsonb_build_object('1', 1500, '3', 1000, '12', 500),
+                                'platinum', jsonb_build_object('1', 2250, '3', 1500, '12', 750)))
+  where id = 1 and not (data ? 'plans');
+
+create or replace function private.plan_price(p_plan text, p_months int) returns int
+language sql stable security definer set search_path = public as $$
+  select coalesce((select (data->'plans'->p_plan->>p_months::text)::int from public.settings where id = 1),
+                  case p_plan when 'platinum' then case p_months when 12 then 750 when 3 then 1500 else 2250 end
+                              else case p_months when 12 then 500 when 3 then 1000 else 1500 end end) * p_months * 4;
+$$;
+
+-- Members can only file a receipt for themselves, at the listed price, one at a time.
+-- A team decision on a receipt is final.
+create or replace function private.payment_before() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'INSERT' then
+    if not private.is_admin() then
+      if new.member_id is distinct from auth.uid() then raise exception 'You can only pay for your own membership'; end if;
+      if exists (select 1 from public.payments where member_id = new.member_id and status = 'uploaded') then
+        raise exception 'Your last receipt is still being checked. Cancel it first to choose another plan.';
+      end if;
+      new.status := 'uploaded'; new.note := ''; new.reviewed_at := null;
+      new.amount := private.plan_price(new.plan, new.months);
+    elsif new.status <> 'uploaded' then
+      new.reviewed_at := now();
+    end if;
+    new.ref := coalesce((select payment->>'ref' from public.members where id = new.member_id), '');
+    new.created_at := now();
+    return new;
+  end if;
+  if old.status <> 'uploaded' and new.status <> old.status then raise exception 'This payment has already been reviewed'; end if;
+  if new.status <> old.status then new.reviewed_at := now(); end if;
+  return new;
+end $$;
+drop trigger if exists payment_before on public.payments;
+create trigger payment_before before insert or update on public.payments
+  for each row execute function private.payment_before();
+
+-- A confirmed payment extends the membership. Before approval the months are held
+-- as credit and start on the day the profile is approved.
+create or replace function private.payment_after() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare m public.members; who text; first text;
+begin
+  select * into m from public.members where id = new.member_id;
+  select coalesce(profile->>'first', '') into first from public.profiles where id = new.member_id;
+  who := trim(first || ' ' || coalesce((select profile->>'last' from public.profiles where id = new.member_id), ''));
+  if tg_op = 'INSERT' and new.status = 'uploaded' then
+    insert into public.activity(text) values (coalesce(nullif(who, ''), m.email) || ' uploaded a receipt for ' || initcap(new.plan) || ', ' || new.months || ' months');
+    perform private.notify('receipt', jsonb_build_object('to', private.alert_email(), 'name', coalesce(nullif(who, ''), m.email), 'email', m.email,
+      'plan', new.plan, 'months', new.months, 'amount', new.amount, 'ref', new.ref));
+  end if;
+  if new.status = 'confirmed' and (tg_op = 'INSERT' or old.status <> 'confirmed') then
+    if m.status = 'approved' then
+      update public.members set plan = new.plan,
+        paid_until = greatest(coalesce(paid_until, now()), now()) + make_interval(months => new.months) where id = new.member_id;
+    else
+      update public.members set plan = new.plan, credit_months = credit_months + new.months where id = new.member_id;
+    end if;
+    perform private.notify('paid', jsonb_build_object('to', m.email, 'first', first, 'plan', new.plan, 'months', new.months, 'amount', new.amount,
+      'until', (select paid_until from public.members where id = new.member_id), 'approved', m.status = 'approved'));
+  end if;
+  if tg_op = 'UPDATE' and new.status = 'rejected' and old.status <> 'rejected' then
+    perform private.notify('receipt_rejected', jsonb_build_object('to', m.email, 'first', first, 'note', new.note));
+  end if;
+  return null;
+end $$;
+drop trigger if exists payment_after on public.payments;
+create trigger payment_after after insert or update on public.payments
+  for each row execute function private.payment_after();
+
+-- months paid before approval start counting on approval day
+create or replace function private.member_membership() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.status = 'approved' and old.status <> 'approved' and new.credit_months > 0 then
+    new.paid_until := greatest(coalesce(new.paid_until, now()), now()) + make_interval(months => new.credit_months);
+    new.credit_months := 0;
+  end if;
+  return new;
+end $$;
+drop trigger if exists member_membership on public.members;
+create trigger member_membership before update on public.members
+  for each row execute function private.member_membership();
+
+alter table public.payments enable row level security;
+drop policy if exists "payments: own or team read"   on public.payments;
+drop policy if exists "payments: add own or team"    on public.payments;
+drop policy if exists "payments: team review"        on public.payments;
+drop policy if exists "payments: cancel own pending" on public.payments;
+create policy "payments: own or team read"   on public.payments for select using (member_id = auth.uid() or private.is_admin());
+create policy "payments: add own or team"    on public.payments for insert with check (member_id = auth.uid() or private.is_admin());
+create policy "payments: team review"        on public.payments for update using (private.is_admin()) with check (private.is_admin());
+create policy "payments: cancel own pending" on public.payments for delete using ((member_id = auth.uid() and status = 'uploaded') or private.is_admin());
+
+-- ---------------------------------------------------------------------
+-- Email notifications
+-- The database posts each event to the "notify" Edge Function, which sends
+-- the email through Resend. Copy the secret this creates into the function:
+--   select value from private.config where key = 'notify_secret';
+-- ---------------------------------------------------------------------
+create extension if not exists pg_net;
+create table if not exists private.config (key text primary key, value text not null);
+revoke all on private.config from anon, authenticated;
+insert into private.config values ('notify_url', 'https://mnojvwqrlagezgiirbpt.supabase.co/functions/v1/notify') on conflict (key) do nothing;
+insert into private.config values ('notify_secret', replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')) on conflict (key) do nothing;
+
+create or replace function private.alert_email() returns text
+language sql stable security definer set search_path = public as $$
+  select coalesce(nullif((select data->>'alertEmail' from public.settings where id = 1), ''), 'justlynnonme@yahoo.com');
+$$;
+
+-- never lets an email problem stop the change that caused it
+create or replace function private.notify(p_kind text, p jsonb) returns void
+language plpgsql security definer set search_path = public as $$
+declare u text; s text;
+begin
+  select value into u from private.config where key = 'notify_url';
+  select value into s from private.config where key = 'notify_secret';
+  if u is null or s is null or coalesce(p->>'to', '') = '' then return; end if;
+  perform net.http_post(url := u, body := jsonb_build_object('kind', p_kind) || p,
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-nsc-secret', s));
+exception when others then
+  raise warning 'NSC email not sent (%): %', p_kind, sqlerrm;
+end $$;
+
+create or replace function private.first_of(uid uuid) returns text
+language sql stable security definer set search_path = public as $$
+  select coalesce((select profile->>'first' from public.profiles where id = uid), '');
+$$;
+
+-- profile decisions, and "you have a new match" for everyone who can now see a newly active member
+create or replace function private.member_notify() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare was boolean; now_on boolean; g text; list jsonb;
+begin
+  if new.status <> old.status and new.status in ('approved','changes','rejected','suspended') then
+    perform private.notify('status', jsonb_build_object('to', new.email, 'first', private.first_of(new.id), 'status', new.status,
+      'note', new.admin_note, 'until', new.paid_until, 'active', new.paid_until > now(), 'credit', new.credit_months > 0));
+  end if;
+  was := old.status = 'approved' and coalesce(old.paid_until > now(), false);
+  now_on := new.status = 'approved' and coalesce(new.paid_until > now(), false);
+  if now_on and not was then
+    select profile->>'gender' into g from public.profiles where id = new.id;
+    select coalesce(jsonb_agg(o.email), '[]'::jsonb) into list from (
+      select m.email from public.members m join public.profiles p on p.id = m.id
+      where m.id <> new.id and private.eligible(new.id, m.id)
+        and (g is null or g = '' or coalesce(p.profile->>'gender', '') in ('', case g when 'Man' then 'Woman' when 'Woman' then 'Man' else g end))
+        and not exists (select 1 from public.intros i where (i.from_id = new.id and i.to_id = m.id) or (i.to_id = new.id and i.from_id = m.id))
+      limit 100) o;
+    if jsonb_array_length(list) > 0 then perform private.notify('new_match', jsonb_build_object('to', list)); end if;
+  end if;
+  return null;
+end $$;
+drop trigger if exists member_notify on public.members;
+create trigger member_notify after update on public.members
+  for each row execute function private.member_notify();
+
+create or replace function private.intro_notify() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'INSERT' then
+    perform private.notify('intro_request', jsonb_build_object('to', (select email from public.members where id = new.to_id), 'first', private.first_of(new.to_id)));
+  elsif new.status = 'accepted' and old.status <> 'accepted' then
+    perform private.notify('intro_accepted', jsonb_build_object('to', (select email from public.members where id = new.from_id),
+      'first', private.first_of(new.from_id), 'other', private.first_of(new.to_id)));
+  end if;
+  return null;
+end $$;
+drop trigger if exists intro_notify on public.intros;
+create trigger intro_notify after insert or update on public.intros
+  for each row execute function private.intro_notify();
+
+-- New messages, at most one email per conversation every few hours so people aren't flooded
+create or replace function private.message_notify() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare mid uuid; i public.intros; other uuid;
+begin
+  if new.quiet or new.from_id = 'system' then return null; end if;
+  if new.thread like 'support:%' then
+    mid := substr(new.thread, 9)::uuid;
+    if new.from_id = 'admin' then
+      -- skip the automatic welcome message sent at sign-up
+      if exists (select 1 from public.members where id = mid and created_at > now() - interval '15 minutes') then return null; end if;
+      if exists (select 1 from public.messages where thread = new.thread and from_id = 'admin' and id <> new.id and at > now() - interval '6 hours') then return null; end if;
+      perform private.notify('team_message', jsonb_build_object('to', (select email from public.members where id = mid), 'first', private.first_of(mid), 'preview', left(new.body, 220)));
+    else
+      if exists (select 1 from public.messages where thread = new.thread and from_id <> 'admin' and id <> new.id and at > now() - interval '1 hour') then return null; end if;
+      perform private.notify('support_in', jsonb_build_object('to', private.alert_email(),
+        'name', trim(private.first_of(mid) || ' ' || coalesce((select profile->>'last' from public.profiles where id = mid), '')), 'preview', left(new.body, 220)));
+    end if;
+    return null;
+  end if;
+  select * into i from public.intros where id::text = new.thread;
+  if i.id is null then return null; end if;
+  other := case when new.from_id = i.from_id::text then i.to_id else i.from_id end;
+  if exists (select 1 from public.messages where thread = new.thread and from_id = new.from_id and id <> new.id and at > now() - interval '6 hours') then return null; end if;
+  perform private.notify('member_message', jsonb_build_object('to', (select email from public.members where id = other),
+    'first', private.first_of(other), 'other', private.first_of(new.from_id::uuid)));
+  return null;
+end $$;
+drop trigger if exists message_notify on public.messages;
+create trigger message_notify after insert on public.messages
+  for each row execute function private.message_notify();
+
+-- daily reminders: 3 days before a membership ends, and the day after it ends
+create or replace function private.membership_reminders() returns void
+language plpgsql security definer set search_path = public as $$
+declare r record;
+begin
+  for r in select id, email, plan, paid_until from public.members where status = 'approved'
+             and paid_until between now() + interval '3 days' and now() + interval '4 days' loop
+    perform private.notify('expiring', jsonb_build_object('to', r.email, 'first', private.first_of(r.id), 'plan', r.plan, 'until', r.paid_until));
+  end loop;
+  for r in select id, email, plan, paid_until from public.members where status = 'approved'
+             and paid_until between now() - interval '1 day' and now() loop
+    perform private.notify('expired', jsonb_build_object('to', r.email, 'first', private.first_of(r.id), 'plan', r.plan, 'until', r.paid_until));
+  end loop;
+end $$;
+do $$ begin
+  create extension if not exists pg_cron;
+  perform cron.unschedule(jobid) from cron.job where jobname = 'nsc-membership-reminders';
+  perform cron.schedule('nsc-membership-reminders', '0 8 * * *', 'select private.membership_reminders()');
+exception when others then raise notice 'Membership reminders were not scheduled: %', sqlerrm;
+end $$;
 
 -- ---------------------------------------------------------------------
 -- Make yourself an admin (run once, after creating your team login):

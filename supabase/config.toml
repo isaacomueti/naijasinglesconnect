@@ -4,3 +4,7 @@ project_id = "mnojvwqrlagezgiirbpt"
 [functions.send-email]
 # Supabase signs auth hook calls itself, so the function must not require a user JWT.
 verify_jwt = false
+
+[functions.notify]
+# Called by the database with a shared secret (see private.notify in schema.sql), not a user JWT.
+verify_jwt = false
