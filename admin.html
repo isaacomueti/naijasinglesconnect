@@ -22,19 +22,96 @@
 .feed li:last-child{border-bottom:0}
 .feed li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--gold)}
 .feed time{font-size:.8rem;color:var(--ink-3);white-space:nowrap}
+.feed .dayhd{display:block;padding:18px 0 6px;border:0;font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.feed .dayhd::before{display:none}
 .qrow{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}
 .qrow:last-child{border-bottom:0}
 .qrow b{display:block}
 .qrow span{font-size:.85rem;color:var(--ink-2)}
 .meter{height:6px;border-radius:6px;background:var(--panel-2);overflow:hidden;width:90px}
 .meter i{display:block;height:100%;background:var(--green)}
-.side{background:var(--green-deep);border-right:0}
-.side .navlist a{color:rgba(248,245,240,.75)}
+.side{background:var(--green-deep);border-right:0;gap:20px}
+.side .navlist{gap:2px}
+.side .navlist a{color:rgba(248,245,240,.75);padding:10px 14px}
 .side .navlist a:hover{background:rgba(248,245,240,.08);color:#F8F5F0}
 .side .navlist a[aria-current="page"]{background:rgba(248,245,240,.12);color:#F8F5F0}
+.side .navhd{margin:12px 14px 4px;font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(248,245,240,.45);list-style:none}
+.side .navhd:first-child{margin-top:0}
 .side .help{background:rgba(248,245,240,.08);color:rgba(248,245,240,.75)}
 .side .help b{color:#F8F5F0}
 .side .tag{color:var(--gold)}
+
+/* global member search */
+.gsearch{position:relative;flex:1;max-width:380px;margin-left:auto}
+.gsearch .input{border-radius:999px;padding:10px 16px}
+.gres{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 24px 48px -24px rgba(0,0,0,.35);padding:6px;z-index:35;display:grid}
+.gres button{display:flex;gap:12px;align-items:center;text-align:left;border:0;background:none;padding:8px 10px;border-radius:12px;cursor:pointer;color:var(--ink)}
+.gres button:hover,.gres button:focus-visible{background:var(--panel-2)}
+.gres .none{padding:12px;color:var(--ink-2);font-size:.9rem}
+.top .sp{display:none}
+
+/* plain tables: rows aren't one click target */
+table.t.plain tbody tr{cursor:default}
+.linkp{border:0;background:none;padding:0;cursor:pointer;text-align:left;color:inherit;font:inherit}
+.linkp:hover b{color:var(--green)}
+.arrow{color:var(--ink-3);font-weight:800}
+
+/* matchmaker */
+.mm{display:grid;grid-template-columns:320px minmax(0,1fr);gap:24px;align-items:start}
+.mm .pick{display:grid;gap:12px;position:sticky;top:90px}
+.mm .plist{display:grid;gap:2px;max-height:calc(100vh - 300px);overflow-y:auto;margin:0 -8px;padding:0 8px}
+.mm .plist button{display:flex;gap:12px;align-items:center;width:100%;text-align:left;border:0;background:none;padding:8px;border-radius:12px;cursor:pointer;color:var(--ink)}
+.mm .plist button:hover{background:var(--panel-2)}
+.mm .plist button[aria-current="true"]{background:var(--green-tint)}
+.mm .plist b{display:block;font-size:.95rem}
+.mm .plist span{display:block;font-size:.8rem;color:var(--ink-2)}
+.cand{display:grid;grid-template-columns:64px 1fr auto;gap:16px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px 18px 14px 14px}
+.cand .av{width:64px;height:64px;border-radius:16px;font-size:1.1rem}
+.cand .score{font-weight:800;color:var(--green);font-variant-numeric:tabular-nums}
+.cand .chips{margin-top:8px}
+@media (max-width:1100px){.mm{grid-template-columns:1fr}.mm .pick{position:static}.mm .plist{max-height:260px}}
+@media (max-width:560px){.cand{grid-template-columns:52px 1fr}.cand .av{width:52px;height:52px}.cand > :last-child{grid-column:1/-1}}
+
+/* charts: single series in NSC green; values in ink */
+.bars{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;align-items:end;height:180px;border-bottom:1px solid var(--line)}
+.bars .col{height:100%;display:flex;align-items:flex-end;cursor:default;outline-offset:0}
+.bars .col i{display:block;width:100%;background:var(--green);border-radius:4px 4px 0 0;min-height:2px;transition:background .15s}
+.bars .col:hover i,.bars .col:focus-visible i{background:var(--green-deep)}
+.barx{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:2px;margin-top:8px;font-size:.72rem;color:var(--ink-3);text-align:center}
+.hbars{display:grid;gap:12px}
+.hb{display:grid;grid-template-columns:minmax(90px,150px) 1fr auto;gap:12px;align-items:center;font-size:.9rem}
+.hb .tr{height:10px;background:var(--panel-2);border-radius:5px;overflow:hidden}
+.hb .tr i{display:block;height:100%;background:var(--green);border-radius:5px}
+.hb b{font-variant-numeric:tabular-nums;font-size:.88rem;min-width:56px;text-align:right}
+.hb span{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tip{position:fixed;transform:translate(-50%,-100%);background:var(--ink);color:#fff;font-size:.8rem;font-weight:700;padding:6px 10px;border-radius:8px;pointer-events:none;z-index:95;white-space:nowrap}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+
+/* drawer notes */
+.notes{display:grid;gap:8px;margin-top:10px}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.note p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.93rem}
+.note span{display:block;font-size:.78rem;color:var(--ink-3);margin-top:6px}
+.noteadd{display:flex;gap:10px;align-items:flex-end;margin-top:10px}
+.noteadd textarea{flex:1;font:500 .95rem var(--body);border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;resize:vertical;min-height:46px;background:var(--panel);color:var(--ink)}
+.noteadd textarea:focus{outline:none;border-color:var(--green)}
+
+/* settings preview */
+.acct{display:grid;grid-template-columns:auto 1fr;gap:10px 18px;margin:14px 0 0;font-size:.93rem}
+.acct dt{color:var(--ink-2)}
+.acct dd{margin:0;font-weight:800}
+.team li{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.team li:last-child{border-bottom:0}
+.team ul{list-style:none;margin:0;padding:0}
+
+/* mobile "more" sheet */
+.tabbar button{position:relative;display:grid;justify-items:center;gap:3px;padding:8px 4px;border:0;background:none;font:700 .7rem var(--body);color:var(--ink-3);border-radius:12px;cursor:pointer}
+.tabbar button svg{width:22px;height:22px}
+.sheetlist{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sheetlist a{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:14px;border-radius:14px;background:var(--panel-2);text-decoration:none;font-weight:700;color:var(--ink)}
+.sheetlist a[aria-current="page"]{background:var(--green-tint);color:var(--green)}
+@media (max-width:980px){.gsearch{max-width:none}}
+@media (max-width:560px){.hb{grid-template-columns:90px 1fr auto}}
 </style>
 </head>
 <body>
@@ -42,7 +119,7 @@
 <div class="gate" id="gate" hidden>
   <form id="gateForm" novalidate>
     <img src="/assets/nsc-logo.png" alt="NSC" style="height:34px;width:auto">
-    <div><h1>Team sign in</h1><p class="sub" style="margin-top:8px">For the NaijaSinglesConnect review team only.</p></div>
+    <div><h1>Team sign in</h1><p class="sub" style="margin-top:8px">For the NaijaSinglesConnect team only.</p></div>
     <div class="field"><label for="gEmail">Email</label><input id="gEmail" type="email" autocomplete="username" placeholder="you@naijasinglesconnect.com"></div>
     <div class="field"><label for="gPass">Password</label><input id="gPass" type="password" autocomplete="current-password"></div>
     <p class="err" id="gErr" hidden></p>
@@ -55,20 +132,32 @@
   <aside class="side" aria-label="Admin">
     <div><img class="logo" src="/assets/nsc-logo-light.png" alt="NSC"><div class="tag">Admin</div></div>
     <ul class="navlist">
+      <li class="navhd">Daily work</li>
       <li><a href="#overview" data-v="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>Overview</a></li>
       <li><a href="#review" data-v="review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3 4.5 6v6c0 4.4 3.2 8.2 7.5 9 4.3-.8 7.5-4.6 7.5-9V6L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>Review queue<span class="count" data-badge="review" hidden></span></a></li>
-      <li><a href="#members" data-v="members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/></svg>Members</a></li>
       <li><a href="#payments" data-v="payments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg>Payments<span class="count" data-badge="payments" hidden></span></a></li>
       <li><a href="#support" data-v="support"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M20 12.5a8 8 0 0 1-11.6 7.1L4 21l1.4-4.2A8 8 0 1 1 20 12.5Z"/></svg>Support inbox<span class="count" data-badge="support" hidden></span></a></li>
       <li><a href="#reports" data-v="reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"><path d="M5 21V4h11l1 3h3v9h-8l-1-3H5"/></svg>Reports<span class="count" data-badge="reports" hidden></span></a></li>
+      <li class="navhd">Community</li>
+      <li><a href="#members" data-v="members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/></svg>Members</a></li>
+      <li><a href="#intros" data-v="intros"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h12M12 4l4 4-4 4"/><path d="M20 16H8M12 12l-4 4 4 4"/></svg>Introductions<span class="count" data-badge="intros" hidden></span></a></li>
+      <li><a href="#matchmaker" data-v="matchmaker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/></svg>Matchmaker</a></li>
+      <li><a href="#broadcasts" data-v="broadcasts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"><path d="M4 10v4h3l6 4V6L7 10H4Z"/><path d="M17 9a4 4 0 0 1 0 6"/></svg>Broadcasts</a></li>
+      <li class="navhd">Business</li>
+      <li><a href="#insights" data-v="insights"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 20h16"/><path d="M7 16v-4M12 16V7M17 16v-7"/></svg>Insights</a></li>
+      <li><a href="#activity" data-v="activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Activity log</a></li>
+      <li class="navhd">Admin</li>
+      <li><a href="#team" data-v="team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 3 4.5 6v6c0 4.4 3.2 8.2 7.5 9 4.3-.8 7.5-4.6 7.5-9V6L12 3Z"/></svg>Team</a></li>
+      <li><a href="#settings" data-v="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Settings</a></li>
     </ul>
-    <div class="help"><b>Demo data</b><span>Everything here is stored in this browser until Supabase is connected.</span><button type="button" class="btn btn-ghost btn-sm" id="resetDemo">Reset demo data</button></div>
+    <div class="help"><b>Demo data</b><span>Everything here is stored in this browser.</span><button type="button" class="btn btn-ghost btn-sm" id="resetDemo">Reset demo data</button></div>
   </aside>
 
   <div class="main">
     <header class="top">
       <img class="mlogo" src="/assets/nsc-logo.png" alt="NSC">
       <h1 id="pageTitle">Overview</h1>
+      <div class="gsearch"><input class="input" id="gq" type="search" placeholder="Find a member by name, email, phone or reference" aria-label="Find a member" autocomplete="off"><div class="gres" id="gres" hidden></div></div>
       <span class="sp"></span>
       <div class="who">
         <button type="button" id="whoBtn" aria-haspopup="true" aria-expanded="false"><span class="av gold">NSC</span><span>NSC Team</span></button>
@@ -81,13 +170,16 @@
     </header>
 
     <main class="content">
+      <div class="banner" id="upgrade" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div><b>One database step left</b><p>Run <b>supabase/schema.sql</b> again in Supabase (SQL Editor → paste → Run) to turn on Settings, Team, team notes and account deletion. It's safe to run more than once.</p></div></div>
+
       <section id="v-overview" data-view>
         <div style="display:grid;gap:24px">
           <div class="hello"><div><h2 id="greet">Good day</h2><p>Here is what needs the team's attention.</p></div></div>
+          <div id="ovSetup"></div>
           <div class="stats" id="ovStats"></div>
           <div class="grid2">
             <div class="card"><div class="chead"><h2>Waiting for review</h2><a href="#review">Open queue</a></div><div id="ovQueue"></div></div>
-            <div class="card"><div class="chead"><h2>Recent activity</h2></div><ul class="feed" id="ovFeed"></ul></div>
+            <div class="card"><div class="chead"><h2>Recent activity</h2><a href="#activity">Full log</a></div><ul class="feed" id="ovFeed"></ul></div>
           </div>
         </div>
       </section>
@@ -106,12 +198,12 @@
 
       <section id="v-members" data-view hidden>
         <div style="display:grid;gap:20px">
-          <div class="hello"><div><h2>Members</h2><p id="mbCount"></p></div></div>
+          <div class="hello"><div><h2>Members</h2><p id="mbCount"></p></div><button type="button" class="btn btn-ghost btn-sm" id="mbCsv">Download list (CSV)</button></div>
           <div class="toolbar">
             <input class="input" id="mbSearch" type="search" placeholder="Search name, email or city" aria-label="Search members">
             <div class="seg" id="mbFilter">
               <button type="button" aria-pressed="true" data-f="all">All</button><button type="button" aria-pressed="false" data-f="approved">Approved</button>
-              <button type="button" aria-pressed="false" data-f="pending">In review</button><button type="button" aria-pressed="false" data-f="suspended">Paused</button><button type="button" aria-pressed="false" data-f="rejected">Rejected</button><button type="button" aria-pressed="false" data-f="intl">From other countries</button><button type="button" aria-pressed="false" data-f="circle">Private Circle</button>
+              <button type="button" aria-pressed="false" data-f="pending">In review</button><button type="button" aria-pressed="false" data-f="draft">Not submitted</button><button type="button" aria-pressed="false" data-f="suspended">Paused</button><button type="button" aria-pressed="false" data-f="rejected">Rejected</button><button type="button" aria-pressed="false" data-f="intl">From other countries</button><button type="button" aria-pressed="false" data-f="circle">Private Circle</button>
             </div>
           </div>
           <div class="tablewrap"><table class="t"><thead><tr><th>Member</th><th>Status</th><th>Faith</th><th>Lives in</th><th>Genotype</th><th>Joined</th><th>Payment</th></tr></thead><tbody id="mbBody"></tbody></table></div>
@@ -121,6 +213,7 @@
       <section id="v-payments" data-view hidden>
         <div style="display:grid;gap:20px">
           <div class="hello"><div><h2>Payments</h2><p>Match each receipt to the member's reference and your bank statement before confirming.</p></div></div>
+          <div class="stats" id="pyStats"></div>
           <div class="tabs" role="tablist" id="pyTabs">
             <button role="tab" aria-selected="true" data-t="uploaded">To confirm</button>
             <button role="tab" aria-selected="false" data-t="confirmed">Confirmed</button>
@@ -147,6 +240,108 @@
           <div class="tablewrap"><table class="t"><thead><tr><th>Reported member</th><th>Reason</th><th>Reported by</th><th>When</th><th>Status</th></tr></thead><tbody id="rpBody"></tbody></table></div>
         </div>
       </section>
+
+      <section id="v-intros" data-view hidden>
+        <div style="display:grid;gap:20px">
+          <div class="hello"><div><h2>Introductions</h2><p>Every request between members. Conversations stay private: you see how active they are, never what they say, unless a member reports one.</p></div><a class="btn btn-primary btn-sm" href="#matchmaker">Suggest a match</a></div>
+          <div class="stats" id="inStats"></div>
+          <div class="tabs" role="tablist" id="inTabs">
+            <button role="tab" aria-selected="true" data-t="pending">Waiting for an answer</button>
+            <button role="tab" aria-selected="false" data-t="accepted">Introduced</button>
+            <button role="tab" aria-selected="false" data-t="declined">Declined or closed</button>
+          </div>
+          <div class="tablewrap"><table class="t plain"><thead><tr><th>Requested by</th><th></th><th>Sent to</th><th>Match</th><th>Sent</th><th id="inCol">Waiting</th><th></th></tr></thead><tbody id="inBody"></tbody></table></div>
+        </div>
+      </section>
+
+      <section id="v-matchmaker" data-view hidden>
+        <div style="display:grid;gap:20px">
+          <div class="hello"><div><h2>Matchmaker</h2><p>Pick an approved member to see who suits them best. Suggestions go to their support inbox, and they decide whether to send a request.</p></div></div>
+          <div class="mm">
+            <div class="card pick"><input class="input" id="mmSearch" type="search" placeholder="Search approved members" aria-label="Search approved members" style="border-radius:999px;padding:10px 16px"><div class="plist" id="mmList"></div></div>
+            <div id="mmBody" style="display:grid;gap:14px;min-width:0"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="v-broadcasts" data-view hidden>
+        <div style="display:grid;gap:20px">
+          <div class="hello"><div><h2>Broadcasts</h2><p>Send one message to a group of members. Each person receives it privately in their own support inbox, and replies come back to you.</p></div></div>
+          <div class="grid2">
+            <div class="card" style="display:grid;gap:16px">
+              <div class="field"><label for="bcAud">Send to</label><select id="bcAud"></select></div>
+              <div id="bcWarn"></div>
+              <div class="field"><label for="bcBody">Message</label><textarea id="bcBody" maxlength="2000" placeholder="Hi {first}, …"></textarea><span class="hint">Write <b>{first}</b> and each member sees their own first name.</span></div>
+              <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap"><button type="button" class="btn btn-primary" id="bcSend">Send</button></div>
+            </div>
+            <div class="card"><h2>Preview</h2><p class="sub" id="bcWho"></p><div class="msgs" style="border-radius:14px;margin-top:12px;border:1px solid var(--line);min-height:140px;max-height:none"><div class="bub them" id="bcPrev" style="white-space:pre-wrap"></div></div></div>
+          </div>
+          <div class="card"><div class="chead"><h2>Sent broadcasts</h2></div><ul class="feed" id="bcHist"></ul></div>
+        </div>
+      </section>
+
+      <section id="v-insights" data-view hidden>
+        <div style="display:grid;gap:24px">
+          <div class="hello"><div><h2>Insights</h2><p>How NSC is growing. Counts exclude team accounts.</p></div></div>
+          <div class="stats" id="isStats"></div>
+          <div class="grid2">
+            <div class="card"><div class="chead"><h2 id="isWeekT">New accounts per week</h2><span class="sub">Last 12 weeks</span></div><div class="bars" id="isWeeks" role="img"></div><div class="barx" id="isWeekX" aria-hidden="true"></div></div>
+            <div class="card"><div class="chead"><h2>From sign-up to introduction</h2></div><div class="hbars" id="isFunnel"></div></div>
+          </div>
+          <div class="grid3" id="isBreak"></div>
+        </div>
+      </section>
+
+      <section id="v-activity" data-view hidden>
+        <div style="display:grid;gap:20px">
+          <div class="hello"><div><h2>Activity log</h2><p>Everything members and the team have done, newest first.</p></div></div>
+          <div class="toolbar"><input class="input" id="acSearch" type="search" placeholder="Search the log" aria-label="Search the activity log"></div>
+          <div class="card"><ul class="feed" id="acList"></ul></div>
+        </div>
+      </section>
+
+      <section id="v-team" data-view hidden>
+        <div style="display:grid;gap:20px">
+          <div class="hello"><div><h2>Team</h2><p>People who can sign in here. Team accounts never appear in Members or matches.</p></div></div>
+          <div class="grid2">
+            <div class="card team"><h2>Team members</h2><ul id="tmList" style="margin-top:8px"></ul></div>
+            <form class="card" id="tmForm" style="display:grid;gap:14px;align-content:start" novalidate>
+              <div><h2>Add someone</h2><p class="sub">They need an NSC login first. Ask them to create an account at naijasinglesconnect.com, or add them in Supabase under Authentication → Users. Then enter the same email here.</p></div>
+              <div class="field"><label for="tmEmail">Their email</label><input id="tmEmail" type="email" autocomplete="off" placeholder="name@naijasinglesconnect.com"></div>
+              <button class="btn btn-primary" type="submit">Add to team</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section id="v-settings" data-view hidden>
+        <div style="display:grid;gap:20px">
+          <div class="hello"><div><h2>Settings</h2><p>What members see on their Membership page. Changes show straight away.</p></div></div>
+          <div class="grid2">
+            <form class="card" id="stForm" style="display:grid;gap:18px" novalidate>
+              <div><h2>Membership fee</h2><p class="sub">Members only see this inside their dashboard, never on the public website.</p></div>
+              <div class="fields">
+                <div class="field"><label for="stFee">Amount (₦)</label><input id="stFee" inputmode="numeric" placeholder="e.g. 25000"></div>
+                <div class="field"><label for="stFeeNote">What it covers</label><input id="stFeeNote" placeholder="e.g. 12 months' membership"></div>
+              </div>
+              <div><h2>Bank transfer details</h2></div>
+              <div class="fields">
+                <div class="field"><label for="stBank">Bank</label><input id="stBank" placeholder="e.g. Zenith Bank"></div>
+                <div class="field"><label for="stName">Account name</label><input id="stName"></div>
+                <div class="field full"><label for="stNo">Account number</label><input id="stNo" inputmode="numeric" maxlength="10" placeholder="10 digits"></div>
+              </div>
+              <div><h2>Messages to members</h2></div>
+              <div class="fields">
+                <div class="field"><label for="stReview">Review time</label><input id="stReview" placeholder="usually within 24 hours"></div>
+                <div class="field"><label for="stEmail">Support email</label><input id="stEmail" type="email"></div>
+              </div>
+              <p class="err" id="stErr" style="color:var(--err);font-weight:700;margin:0" hidden></p>
+              <div style="display:flex;justify-content:flex-end"><button class="btn btn-primary" type="submit">Save settings</button></div>
+            </form>
+            <div class="card" style="align-self:start"><h2>What members see</h2><p class="sub">Membership page, step 1</p><dl class="acct" id="stPrev"></dl></div>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 </div>
@@ -156,11 +351,12 @@
   <a href="#review" data-v="review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3 4.5 6v6c0 4.4 3.2 8.2 7.5 9 4.3-.8 7.5-4.6 7.5-9V6L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>Review<span class="count" data-badge="review" hidden></span></a>
   <a href="#members" data-v="members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/></svg>Members</a>
   <a href="#support" data-v="support"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M20 12.5a8 8 0 0 1-11.6 7.1L4 21l1.4-4.2A8 8 0 1 1 20 12.5Z"/></svg>Inbox<span class="count" data-badge="support" hidden></span></a>
-  <a href="#reports" data-v="reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"><path d="M5 21V4h11l1 3h3v9h-8l-1-3H5"/></svg>Reports<span class="count" data-badge="reports" hidden></span></a>
+  <button type="button" id="moreBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg>More<span class="count" data-badge="more" hidden></span></button>
 </nav>
 
 <div id="layer"></div>
 <div id="layer2"></div>
+<div class="tip" id="tip" hidden></div>
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script src="/assets/js/config.js"></script>
@@ -171,7 +367,9 @@
 <script>
 window.NSC.ready({ as: 'admin' }).then(function(){
   var S = window.NSC, esc = S.esc, $ = function(id){ return document.getElementById(id) };
-  function toast(msg){ var t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(t._h); t._h = setTimeout(function(){ t.hidden = true }, 2800) }
+  var D = 864e5;
+  function toast(msg){ var t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(t._h); t._h = setTimeout(function(){ t.hidden = true }, 3200) }
+  function errMsg(e){ return e && e.message ? e.message : String(e) }
   window.addEventListener('nsc:error', function(e){ toast(e.detail) });
   if (S.mode === 'cloud') { var help = document.querySelector('.side .help'); if (help) help.hidden = true; }
 
@@ -195,31 +393,47 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   /* ---------- helpers ---------- */
   var STATUS = { draft:['off','Not submitted'], pending:['wait','In review'], changes:['wait','Changes requested'], approved:['ok','Approved'], rejected:['bad','Rejected'], suspended:['bad','Paused'] };
   var PAY = { none:['off','No receipt'], uploaded:['wait','To confirm'], confirmed:['ok','Confirmed'], rejected:['bad','Rejected'] };
-  function pill(map, k){ return '<span class="pill ' + map[k][0] + '">' + map[k][1] + '</span>' }
-  function av(m){ var ph = (m.profile.photos || [])[0]; return '<span class="av">' + (ph ? '<img alt="" src="' + ph + '">' : esc(S.initials(m))) + '</span>' }
+  function pill(map, k){ var v = map[k] || ['off', k]; return '<span class="pill ' + v[0] + '">' + v[1] + '</span>' }
+  function av(m){ var ph = (m.profile.photos || [])[0]; return '<span class="av">' + (ph ? '<img alt="" src="' + esc(ph) + '">' : esc(S.initials(m))) + '</span>' }
   function person(m, sub){ return '<div class="person">' + av(m) + '<div><b>' + esc(S.fullName(m)) + '</b><span>' + esc(sub == null ? m.email : sub) + '</span></div></div>' }
   var groups = ['first','last','gender','dob','location','origin','lga','qual','job','religion','denom','marital','genotype','children','wantkids','intent','agemin','agemax','ploc','lookfor','bio'];
   function completion(pr){ var t = groups.length + 2, d = Math.min(2, (pr.photos || []).length); groups.forEach(function(k){ var v = pr[k]; if (Array.isArray(v) ? v.length : v != null && String(v).trim()) d++ }); return Math.round(d / t * 100) }
-  function members(){ return S.all('members') }
+  function teamIds(){ return (S.team.list() || []).map(function(t){ return t.user_id }) }
+  /* team logins also get a member row when they sign up; keep them out of every member list */
+  function members(){ var t = teamIds(); return S.all('members').filter(function(m){ return t.indexOf(m.id) < 0 }) }
+  function member(id){ var m = S.get('members', id); return m && teamIds().indexOf(id) < 0 ? m : null }
   function supportThreads(){
     return members().map(function(m){
       var id = S.supportThread(m.id), ms = S.threadMessages(id);
       return { id: id, m: m, last: ms[ms.length - 1] || null, unread: S.unread('admin', id) };
     }).filter(function(t){ return t.last });
   }
+  function feeNum(){ return Number(String(S.settings().fee || '').replace(/[^\d.]/g, '')) || 0 }
+  function naira(n){ return '₦' + Number(n || 0).toLocaleString('en-NG') }
+  function date(ts, long){ return ts ? new Date(ts).toLocaleDateString('en-GB', { day:'numeric', month: long ? 'long' : 'short', year:'numeric' }) : '—' }
+  function pct(a, b){ return b ? Math.round(a / b * 100) : 0 }
+  function download(name, text, type){
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: type })); a.download = name;
+    document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove() }, 500);
+  }
 
   /* ---------- routing ---------- */
-  var titles = { overview:'Overview', review:'Review queue', members:'Members', payments:'Payments', support:'Support inbox', reports:'Reports' };
-  var view = 'overview', curThread = null, drawerId = null;
+  var titles = { overview:'Overview', review:'Review queue', members:'Members', payments:'Payments', support:'Support inbox', reports:'Reports',
+    intros:'Introductions', matchmaker:'Matchmaker', broadcasts:'Broadcasts', insights:'Insights', activity:'Activity log', team:'Team', settings:'Settings' };
+  var view = 'overview', curThread = null, drawerId = null, mmId = null;
   function route(){
     var h = (location.hash || '#overview').slice(1).split('/');
     view = titles[h[0]] ? h[0] : 'overview';
     if (view === 'support' && h[1]) curThread = decodeURIComponent(h[1]);
+    if (view === 'matchmaker' && h[1]) mmId = decodeURIComponent(h[1]);
     document.querySelectorAll('[data-view]').forEach(function(s){ s.hidden = s.id !== 'v-' + view });
     document.querySelectorAll('[data-v]').forEach(function(a){ if (a.dataset.v === view) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current') });
-    $('pageTitle').textContent = titles[view]; $('whoMenu').hidden = true;
+    $('pageTitle').textContent = titles[view]; $('whoMenu').hidden = true; $('gres').hidden = true;
     closeDrawer(); closeModal();
+    if (view === 'settings') fillSettings();
+    if (view === 'team' && S.team.load) S.team.load().catch(function(){});
     render();
+    window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', function(){ if (S.admin.get()) route() });
   function go(h){ if (location.hash === h) route(); else location.hash = h }
@@ -227,16 +441,22 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   function render(){
     if (!S.admin.get()) return;
     badges();
-    ({ overview: rOverview, review: rReview, members: rMembers, payments: rPayments, support: rSupport, reports: rReports })[view]();
+    $('upgrade').hidden = !S.needsUpgrade;
+    ({ overview: rOverview, review: rReview, members: rMembers, payments: rPayments, support: rSupport, reports: rReports,
+       intros: rIntros, matchmaker: rMatchmaker, broadcasts: rBroadcasts, insights: rInsights, activity: rActivity, team: rTeam, settings: rSettings })[view]();
     if (drawerId) rDrawer();
   }
   S.on(render);
 
+  function staleIntros(){ return S.all('intros').filter(function(i){ return i.status === 'pending' && Date.now() - i.createdAt > 3 * D }) }
   function badges(){
-    var n = { review: members().filter(function(m){ return m.status === 'pending' }).length,
-      payments: members().filter(function(m){ return m.payment.status === 'uploaded' }).length,
+    var all = members();
+    var n = { review: all.filter(function(m){ return m.status === 'pending' }).length,
+      payments: all.filter(function(m){ return m.payment.status === 'uploaded' }).length,
       support: supportThreads().reduce(function(a, t){ return a + t.unread }, 0),
-      reports: S.all('reports').filter(function(r){ return r.status === 'open' }).length };
+      reports: S.all('reports').filter(function(r){ return r.status === 'open' }).length,
+      intros: staleIntros().length };
+    n.more = n.payments + n.reports + n.intros;
     Object.keys(n).forEach(function(k){ document.querySelectorAll('[data-badge="' + k + '"]').forEach(function(b){ b.textContent = n[k]; b.hidden = !n[k] }) });
     var total = n.review + n.payments + n.support + n.reports;
     document.title = (total ? '(' + total + ') ' : '') + 'Admin | NaijaSinglesConnect';
@@ -246,19 +466,22 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   /* ---------- overview ---------- */
   function rOverview(){
     var h = new Date().getHours(); $('greet').textContent = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-    var n = badges(), all = members();
+    var n = badges(), all = members(), cfg = S.settings();
+    var week = all.filter(function(m){ return Date.now() - m.createdAt < 7 * D }).length;
+    $('ovSetup').innerHTML = (!cfg.fee || !cfg.accountNumber) && !S.needsUpgrade ? '<div class="banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div><b>Add the membership fee and bank details</b><p>Members currently see "To be confirmed" on their Membership page. <a href="#settings" style="color:var(--green);font-weight:800">Open Settings</a></p></div></div>' : '';
     $('ovStats').innerHTML = [
       ['#review', 'Waiting for review', n.review, 'Oldest ' + oldest()],
       ['#payments', 'Receipts to confirm', n.payments, 'Check against bank statement'],
       ['#support', 'Unread support messages', n.support, supportThreads().length + ' conversations'],
       ['#reports', 'Open reports', n.reports, 'Review within 24 hours'],
-      ['#members', 'Approved members', all.filter(function(m){ return m.status === 'approved' }).length, all.length + ' accounts in total']
+      ['#intros', 'Requests waiting 3+ days', n.intros, 'Nudge or close them'],
+      ['#members', 'Approved members', all.filter(function(m){ return m.status === 'approved' }).length, week + ' new accounts this week']
     ].map(function(s){ return '<a class="stat" href="' + s[0] + '"><span>' + s[1] + '</span><b>' + s[2] + '</b><small>' + s[3] + '</small></a>' }).join('');
     var q = all.filter(function(m){ return m.status === 'pending' }).sort(function(a, b){ return a.submittedAt - b.submittedAt });
     $('ovQueue').innerHTML = q.length ? q.slice(0, 6).map(function(m){
       return '<div class="qrow" data-open="' + m.id + '">' + av(m) + '<div><b>' + esc(S.fullName(m)) + '</b><span>' + esc(m.profile.location || '—') + ' · submitted ' + S.ago(m.submittedAt).toLowerCase() + '</span></div>' + pill(PAY, m.payment.status) + '</div>' }).join('')
       : '<div class="empty"><b>All caught up</b><span>No profiles are waiting for review.</span></div>';
-    $('ovFeed').innerHTML = S.all('activity').slice(0, 12).map(function(a){ return '<li><span>' + esc(a.text) + '</span><time>' + S.ago(a.at) + '</time></li>' }).join('') || '<li><span>No activity yet</span></li>';
+    $('ovFeed').innerHTML = S.all('activity').slice(0, 10).map(function(a){ return '<li><span>' + esc(a.text) + '</span><time>' + S.ago(a.at) + '</time></li>' }).join('') || '<li><span>No activity yet</span></li>';
   }
   function oldest(){ var q = members().filter(function(m){ return m.status === 'pending' }).sort(function(a, b){ return a.submittedAt - b.submittedAt })[0]; return q ? S.ago(q.submittedAt).toLowerCase() : 'none waiting' }
 
@@ -269,8 +492,8 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   function rReview(){
     var list = members().filter(function(m){ return m.status === rvTab }).sort(function(a, b){ return (a.submittedAt || a.createdAt) - (b.submittedAt || b.createdAt) });
     $('rvBody').innerHTML = list.length ? list.map(function(m){
-      var pct = completion(m.profile);
-      return '<tr data-open="' + m.id + '"><td>' + person(m) + '</td><td><div style="display:flex;gap:10px;align-items:center"><div class="meter"><i style="width:' + pct + '%"></i></div>' + pct + '%</div></td>' +
+      var p = completion(m.profile);
+      return '<tr data-open="' + m.id + '"><td>' + person(m) + '</td><td><div style="display:flex;gap:10px;align-items:center"><div class="meter"><i style="width:' + p + '%"></i></div>' + p + '%</div></td>' +
         '<td>' + (m.profile.photos || []).length + ' of 3</td><td>' + pill(PAY, m.payment.status) + '</td><td>' + (m.submittedAt ? S.ago(m.submittedAt) : '—') + '</td><td><button type="button" class="btn btn-primary btn-sm" data-open="' + m.id + '">Review</button></td></tr>' }).join('')
       : '<tr><td colspan="6"><div class="empty"><b>Nothing here</b><span>' + { pending:'No profiles are waiting for review.', changes:'No members are making changes.', draft:'Every account has submitted a profile.' }[rvTab] + '</span></div></td></tr>';
   }
@@ -279,34 +502,57 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   var mbF = 'all';
   $('mbFilter').addEventListener('click', function(e){ var b = e.target.closest('button'); if (!b) return; mbF = b.dataset.f; this.querySelectorAll('button').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)) }); render() });
   $('mbSearch').addEventListener('input', render);
-  function rMembers(){
-    var q = $('mbSearch').value.trim().toLowerCase(), all = members();
-    var list = all.filter(function(m){
+  function memberList(){
+    var q = $('mbSearch').value.trim().toLowerCase();
+    return members().filter(function(m){
       if (mbF === 'intl') { if (S.groupOf(m) !== 'international') return false; }
       else if (mbF === 'circle') { if (!m.profile.circle) return false; }
       else if (mbF !== 'all' && m.status !== mbF && !(mbF === 'pending' && m.status === 'changes')) return false;
       return !q || (S.fullName(m) + ' ' + m.email + ' ' + (m.profile.location || '')).toLowerCase().indexOf(q) >= 0;
     }).sort(function(a, b){ return b.createdAt - a.createdAt });
-    $('mbCount').textContent = all.length + ' accounts · ' + all.filter(function(m){ return m.status === 'approved' }).length + ' approved';
+  }
+  function rMembers(){
+    var all = members(), list = memberList();
+    $('mbCount').textContent = all.length + ' accounts · ' + all.filter(function(m){ return m.status === 'approved' }).length + ' approved' + (list.length !== all.length ? ' · ' + list.length + ' shown' : '');
     $('mbBody').innerHTML = list.length ? list.map(function(m){
       var a = S.age(m.profile.dob);
-      return '<tr data-open="' + m.id + '"><td>' + person(m, [m.profile.gender, a].filter(Boolean).join(', ') || m.email) + '</td><td>' + pill(STATUS, m.status) + '</td><td>' + esc(S.religionLabel(m.profile.religion) || '—') + '</td><td>' + esc(m.profile.location || '—') + (S.groupOf(m) === 'international' ? ' <span class="pill wait">' + esc(m.profile.nationality) + '</span>' : '') + (m.profile.circle ? ' <span class="pill ok" title="Private Circle">Circle</span>' : '') + '</td><td>' + esc(m.profile.genotype || '—') + '</td><td>' + new Date(m.createdAt).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) + '</td><td>' + pill(PAY, m.payment.status) + '</td></tr>' }).join('')
+      return '<tr data-open="' + m.id + '"><td>' + person(m, [m.profile.gender, a].filter(Boolean).join(', ') || m.email) + '</td><td>' + pill(STATUS, m.status) + '</td><td>' + esc(S.religionLabel(m.profile.religion) || '—') + '</td><td>' + esc(m.profile.location || '—') + (S.groupOf(m) === 'international' ? ' <span class="pill wait">' + esc(m.profile.nationality) + '</span>' : '') + (m.profile.circle ? ' <span class="pill ok" title="Private Circle">Circle</span>' : '') + '</td><td>' + esc(m.profile.genotype || '—') + '</td><td>' + date(m.createdAt) + '</td><td>' + pill(PAY, m.payment.status) + '</td></tr>' }).join('')
       : '<tr><td colspan="7"><div class="empty"><b>No members found</b><span>Try another search or filter.</span></div></td></tr>';
   }
+  /* contact list only: religion, genotype and circle membership stay out of exported files */
+  $('mbCsv').addEventListener('click', function(){
+    var cell = function(v){ v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v };
+    var rows = [['First name','Last name','Email','Phone','Status','Lives in','Nationality','Joined','Payment','Reference']].concat(memberList().map(function(m){
+      return [m.profile.first, m.profile.last, m.email, m.phone, STATUS[m.status][1], m.profile.location, m.profile.nationality, new Date(m.createdAt).toISOString().slice(0, 10), PAY[m.payment.status][1], m.payment.ref] }));
+    download('nsc-members-' + new Date().toISOString().slice(0, 10) + '.csv', rows.map(function(r){ return r.map(cell).join(',') }).join('\n'), 'text/csv');
+    S.log('Member list downloaded (' + (rows.length - 1) + ' members)');
+  });
 
   /* ---------- payments ---------- */
   var pyTab = 'uploaded';
   tabs('pyTabs', function(t){ pyTab = t });
   function rPayments(){
-    var list = members().filter(function(m){ return m.payment.status === pyTab }).sort(function(a, b){ return (b.payment.uploadedAt || 0) - (a.payment.uploadedAt || 0) });
+    var all = members(), conf = all.filter(function(m){ return m.payment.status === 'confirmed' });
+    var month = new Date(); month.setDate(1); month.setHours(0, 0, 0, 0);
+    var sum = function(l){ return l.reduce(function(a, m){ return a + (+m.payment.amount || 0) }, 0) };
+    var thisMonth = conf.filter(function(m){ return (m.payment.confirmedAt || 0) >= +month });
+    $('pyStats').innerHTML = [
+      ['To confirm', all.filter(function(m){ return m.payment.status === 'uploaded' }).length, 'Receipts waiting'],
+      ['Confirmed payments', conf.length, conf.length ? pct(conf.length, all.length) + '% of accounts' : 'None yet'],
+      ['Recorded this month', naira(sum(thisMonth)), thisMonth.length + ' payments'],
+      ['Recorded in total', naira(sum(conf)), feeNum() ? 'Current fee ' + naira(feeNum()) : 'Set the fee in Settings']
+    ].map(function(s){ return '<div class="stat"><span>' + s[0] + '</span><b>' + s[1] + '</b><small>' + s[2] + '</small></div>' }).join('');
+    var list = all.filter(function(m){ return m.payment.status === pyTab }).sort(function(a, b){ return (b.payment.uploadedAt || 0) - (a.payment.uploadedAt || 0) });
     $('pyBody').innerHTML = list.length ? list.map(function(m){
       var f = m.payment.file;
-      return '<tr data-open="' + m.id + '"><td>' + person(m) + '</td><td><b>' + esc(m.payment.ref) + '</b></td><td>' + (f ? esc(f.name) + '<br><span class="sub">' + esc(f.size) + '</span>' : '<span class="sub">—</span>') + '</td><td>' + (m.payment.uploadedAt ? S.ago(m.payment.uploadedAt) : '—') + '</td><td>' + pill(PAY, m.payment.status) + '</td>' +
+      return '<tr data-open="' + m.id + '"><td>' + person(m) + '</td><td><b>' + esc(m.payment.ref) + '</b></td><td>' + (f ? esc(f.name) + '<br><span class="sub">' + esc(f.size) + '</span>' : '<span class="sub">—</span>') + '</td><td>' + (m.payment.uploadedAt ? S.ago(m.payment.uploadedAt) : '—') + '</td><td>' + pill(PAY, m.payment.status) + (m.payment.amount ? '<br><span class="sub">' + naira(m.payment.amount) + '</span>' : '') + '</td>' +
         '<td>' + (pyTab === 'uploaded' ? '<div style="display:flex;gap:8px"><button type="button" class="btn btn-ghost btn-sm" data-payrej="' + m.id + '">Reject</button><button type="button" class="btn btn-primary btn-sm" data-payok="' + m.id + '">Confirm</button></div>' : '') + '</td></tr>' }).join('')
       : '<tr><td colspan="6"><div class="empty"><b>Nothing here</b><span>' + (pyTab === 'uploaded' ? 'No receipts are waiting.' : 'No payments in this list yet.') + '</span></div></td></tr>';
   }
+  /* records the fee in force when the payment is confirmed, so totals stay right if the fee changes later */
+  function markPaid(r){ var fee = feeNum(); r.payment.status = 'confirmed'; r.payment.confirmedAt = Date.now(); if (fee && !r.payment.amount) r.payment.amount = fee }
   function confirmPay(id){
-    var m = S.update('members', id, function(r){ r.payment.status = 'confirmed' });
+    var m = S.update('members', id, markPaid);
     S.send(S.supportThread(id), 'admin', 'We have confirmed your payment (' + m.payment.ref + '). Thank you.' + (m.status === 'pending' ? ' Your profile review is next.' : ''));
     S.log('Payment confirmed for ' + S.fullName(m)); toast('Payment confirmed for ' + m.profile.first);
   }
@@ -320,14 +566,14 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   function rSupport(){
     var q = $('spSearch').value.trim().toLowerCase();
     var ts = supportThreads().filter(function(t){ return !q || S.fullName(t.m).toLowerCase().indexOf(q) >= 0 }).sort(function(a, b){ return b.last.at - a.last.at });
-    if (curThread && !S.get('members', curThread.replace('support:', ''))) curThread = null;
+    if (curThread && !member(curThread.replace('support:', ''))) curThread = null;
     $('threadList').innerHTML = ts.length ? ts.map(function(t){
       return '<li><button type="button" class="citem' + (t.unread ? ' unread' : '') + '" data-thread="' + t.id + '" aria-current="' + (t.id === curThread) + '">' + av(t.m) +
         '<span class="t"><b>' + esc(S.fullName(t.m)) + '</b><span>' + (t.last.from === 'admin' ? 'You: ' : '') + esc(t.last.body) + '</span></span><span class="r">' + S.ago(t.last.at) + (t.unread ? '<span class="count" style="margin:0">' + t.unread + '</span>' : '') + '</span></button></li>' }).join('')
       : '<li class="empty"><b>No conversations</b></li>';
     $('chat').classList.toggle('open', !!curThread);
     if (!curThread) { $('thread').innerHTML = '<div class="empty" style="margin:auto"><b>Choose a conversation</b><span>Members message the team from their dashboard.</span></div>'; return; }
-    var m = S.get('members', curThread.replace('support:', '')), msgs = S.threadMessages(curThread), box = $('msgs');
+    var m = member(curThread.replace('support:', '')), msgs = S.threadMessages(curThread), box = $('msgs');
     var near = !box || box.scrollHeight - box.scrollTop - box.clientHeight < 80, draft = $('composeText') ? $('composeText').value : '', focus = document.activeElement && document.activeElement.id === 'composeText';
     var html = '', ld = '';
     msgs.forEach(function(x){
@@ -338,7 +584,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     $('thread').innerHTML = '<div class="hd"><button type="button" class="back" id="chatBack" aria-label="Back">←</button>' + av(m) + '<div class="who-t"><b>' + esc(S.fullName(m)) + '</b><span>' + STATUS[m.status][1] + ' · ' + esc(m.payment.ref) + ' · ' + esc(m.email) + '</span></div><button type="button" class="btn btn-ghost btn-sm" data-open="' + m.id + '">View profile</button></div>' +
       '<div class="msgs" id="msgs">' + html + '</div>' +
       '<div style="padding:8px 12px 0;display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--line);background:var(--panel)" id="quick">' +
-      ['Thanks, we have received your receipt and will confirm it shortly.', 'Your profile is in review. We will update you within 24 hours.', 'Could you send a clearer photo of your receipt?'].map(function(q){ return '<button type="button" class="chip" style="border:0;cursor:pointer" data-quick="' + esc(q) + '">' + esc(q.split(',')[0].split('.')[0]) + '</button>' }).join('') + '</div>' +
+      ['Thanks, we have received your receipt and will confirm it shortly.', 'Your profile is in review. We will update you ' + (S.settings().reviewTime || 'soon') + '.', 'Could you send a clearer photo of your receipt?'].map(function(q){ return '<button type="button" class="chip" style="border:0;cursor:pointer" data-quick="' + esc(q) + '">' + esc(q.split(',')[0].split('.')[0]) + '</button>' }).join('') + '</div>' +
       '<form class="compose" id="compose" style="border-top:0"><textarea id="composeText" rows="1" placeholder="Reply as NSC Support" aria-label="Reply"></textarea><button class="btn btn-primary" type="submit">Send</button></form>';
     $('composeText').value = draft; if (focus) $('composeText').focus();
     box = $('msgs'); if (near || !draft) box.scrollTop = box.scrollHeight;
@@ -386,22 +632,305 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     closeModal(); toast({ dismiss:'Report dismissed', warn:'Warning sent', suspend:'Account paused' }[act]);
   });
 
+  /* ---------- introductions ---------- */
+  var inTab = 'pending';
+  tabs('inTabs', function(t){ inTab = t });
+  function pairScore(a, b){ return Math.round((S.compat(a, b) + S.compat(b, a)) / 2) }
+  function convo(id){ return S.threadMessages(id).filter(function(x){ return x.from !== 'system' }) }
+  function rIntros(){
+    var all = S.all('intros').filter(function(i){ return member(i.from) && member(i.to) });
+    var answered = all.filter(function(i){ return i.status !== 'pending' && i.respondedAt });
+    var acc = all.filter(function(i){ return i.status === 'accepted' });
+    var hrs = answered.length ? answered.reduce(function(a, i){ return a + (i.respondedAt - i.createdAt) }, 0) / answered.length / 36e5 : 0;
+    var active = acc.filter(function(i){ return convo(i.id).some(function(x){ return Date.now() - x.at < 7 * D }) }).length;
+    $('inStats').innerHTML = [
+      ['Waiting for an answer', all.filter(function(i){ return i.status === 'pending' }).length, staleIntros().length + ' waiting 3+ days'],
+      ['Accepted', acc.length, answered.length ? pct(acc.length, answered.length) + '% of answered requests' : 'No answers yet'],
+      ['Usual reply time', answered.length ? (hrs < 24 ? Math.max(1, Math.round(hrs)) + ' h' : Math.round(hrs / 24) + ' days') : '—', 'Average across answered requests'],
+      ['Active conversations', active, 'Messages in the last 7 days']
+    ].map(function(s){ return '<div class="stat"><span>' + s[0] + '</span><b>' + s[1] + '</b><small>' + s[2] + '</small></div>' }).join('');
+    $('inCol').textContent = { pending:'Waiting', accepted:'Conversation', declined:'Answered' }[inTab];
+    var list = all.filter(function(i){ return i.status === inTab }).sort(function(a, b){ return inTab === 'pending' ? a.createdAt - b.createdAt : (b.respondedAt || b.createdAt) - (a.respondedAt || a.createdAt) });
+    $('inBody').innerHTML = list.length ? list.map(function(i){
+      var a = member(i.from), b = member(i.to), col = '', acts = '';
+      if (inTab === 'pending') {
+        var old = Date.now() - i.createdAt > 3 * D;
+        col = old ? '<span class="pill wait">' + Math.floor((Date.now() - i.createdAt) / D) + ' days</span>' : '<span class="sub">' + S.ago(i.createdAt) + '</span>';
+        acts = '<div style="display:flex;gap:8px;justify-content:flex-end"><button type="button" class="btn btn-ghost btn-sm" data-nudge="' + i.id + '">Nudge ' + esc(b.profile.first) + '</button><button type="button" class="btn btn-ghost btn-sm" data-closeintro="' + i.id + '">Close</button></div>';
+      } else if (inTab === 'accepted') {
+        var c = convo(i.id), last = c[c.length - 1];
+        col = c.length ? c.length + ' messages<br><span class="sub">Last ' + S.ago(last.at).toLowerCase() + '</span>' : '<span class="sub">No messages yet</span>';
+      } else col = '<span class="sub">' + (i.respondedAt ? S.ago(i.respondedAt) : '—') + '</span>';
+      return '<tr><td><button type="button" class="linkp" data-open="' + a.id + '">' + person(a, a.profile.location || '') + '</button></td><td class="arrow">→</td><td><button type="button" class="linkp" data-open="' + b.id + '">' + person(b, b.profile.location || '') + '</button></td>' +
+        '<td><b>' + pairScore(a, b) + '%</b></td><td>' + date(i.createdAt) + '</td><td>' + col + '</td><td>' + acts + '</td></tr>' }).join('')
+      : '<tr><td colspan="7"><div class="empty"><b>Nothing here</b><span>' + { pending:'No requests are waiting for an answer.', accepted:'No one has been introduced yet.', declined:'No declined or closed requests.' }[inTab] + '</span></div></td></tr>';
+  }
+  document.addEventListener('click', function(e){
+    var n = e.target.closest('[data-nudge]'), c = e.target.closest('[data-closeintro]');
+    if (n) {
+      var i = S.get('intros', n.dataset.nudge), to = member(i.to);
+      S.send(S.supportThread(to.id), 'admin', 'Hi ' + to.profile.first + ', you have an introduction request waiting on your dashboard. Open Introductions to accept or decline it. There is no pressure either way, and the other member is only told your answer.');
+      S.log('Reminded ' + S.fullName(to) + ' about a waiting introduction'); toast(to.profile.first + ' has been reminded');
+    }
+    if (c) {
+      var ci = S.get('intros', c.dataset.closeintro), from = member(ci.from);
+      modal('<h3>Close this request?</h3><p class="sub">' + esc(from.profile.first) + ' will be told the request has closed without an answer, so they can focus on other matches.</p><div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-primary" id="ciGo" data-id="' + ci.id + '">Close request</button></div>');
+    }
+    if (e.target.id === 'ciGo') {
+      var x = S.get('intros', e.target.dataset.id), fm = member(x.from), tm = member(x.to);
+      S.update('intros', x.id, { status: 'declined', respondedAt: Date.now() });
+      S.send(S.supportThread(fm.id), 'admin', 'Hi ' + fm.profile.first + ', one of your introduction requests didn\'t get an answer, so we have closed it. There are more members to explore in your Matches.');
+      S.log('Closed an unanswered request from ' + S.fullName(fm) + ' to ' + S.fullName(tm)); closeModal(); toast('Request closed');
+    }
+  });
+
+  /* ---------- matchmaker ---------- */
+  function city(pr){ return (pr.location || '').split(',')[0].trim().toLowerCase() }
+  function fits(age, min, max){ return age != null && (!min || age >= +min) && (!max || age <= +max) }
+  function reasons(a, b){
+    var A = a.profile, B = b.profile, r = [];
+    if (A.religion && A.religion === B.religion) r.push(['g', 'Same faith']);
+    if (A.intent && A.intent === B.intent) r.push(['g', 'Same timeline']);
+    if (fits(S.age(B.dob), A.agemin, A.agemax) && fits(S.age(A.dob), B.agemin, B.agemax)) r.push(['g', 'Ages suit both']);
+    if (A.wantkids && A.wantkids === B.wantkids) r.push(['g', 'Agree on children']);
+    if (city(A) && city(A) === city(B)) r.push(['g', 'Same city']);
+    if (S.groupOf(a) !== S.groupOf(b)) r.push(['w', 'Across borders']);
+    if (S.genoRisk(A.genotype, B.genotype)) r.push(['w', 'Both genotype carriers']);
+    return r;
+  }
+  function suggestedAt(a, b){
+    var key = 'Suggested match: ' + S.fullName(b);
+    var n = S.all('notes').filter(function(x){ return x.member === a.id && x.body === key }).sort(function(x, y){ return y.at - x.at })[0];
+    return n ? n.at : null;
+  }
+  function candidates(a){
+    var want = a.profile.gender === 'Man' ? 'Woman' : a.profile.gender === 'Woman' ? 'Man' : null;
+    return members().filter(function(b){
+      return b.id !== a.id && b.status === 'approved' && (!want || b.profile.gender === want) && S.eligible(a, b) && !S.breaks(a, b) && !S.breaks(b, a) &&
+        !S.introBetween(a.id, b.id) && (a.blocked || []).indexOf(b.id) < 0 && (b.blocked || []).indexOf(a.id) < 0;
+    }).map(function(b){ return { m: b, score: pairScore(a, b), why: reasons(a, b), at: suggestedAt(a, b) } })
+      .sort(function(x, y){ return y.score - x.score });
+  }
+  $('mmSearch').addEventListener('input', render);
+  $('mmList').addEventListener('click', function(e){ var b = e.target.closest('[data-mm]'); if (b) go('#matchmaker/' + b.dataset.mm) });
+  function rMatchmaker(){
+    var q = $('mmSearch').value.trim().toLowerCase();
+    var pool = members().filter(function(m){ return m.status === 'approved' });
+    if (mmId && !member(mmId)) mmId = null;
+    var list = pool.filter(function(m){ return !q || (S.fullName(m) + ' ' + (m.profile.location || '')).toLowerCase().indexOf(q) >= 0 })
+      .sort(function(a, b){ return S.fullName(a).localeCompare(S.fullName(b)) });
+    $('mmList').innerHTML = list.length ? list.map(function(m){
+      return '<button type="button" data-mm="' + m.id + '" aria-current="' + (m.id === mmId) + '">' + av(m) + '<span style="min-width:0"><b>' + esc(S.fullName(m)) + '</b><span>' + esc([m.profile.gender, S.age(m.profile.dob), m.profile.location].filter(Boolean).join(' · ')) + '</span></span></button>' }).join('')
+      : '<p class="sub" style="padding:8px">No approved members match.</p>';
+    if (!mmId) { $('mmBody').innerHTML = '<div class="card"><div class="empty"><b>Choose a member</b><span>Their best matches appear here, ranked by compatibility both ways.</span></div></div>'; return; }
+    var a = member(mmId), c = candidates(a), pr = a.profile;
+    $('mmBody').innerHTML = '<div class="card" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">' + av(a).replace('class="av"', 'class="av lg"') +
+        '<div style="flex:1;min-width:200px"><b style="font-size:1.1rem">' + esc(S.fullName(a)) + '</b><p class="sub">' + esc([pr.gender, S.age(pr.dob), pr.location, S.religionLabel(pr.religion)].filter(Boolean).join(' · ')) + '</p>' +
+        '<p class="sub">Looking for ' + esc(pr.agemin || pr.agemax ? 'ages ' + (pr.agemin || '?') + ' to ' + (pr.agemax || '?') : 'any age') + (pr.ploc ? ' · ' + esc(pr.ploc) : '') + ((pr.dealbreakers || []).length ? ' · Deal-breakers: ' + esc(pr.dealbreakers.join(', ')) : '') + '</p></div>' +
+        '<button type="button" class="btn btn-ghost btn-sm" data-open="' + a.id + '">Full profile</button></div>' +
+      (pr.circle ? '<div class="banner ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><div><b>Private Circle</b><p>Only other circle members are shown. Never mention the circle in a suggestion.</p></div></div>' : '') +
+      '<p class="sub">' + c.length + ' possible ' + (c.length === 1 ? 'match' : 'matches') + '. Members they already have a request with, have blocked, or rule out with a deal-breaker are left out.</p>' +
+      (c.length ? c.slice(0, 30).map(function(x){
+        var b = x.m, bp = b.profile;
+        return '<div class="cand">' + av(b) + '<div style="min-width:0"><button type="button" class="linkp" data-open="' + b.id + '"><b>' + esc(S.fullName(b)) + '</b></button> <span class="score">' + x.score + '%</span>' +
+          '<p class="sub">' + esc([S.age(bp.dob), bp.location, S.religionLabel(bp.religion), bp.job].filter(Boolean).join(' · ')) + '</p>' +
+          '<div class="chips">' + x.why.map(function(w){ return '<span class="chip ' + w[0] + '">' + w[1] + '</span>' }).join('') + (x.at ? '<span class="chip">Suggested ' + S.ago(x.at).toLowerCase() + '</span>' : '') + '</div></div>' +
+          '<div><button type="button" class="btn ' + (x.at ? 'btn-ghost' : 'btn-primary') + ' btn-sm" data-suggest="' + b.id + '">' + (x.at ? 'Suggest again' : 'Suggest') + '</button></div></div>' }).join('')
+        : '<div class="card"><div class="empty"><b>No possible matches right now</b><span>As more members are approved, they will appear here.</span></div></div>');
+  }
+  function suggestText(to, other, why){
+    var name = S.view(other, to.id).name, good = why.filter(function(w){ return w[0] === 'g' }).map(function(w){ return w[1].toLowerCase() });
+    return 'Hi ' + to.profile.first + ', our team has been looking at your matches and we think you and ' + name + ' could be a lovely fit' + (good.length ? ' (' + good.join(', ') + ')' : '') + '. You will find ' + name + ' in your Matches. Have a look, and if you like what you see, send an introduction request. No pressure at all.';
+  }
+  document.addEventListener('click', function(e){
+    var s = e.target.closest('[data-suggest]');
+    if (s) {
+      var a = member(mmId), b = member(s.dataset.suggest), why = reasons(a, b);
+      modal('<h3>Suggest ' + esc(S.view(b, a.id).name) + ' to ' + esc(a.profile.first) + '</h3>' +
+        '<div class="field"><label for="sgText">Message to ' + esc(a.profile.first) + '</label><textarea id="sgText">' + esc(suggestText(a, b, why)) + '</textarea><span class="hint">Names follow each member\'s privacy setting.</span></div>' +
+        '<label style="display:flex;gap:10px;align-items:center;font-size:.95rem"><input type="checkbox" id="sgBoth" style="width:18px;height:18px;accent-color:var(--green)">Also suggest ' + esc(S.view(a, b.id).name) + ' to ' + esc(b.profile.first) + '</label>' +
+        '<div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-primary" id="sgGo" data-b="' + b.id + '">Send suggestion</button></div>');
+    }
+    if (e.target.id === 'sgGo') {
+      var A = member(mmId), B = member(e.target.dataset.b), body = $('sgText').value.trim(); if (!body) { $('sgText').focus(); return }
+      var both = $('sgBoth').checked;
+      S.send(S.supportThread(A.id), 'admin', body);
+      addNote(A.id, 'Suggested match: ' + S.fullName(B));
+      if (both) { S.send(S.supportThread(B.id), 'admin', suggestText(B, A, reasons(B, A))); addNote(B.id, 'Suggested match: ' + S.fullName(A)); }
+      S.log('Team suggested ' + S.fullName(B) + ' to ' + S.fullName(A) + (both ? ' (and the other way round)' : ''));
+      closeModal(); toast('Suggestion sent to ' + A.profile.first + (both ? ' and ' + B.profile.first : ''));
+    }
+  });
+
+  /* ---------- broadcasts ---------- */
+  var AUD = [
+    ['active', 'Every active member', function(m){ return ['rejected','suspended'].indexOf(m.status) < 0 }],
+    ['approved', 'Approved members', function(m){ return m.status === 'approved' }],
+    ['waiting', 'In review or making changes', function(m){ return m.status === 'pending' || m.status === 'changes' }],
+    ['draft', 'Haven\'t submitted a profile yet', function(m){ return m.status === 'draft' }],
+    ['unpaid', 'Haven\'t paid yet', function(m){ return ['approved','rejected','suspended'].indexOf(m.status) < 0 && (m.payment.status === 'none' || m.payment.status === 'rejected') }],
+    ['women', 'Approved women', function(m){ return m.status === 'approved' && m.profile.gender === 'Woman' }],
+    ['men', 'Approved men', function(m){ return m.status === 'approved' && m.profile.gender === 'Man' }],
+    ['intl', 'Members from other countries', function(m){ return m.status !== 'rejected' && S.groupOf(m) === 'international' }],
+    ['circle', 'Private Circle members', function(m){ return m.status === 'approved' && m.profile.circle }]
+  ];
+  function audience(){ var k = $('bcAud').value || 'active', a = AUD.filter(function(x){ return x[0] === k })[0]; return { key: a[0], label: a[1], list: members().filter(a[2]) } }
+  function personal(body, m){ return body.replace(/\{first\}/gi, m.profile.first || 'there') }
+  $('bcAud').addEventListener('change', render);
+  $('bcBody').addEventListener('input', render);
+  function rBroadcasts(){
+    var keep = $('bcAud').value || 'active';
+    $('bcAud').innerHTML = AUD.map(function(a){ return '<option value="' + a[0] + '">' + esc(a[1]) + ' (' + members().filter(a[2]).length + ')</option>' }).join('');
+    $('bcAud').value = keep;
+    var au = audience(), body = $('bcBody').value.trim();
+    $('bcWarn').innerHTML = au.key === 'circle' ? '<div class="banner ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><div><b>Sensitive group</b><p>Each circle member receives this privately. Never send circle news to any other group.</p></div></div>' : '';
+    $('bcWho').textContent = au.list.length + (au.list.length === 1 ? ' member' : ' members') + ' will receive this' + (au.list[0] ? '. Shown as ' + au.list[0].profile.first + ' sees it.' : '.');
+    $('bcPrev').textContent = body ? (au.list[0] ? personal(body, au.list[0]) : body) : 'Your message will appear here.';
+    $('bcSend').disabled = !body || !au.list.length;
+    var hist = S.all('activity').filter(function(a){ return a.text.indexOf('Broadcast to ') === 0 });
+    $('bcHist').innerHTML = hist.length ? hist.slice(0, 20).map(function(a){ return '<li><span>' + esc(a.text.replace('Broadcast to ', 'To ')) + '</span><time>' + S.ago(a.at) + '</time></li>' }).join('') : '<li><span class="sub">No broadcasts sent yet.</span></li>';
+  }
+  $('bcSend').addEventListener('click', function(){
+    var au = audience();
+    modal('<h3>Send to ' + au.list.length + ' members?</h3><p class="sub">' + esc(au.label) + '. Each member receives it privately in their support inbox. This can\'t be unsent.</p><div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-primary" id="bcGo">Send now</button></div>');
+  });
+  document.addEventListener('click', function(e){
+    if (e.target.id !== 'bcGo') return;
+    var au = audience(), body = $('bcBody').value.trim();
+    S.sendMany(au.list.map(function(m){ return { thread: S.supportThread(m.id), body: personal(body, m) } }), 'admin');
+    S.log('Broadcast to ' + au.list.length + ' members (' + au.label + '): “' + (body.length > 70 ? body.slice(0, 70) + '…' : body) + '”');
+    $('bcBody').value = ''; closeModal(); toast('Sent to ' + au.list.length + ' members'); render();
+  });
+
+  /* ---------- insights ---------- */
+  function hbars(rows, total){
+    var max = Math.max.apply(null, rows.map(function(r){ return r[1] }).concat(1));
+    return rows.map(function(r){ return '<div class="hb" data-tip="' + esc(r[0] + ': ' + r[1] + (total ? ' (' + pct(r[1], total) + '%)' : '')) + '"><span>' + esc(r[0]) + '</span><div class="tr"><i style="width:' + (r[1] / max * 100) + '%"></i></div><b>' + r[1] + (total ? ' <span class="sub" style="font-weight:600">' + pct(r[1], total) + '%</span>' : '') + '</b></div>' }).join('');
+  }
+  function tally(list, fn, top){
+    var c = {}; list.forEach(function(m){ var k = fn(m) || 'Not given'; c[k] = (c[k] || 0) + 1 });
+    var rows = Object.keys(c).map(function(k){ return [k, c[k]] }).sort(function(a, b){ return b[1] - a[1] });
+    if (top && rows.length > top) { var rest = rows.slice(top - 1).reduce(function(a, r){ return a + r[1] }, 0); rows = rows.slice(0, top - 1).concat([['Other', rest]]); }
+    return rows;
+  }
+  function rInsights(){
+    var all = members(), intros = S.all('intros');
+    var submitted = all.filter(function(m){ return m.status !== 'draft' }), approved = all.filter(function(m){ return m.status === 'approved' });
+    var paid = all.filter(function(m){ return m.payment.status === 'confirmed' });
+    var introduced = all.filter(function(m){ return intros.some(function(i){ return i.status === 'accepted' && (i.from === m.id || i.to === m.id) }) });
+    var revenue = paid.reduce(function(a, m){ return a + (+m.payment.amount || 0) }, 0);
+    $('isStats').innerHTML = [
+      ['Accounts', all.length, all.filter(function(m){ return Date.now() - m.createdAt < 7 * D }).length + ' new this week'],
+      ['Approved', approved.length, pct(approved.length, submitted.length) + '% of submitted profiles'],
+      ['Payments confirmed', paid.length, revenue ? naira(revenue) + ' recorded' : 'Amounts recorded from now on'],
+      ['Introduced', introduced.length, pct(introduced.length, approved.length) + '% of approved members']
+    ].map(function(s){ return '<div class="stat"><span>' + s[0] + '</span><b>' + s[1] + '</b><small>' + s[2] + '</small></div>' }).join('');
+    /* weeks start on Monday */
+    var start = new Date(); start.setHours(0, 0, 0, 0); start.setDate(start.getDate() - ((start.getDay() + 6) % 7) - 77);
+    var weeks = []; for (var w = 0; w < 12; w++) weeks.push({ from: +start + w * 7 * D, n: 0 });
+    all.forEach(function(m){ var k = Math.floor((m.createdAt - start) / (7 * D)); if (k >= 0 && k < 12) weeks[k].n++ });
+    var max = Math.max.apply(null, weeks.map(function(x){ return x.n }).concat(1)), sum = weeks.reduce(function(a, x){ return a + x.n }, 0);
+    var lbl = function(t){ return new Date(t).toLocaleDateString('en-GB', { day:'numeric', month:'short' }) };
+    $('isWeekT').textContent = sum + ' new accounts';
+    $('isWeeks').setAttribute('aria-label', 'New accounts per week: ' + weeks.map(function(x){ return 'week of ' + lbl(x.from) + ', ' + x.n }).join('; '));
+    $('isWeeks').innerHTML = weeks.map(function(x){ return '<div class="col" tabindex="0" data-tip="Week of ' + lbl(x.from) + ': ' + x.n + '"><i style="height:' + (x.n / max * 100) + '%"></i></div>' }).join('');
+    $('isWeekX').innerHTML = weeks.map(function(x, k){ return '<span>' + (k % 3 === 0 || k === 11 ? lbl(x.from) : '') + '</span>' }).join('');
+    $('isFunnel').innerHTML = hbars([['Created account', all.length], ['Submitted profile', submitted.length], ['Payment confirmed', paid.length], ['Approved', approved.length], ['Introduced', introduced.length]], all.length);
+    var bands = function(m){ var a = S.age(m.profile.dob); return a == null ? '' : a < 30 ? '21 to 29' : a < 35 ? '30 to 34' : a < 40 ? '35 to 39' : a < 45 ? '40 to 44' : '45 and over' };
+    var cards = [
+      ['Gender', tally(approved, function(m){ return { Man:'Men', Woman:'Women' }[m.profile.gender] })],
+      ['Faith', tally(approved, function(m){ return S.religionLabel(m.profile.religion) }, 6)],
+      ['Age', tally(approved, bands).sort(function(a, b){ return a[0].localeCompare(b[0]) })],
+      ['Lives in', tally(approved, function(m){ return (m.profile.location || '').split(',')[0].trim() }, 7)],
+      ['Background', tally(approved, function(m){ return S.groupOf(m) === 'international' ? 'From other countries' : 'Nigerian' })]
+    ];
+    $('isBreak').innerHTML = cards.map(function(c){ return '<div class="card"><div class="chead"><h2>' + c[0] + '</h2><span class="sub">Approved members</span></div><div class="hbars">' + (approved.length ? hbars(c[1], approved.length) : '<p class="sub">No approved members yet.</p>') + '</div></div>' }).join('');
+  }
+  /* one tooltip for every chart mark */
+  function showTip(e){
+    var t = e.target.closest && e.target.closest('[data-tip]'), tip = $('tip');
+    if (!t) { tip.hidden = true; return }
+    var r = t.getBoundingClientRect(); tip.textContent = t.dataset.tip; tip.hidden = false;
+    tip.style.left = Math.min(innerWidth - 80, Math.max(80, r.left + r.width / 2)) + 'px'; tip.style.top = (r.top - 8) + 'px';
+  }
+  document.addEventListener('mouseover', showTip); document.addEventListener('focusin', showTip);
+  document.addEventListener('scroll', function(){ $('tip').hidden = true }, true);
+
+  /* ---------- activity ---------- */
+  $('acSearch').addEventListener('input', render);
+  function rActivity(){
+    var q = $('acSearch').value.trim().toLowerCase(), last = '';
+    var list = S.all('activity').filter(function(a){ return !q || a.text.toLowerCase().indexOf(q) >= 0 });
+    $('acList').innerHTML = list.length ? list.map(function(a){ var d = S.day(a.at), h = d !== last ? '<li class="dayhd">' + d + '</li>' : ''; last = d; return h + '<li><span>' + esc(a.text) + '</span><time>' + S.clock(a.at) + '</time></li>' }).join('')
+      : '<li><span class="sub">' + (q ? 'Nothing in the log matches.' : 'No activity yet.') + '</span></li>';
+  }
+
+  /* ---------- team ---------- */
+  function rTeam(){
+    var me = (S.admin.get() || {}).id, t = S.team.list() || [];
+    $('tmList').innerHTML = t.length ? t.map(function(x){
+      return '<li><span class="av gold">' + esc((x.email || '?')[0].toUpperCase()) + '</span><div style="flex:1;min-width:0"><b style="display:block;overflow-wrap:anywhere">' + esc(x.email) + (x.user_id === me ? ' <span class="pill ok">You</span>' : '') + '</b><span class="sub">Added ' + date(Date.parse(x.added_at)) + '</span></div>' +
+        (x.user_id !== me && t.length > 1 ? '<button type="button" class="btn btn-danger-ghost btn-sm" data-tmrm="' + x.user_id + '" data-email="' + esc(x.email) + '">Remove</button>' : '') + '</li>' }).join('')
+      : '<li><span class="sub">' + (S.needsUpgrade ? 'Run the latest schema.sql to manage the team here.' : 'Loading…') + '</span></li>';
+  }
+  $('tmForm').addEventListener('submit', function(e){
+    e.preventDefault(); var em = $('tmEmail').value.trim(); if (!/.+@.+\..+/.test(em)) { toast('Enter their email address'); return }
+    S.team.add(em).then(function(){ $('tmEmail').value = ''; toast(em + ' can now sign in here'); render() }, function(err){ toast(errMsg(err)) });
+  });
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('[data-tmrm]');
+    if (b) modal('<h3>Remove ' + esc(b.dataset.email) + '?</h3><p class="sub">They will no longer be able to open this dashboard. Their login itself is kept.</p><div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-danger" id="tmGo" data-id="' + b.dataset.tmrm + '">Remove</button></div>');
+    if (e.target.id === 'tmGo') S.team.remove(e.target.dataset.id).then(function(){ closeModal(); toast('Removed from the team') }, function(err){ closeModal(); toast(errMsg(err)) });
+  });
+
+  /* ---------- settings ---------- */
+  var ST = { stFee:'fee', stFeeNote:'feeNote', stBank:'bank', stName:'accountName', stNo:'accountNumber', stReview:'reviewTime', stEmail:'supportEmail' };
+  function fillSettings(){ var s = S.settings(); Object.keys(ST).forEach(function(id){ $(id).value = s[ST[id]] || '' }); $('stErr').hidden = true }
+  function formSettings(){ var o = {}; Object.keys(ST).forEach(function(id){ o[ST[id]] = $(id).value.trim() }); o.fee = o.fee.replace(/[^\d]/g, ''); o.accountNumber = o.accountNumber.replace(/\D/g, ''); return o }
+  function rSettings(){
+    var s = formSettings();
+    $('stPrev').innerHTML = '<dt>Amount</dt><dd>' + (s.fee ? naira(s.fee) + (s.feeNote ? ' · ' + esc(s.feeNote) : '') : 'To be confirmed by NSC') + '</dd><dt>Bank</dt><dd>' + esc(s.bank || 'To be confirmed') + '</dd><dt>Account name</dt><dd>' + esc(s.accountName || 'NaijaSinglesConnect') + '</dd><dt>Account number</dt><dd>' + esc(s.accountNumber || 'To be confirmed') + '</dd><dt>Reference</dt><dd>NSC-XXXXXX</dd>';
+  }
+  $('stForm').addEventListener('input', rSettings);
+  $('stForm').addEventListener('submit', function(e){
+    e.preventDefault(); var s = formSettings(), err = '';
+    if (s.accountNumber && s.accountNumber.length !== 10) err = 'Nigerian account numbers have 10 digits.';
+    if (s.supportEmail && !/.+@.+\..+/.test(s.supportEmail)) err = 'Check the support email address.';
+    $('stErr').hidden = !err; $('stErr').textContent = err; if (err) return;
+    S.saveSettings(s).then(function(){ S.log('Settings updated'); toast('Saved. Members see the new details straight away.') }, function(e2){ $('stErr').hidden = false; $('stErr').textContent = 'Could not save: ' + errMsg(e2) });
+  });
+
+  /* ---------- global member search ---------- */
+  $('gq').addEventListener('input', function(){
+    var q = this.value.trim().toLowerCase(), box = $('gres');
+    if (q.length < 2) { box.hidden = true; return }
+    var digits = q.replace(/\D/g, '');
+    var hits = members().filter(function(m){ return (S.fullName(m) + ' ' + m.email + ' ' + (m.payment.ref || '')).toLowerCase().indexOf(q) >= 0 || (digits.length >= 4 && (m.phone || '').replace(/\D/g, '').indexOf(digits) >= 0) }).slice(0, 8);
+    box.innerHTML = hits.length ? hits.map(function(m){ return '<button type="button" data-open="' + m.id + '" data-gq>' + av(m) + '<span style="min-width:0"><b style="display:block">' + esc(S.fullName(m)) + '</b><span class="sub">' + esc(m.email) + ' · ' + STATUS[m.status][1] + '</span></span></button>' }).join('') : '<div class="none">No members match.</div>';
+    box.hidden = false;
+  });
+  document.addEventListener('click', function(e){ if (e.target.closest('[data-gq]')) { $('gres').hidden = true; $('gq').value = '' } else if (!e.target.closest('.gsearch')) $('gres').hidden = true });
+
   /* ---------- member drawer ---------- */
   document.addEventListener('click', function(e){
     var o = e.target.closest('[data-open]'); if (!o || e.target.closest('[data-payok],[data-payrej]')) return;
     drawerId = o.dataset.open; rDrawer();
   });
+  function addNote(id, body){ S.insert('notes', { id: S.uid('n_'), member: id, body: body, by: S.mode === 'cloud' ? '' : 'NSC Team', at: Date.now() }) }
   function rDrawer(){
-    var m = S.get('members', drawerId); if (!m) { closeDrawer(); return; }
-    var pr = m.profile, pct = completion(pr), f = m.payment.file, a = S.age(pr.dob);
+    var m = member(drawerId); if (!m) { closeDrawer(); return; }
+    var keepNote = $('noteText') ? $('noteText').value : '', noteFocus = document.activeElement && document.activeElement.id === 'noteText';
+    var keepScroll = document.querySelector('.drawer .db') ? document.querySelector('.drawer .db').scrollTop : 0;
+    var pr = m.profile, p = completion(pr), f = m.payment.file, a = S.age(pr.dob);
     var rows = [['Email', m.email], ['Phone', m.phone], ['Gender', pr.gender], ['Age', a ? a + ' (born ' + pr.dob + ')' : ''], ['Lives in', pr.location], ['Nationality', (pr.nationality || '') + (pr.heritage === 'Yes' ? ' (Nigerian heritage)' : '')], ['Open to', { nigerian:'Nigerians', international:'People from other countries', both:'Nigerians and people from other countries' }[pr.openTo || 'both']], ['State of origin', pr.origin], ['LGA', pr.lga], ['Qualification', pr.qual], ['Occupation', pr.job],
-      ['Religion', pr.religion], ['Denomination', pr.denom], ['Place of worship', pr.worship], ['Marital status', pr.marital], ['Genotype', pr.genotype], ['Children', pr.children], ['Wants children', pr.wantkids],
+      ['Religion', pr.religion], ['Denomination', pr.denom], ['Faith importance', pr.faithImportance], ['Place of worship', pr.worship], ['Marital status', pr.marital], ['Genotype', pr.genotype], ['Children', pr.children], ['Wants children', pr.wantkids],
       ['Intent', pr.intent], ['Preferred ages', pr.agemin || pr.agemax ? pr.agemin + ' to ' + pr.agemax : ''], ['Partner location', pr.ploc], ['Deal-breakers', (pr.dealbreakers || []).join(', ')], ['Privacy', { full:'Full profile', nophoto:'Without photographs', name:'Name-restricted' }[m.privacy || 'full']]];
     var intros = S.all('intros').filter(function(i){ return i.from === m.id || i.to === m.id });
     var reports = S.all('reports').filter(function(r){ return r.about === m.id });
+    var notes = S.all('notes').filter(function(n){ return n.member === m.id }).sort(function(x, y){ return y.at - x.at });
     var acts = '';
     if (['pending','changes','draft','rejected'].indexOf(m.status) >= 0) acts = '<button type="button" class="btn btn-danger-ghost" data-act="reject">Reject</button><button type="button" class="btn btn-ghost" data-act="changes">Request changes</button><button type="button" class="btn btn-primary" data-act="approve">Approve</button>';
-    if (m.status === 'approved') acts = '<button type="button" class="btn btn-danger-ghost" data-act="suspend">Pause account</button>';
+    if (m.status === 'approved') acts = '<button type="button" class="btn btn-danger-ghost" data-act="suspend">Pause account</button><a class="btn btn-primary" href="#matchmaker/' + m.id + '" data-closedrawer>Find matches</a>';
     if (m.status === 'suspended') acts = '<button type="button" class="btn btn-primary" data-act="reactivate">Reactivate</button>';
     acts = '<a class="btn btn-ghost" href="#support/' + encodeURIComponent(S.supportThread(m.id)) + '" data-closedrawer>Message</a>' + acts;
     $('layer2').innerHTML = '<div class="scrim" data-closedrawer></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="Member profile">' +
@@ -409,17 +938,26 @@ window.NSC.ready({ as: 'admin' }).then(function(){
       '<div class="db">' +
         (m.adminNote && ['changes','rejected','suspended'].indexOf(m.status) >= 0 ? '<div class="banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><div><b>Last note to member</b><p>' + esc(m.adminNote) + '</p></div></div>' : '') +
         (pr.circle ? '<div class="banner ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><div><b>Private Circle member · sensitive</b><p>This member is living with HIV and has opted into the Private Circle. Never mention this outside the circle or in messages that other people could see.</p></div></div>' : '') +
-        '<div class="card" style="display:flex;gap:20px;align-items:center;flex-wrap:wrap"><div class="ring" style="--p:' + pct + ';width:72px;height:72px"><b style="width:56px;height:56px;font-size:1rem">' + pct + '%</b></div><div style="flex:1;min-width:200px"><b>Profile ' + pct + '% complete</b><p class="sub">Joined ' + new Date(m.createdAt).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }) + (m.submittedAt ? ' · Submitted ' + S.ago(m.submittedAt).toLowerCase() : '') + '</p><p class="sub">' + intros.length + ' introductions · ' + reports.length + ' reports about them</p></div></div>' +
-        '<div><b>Photos</b><div class="gallery" style="margin-top:10px">' + [0,1,2].map(function(i){ return pr.photos[i] ? '<img src="' + pr.photos[i] + '" alt="Photo ' + (i + 1) + '">' : '<div class="ph">No photo</div>' }).join('') + '</div></div>' +
+        '<div class="card" style="display:flex;gap:20px;align-items:center;flex-wrap:wrap"><div class="ring" style="--p:' + p + ';width:72px;height:72px"><b style="width:56px;height:56px;font-size:1rem">' + p + '%</b></div><div style="flex:1;min-width:200px"><b>Profile ' + p + '% complete</b><p class="sub">Joined ' + date(m.createdAt, true) + (m.submittedAt ? ' · Submitted ' + S.ago(m.submittedAt).toLowerCase() : '') + '</p><p class="sub">' + intros.length + ' introductions · ' + reports.length + ' reports about them</p></div></div>' +
+        '<div><b>Photos</b><div class="gallery" style="margin-top:10px">' + [0,1,2].map(function(i){ return pr.photos[i] ? '<img src="' + esc(pr.photos[i]) + '" alt="Photo ' + (i + 1) + '">' : '<div class="ph">No photo</div>' }).join('') + '</div></div>' +
         (pr.bio ? '<div><b>About me</b><p style="margin:6px 0 0">' + esc(pr.bio) + '</p></div>' : '') +
         (pr.lookfor ? '<div><b>The partner they hope for</b><p style="margin:6px 0 0">' + esc(pr.lookfor) + '</p></div>' : '') +
         '<div><b>Payment</b><div class="receipt" style="margin-top:10px">' + (f && (f.dataUrl || f.path) ? '<div id="rcptBox"><p class="sub" style="padding:14px">Loading receipt…</p></div>' : '') +
-          '<div class="meta"><span>Reference <b>' + esc(m.payment.ref) + '</b>' + (f ? ' · ' + esc(f.name) + ' · ' + esc(f.size) : ' · No receipt uploaded') + (f && !f.dataUrl && !f.path ? ' <span class="sub">(preview not stored)</span>' : '') + '</span>' +
+          '<div class="meta"><span>Reference <b>' + esc(m.payment.ref) + '</b>' + (f ? ' · ' + esc(f.name) + ' · ' + esc(f.size) : ' · No receipt uploaded') + (m.payment.amount ? ' · ' + naira(m.payment.amount) : '') + (f && !f.dataUrl && !f.path ? ' <span class="sub">(preview not stored)</span>' : '') + '</span>' +
           (m.payment.status === 'uploaded' ? '<span style="display:flex;gap:8px"><button type="button" class="btn btn-ghost btn-sm" data-payrej="' + m.id + '">Reject receipt</button><button type="button" class="btn btn-primary btn-sm" data-payok="' + m.id + '">Confirm payment</button></span>' : pill(PAY, m.payment.status)) + '</div></div></div>' +
+        '<div><b>Team notes</b> <span class="sub">Only the team sees these.</span>' +
+          (notes.length ? '<div class="notes">' + notes.map(function(n){ return '<div class="note"><p>' + esc(n.body) + '</p><span>' + esc(n.by || 'Team') + ' · ' + S.ago(n.at) + '</span></div>' }).join('') + '</div>' : '') +
+          '<div class="noteadd"><textarea id="noteText" rows="2" maxlength="2000" placeholder="Add a note, e.g. called to confirm details" aria-label="New team note"></textarea><button type="button" class="btn btn-ghost btn-sm" id="noteAdd">Add note</button></div></div>' +
         '<div><b>Details</b><dl class="kv" style="margin-top:10px">' + rows.map(function(r){ return '<dt>' + r[0] + '</dt><dd>' + (r[1] ? esc(r[1]) : '<span class="sub">Not given</span>') + '</dd>' }).join('') + '</dl></div>' +
+        '<div class="card" style="display:grid;gap:12px"><div><b>Data requests</b><p class="sub">If ' + esc(pr.first || 'this member') + ' asks for a copy of their data or for their account to be deleted, handle it here within 30 days.</p></div><div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn btn-ghost btn-sm" id="exportGo">Download their data</button><button type="button" class="btn btn-danger-ghost btn-sm" id="deleteAsk">Delete account</button></div></div>' +
       '</div><div class="df">' + acts + '</div></aside>';
+    $('noteText').value = keepNote; if (noteFocus) $('noteText').focus();
+    document.querySelector('.drawer .db').scrollTop = keepScroll;
     if (f && (f.dataUrl || f.path)) showReceipt(f, m.id);
   }
+  document.addEventListener('click', function(e){
+    if (e.target.id === 'noteAdd') { var t = $('noteText'), body = t.value.trim(); if (!body) { t.focus(); return } t.value = ''; addNote(drawerId, body); toast('Note added') }
+  });
   /* receipts in Supabase are private: fetch a short-lived link and keep it while the drawer is open */
   var rcptUrls = {};
   function showReceipt(f, id){
@@ -434,6 +972,38 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   function closeDrawer(){ drawerId = null; $('layer2').innerHTML = '' }
   document.addEventListener('click', function(e){ if (e.target.closest('[data-closedrawer]')) closeDrawer() });
 
+  /* data export: what NSC holds about them, without other members' identities or messages */
+  document.addEventListener('click', function(e){
+    if (e.target.id !== 'exportGo') return;
+    var m = member(drawerId), iso = function(t){ return t ? new Date(t).toISOString() : null };
+    var data = {
+      exportedAt: new Date().toISOString(), service: 'NaijaSinglesConnect',
+      account: { email: m.email, phone: m.phone, status: m.status, joined: iso(m.createdAt), submitted: iso(m.submittedAt), approved: iso(m.approvedAt), privacySetting: m.privacy,
+        payment: { status: m.payment.status, reference: m.payment.ref, uploaded: iso(m.payment.uploadedAt), confirmed: iso(m.payment.confirmedAt), amount: m.payment.amount || null } },
+      profile: Object.assign({}, m.profile),
+      introductions: S.all('intros').filter(function(i){ return i.from === m.id || i.to === m.id }).map(function(i){ return { direction: i.from === m.id ? 'sent' : 'received', status: i.status, note: i.from === m.id ? i.note : '', created: iso(i.createdAt), answered: iso(i.respondedAt) } }),
+      messagesTheySent: S.all('messages').filter(function(x){ return x.from === m.id && x.thread !== S.supportThread(m.id) }).map(function(x){ return { at: iso(x.at), body: x.body } }),
+      supportConversation: S.threadMessages(S.supportThread(m.id)).map(function(x){ return { from: x.from === m.id ? 'member' : 'NSC team', at: iso(x.at), body: x.body } }),
+      reportsTheyFiled: S.all('reports').filter(function(r){ return r.by === m.id }).map(function(r){ return { reason: r.reason, details: r.details, at: iso(r.at), status: r.status } }),
+      teamNotes: S.all('notes').filter(function(n){ return n.member === m.id }).map(function(n){ return { at: iso(n.at), note: n.body } })
+    };
+    download('nsc-data-' + (m.payment.ref || m.id) + '.json', JSON.stringify(data, null, 2), 'application/json');
+    S.log('Data export downloaded for ' + S.fullName(m));
+  });
+  document.addEventListener('click', function(e){
+    if (e.target.id === 'deleteAsk') {
+      var m = member(drawerId);
+      modal('<h3>Delete ' + esc(S.fullName(m)) + '\'s account?</h3><p class="sub">This permanently removes their login, profile, photos, receipts, introductions and messages. It can\'t be undone. Download their data first if they asked for a copy.</p>' +
+        '<div class="field"><label for="delConfirm">Type DELETE to confirm</label><input id="delConfirm" autocomplete="off"></div>' +
+        '<div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-danger" id="delGo" disabled>Delete permanently</button></div>');
+    }
+    if (e.target.id === 'delGo') {
+      var who = member(drawerId), btn = e.target; btn.disabled = true; btn.textContent = 'Deleting…';
+      S.deleteMember(who.id).then(function(){ closeModal(); closeDrawer(); toast('Account deleted') }, function(err){ btn.disabled = false; btn.textContent = 'Delete permanently'; toast('Could not delete: ' + errMsg(err)) });
+    }
+  });
+  document.addEventListener('input', function(e){ if (e.target.id === 'delConfirm') $('delGo').disabled = e.target.value.trim() !== 'DELETE' });
+
   /* actions */
   var templates = {
     changes: 'Thank you for your profile. Before we can approve it, please add a clear, recent photo of your face and complete your genotype and About me sections, then resubmit.',
@@ -442,7 +1012,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   };
   document.addEventListener('click', function(e){
     var b = e.target.closest('[data-act]'); if (!b) return;
-    var m = S.get('members', drawerId), act = b.dataset.act;
+    var m = member(drawerId), act = b.dataset.act;
     if (act === 'approve') {
       var payTxt = m.payment.status === 'confirmed' ? '' : '<label style="display:flex;gap:10px;align-items:center;font-size:.95rem"><input type="checkbox" id="apPay"' + (m.payment.status === 'uploaded' ? ' checked' : '') + ' style="width:18px;height:18px;accent-color:var(--green)">Also mark payment ' + esc(m.payment.ref) + ' as confirmed</label>' + (m.payment.status === 'none' ? '<div class="banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div><b>No receipt yet</b><p>This member hasn\'t uploaded a payment receipt.</p></div></div>' : '');
       modal('<h3>Approve ' + esc(m.profile.first) + '?</h3><p class="sub">They will see their matches straight away and other approved members will be able to find them.</p>' + payTxt + '<div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-primary" id="apGo">Approve</button></div>');
@@ -457,10 +1027,10 @@ window.NSC.ready({ as: 'admin' }).then(function(){
       '<div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn ' + (act === 'changes' ? 'btn-primary' : 'btn-danger') + '" id="actGo" data-act2="' + act + '">' + label + '</button></div>');
   });
   document.addEventListener('click', function(e){
-    var m = drawerId && S.get('members', drawerId);
+    var m = drawerId && member(drawerId);
     if (e.target.id === 'apGo') {
       var pay = $('apPay') && $('apPay').checked;
-      S.update('members', m.id, function(r){ r.status = 'approved'; r.approvedAt = Date.now(); r.adminNote = ''; if (pay) r.payment.status = 'confirmed' });
+      S.update('members', m.id, function(r){ r.status = 'approved'; r.approvedAt = Date.now(); r.adminNote = ''; if (pay) markPaid(r) });
       S.send(S.supportThread(m.id), 'admin', 'Good news, ' + m.profile.first + '! Your profile has been approved. Your matches are ready on your dashboard.');
       S.onApproved(m.id); S.log(S.fullName(m) + ' was approved'); closeModal(); toast(m.profile.first + ' is approved');
     }
@@ -475,17 +1045,23 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     var ok = e.target.closest('[data-payok]'), rj = e.target.closest('[data-payrej]');
     if (ok) confirmPay(ok.dataset.payok);
     if (rj) {
-      var who = S.get('members', rj.dataset.payrej);
+      var who = member(rj.dataset.payrej);
       modal('<h3>Reject receipt</h3><div class="field"><label for="pyNote">Message to ' + esc(who.profile.first) + '</label><textarea id="pyNote">We could not match your receipt to a payment in our account. Please check the reference ' + esc(who.payment.ref) + ' and upload the receipt again.</textarea></div><div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-danger" id="pyGo" data-who="' + who.id + '">Reject receipt</button></div>');
     }
     if (e.target.id === 'pyGo') { rejectPay(e.target.dataset.who, $('pyNote').value.trim()); closeModal() }
+  });
+
+  /* mobile: every section from the "More" tab */
+  $('moreBtn').addEventListener('click', function(){
+    var n = badges();
+    modal('<h3>All sections</h3><div class="sheetlist">' + Object.keys(titles).map(function(k){ var c = n[k] ? '<span class="count" style="margin:0">' + n[k] + '</span>' : ''; return '<a href="#' + k + '"' + (k === view ? ' aria-current="page"' : '') + ' data-close>' + titles[k] + c + '</a>' }).join('') + '</div><div class="acts"><button type="button" class="btn btn-ghost" data-close>Close</button></div>');
   });
 
   /* modal */
   function modal(html){ $('layer').innerHTML = '<div class="scrim" data-close style="z-index:80"></div><div class="modal" role="dialog" aria-modal="true" style="z-index:81">' + html + '</div>' }
   function closeModal(){ $('layer').innerHTML = '' }
   document.addEventListener('click', function(e){ if (e.target.closest('[data-close]')) closeModal() });
-  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { if ($('layer').innerHTML) closeModal(); else closeDrawer() } });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { $('gres').hidden = true; if ($('layer').innerHTML) closeModal(); else closeDrawer() } });
 
   $('whoBtn').addEventListener('click', function(e){ e.stopPropagation(); var mn = $('whoMenu'); mn.hidden = !mn.hidden });
   document.addEventListener('click', function(e){ if (!e.target.closest('.who')) $('whoMenu').hidden = true });

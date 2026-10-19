@@ -27,7 +27,7 @@
   });
   /* resolve with null instead of hanging if a request never settles */
   function withTimeout(p, ms) { return Promise.race([p, new Promise(function (r) { setTimeout(function () { r(null); }, ms); })]); }
-  var cache = { members: [], intros: [], messages: [], reports: [], activity: [], reads: {} };
+  var cache = { members: [], intros: [], messages: [], reports: [], activity: [], reads: {}, notes: [], settings: {}, team: [] };
   var st = { user: null, isAdmin: false, as: 'none', loaded: false, channel: null };
   var PROFILE_DEFAULTS = { first: '', last: '', gender: '', dob: '', location: '', nationality: '', heritage: '', openTo: 'both', origin: '', lga: '', qual: '', job: '',
     religion: '', denom: '', worship: '', marital: '', genotype: '', children: '', wantkids: '', intent: '', agemin: '', agemax: '', ploc: '', lookfor: '',
@@ -63,6 +63,9 @@
   function introRow(i) { return { id: i.id, from: i.from_id, to: i.to_id, status: i.status, note: i.note || '', createdAt: ms(i.created_at), respondedAt: ms(i.responded_at) }; }
   function msgRow(x) { return { id: x.id, thread: x.thread, from: x.from_id, body: x.body, at: ms(x.at) }; }
   function reportRow(r) { return { id: r.id, by: r.by_id, about: r.about_id, thread: r.thread, reason: r.reason, details: r.details || '', status: r.status, action: r.action, at: ms(r.at), resolvedAt: ms(r.resolved_at) }; }
+  function noteRow(n) { return { id: n.id, member: n.member_id, body: n.body, by: n.by_email, at: ms(n.at) }; }
+  /* tables added by a later schema.sql: a missing one shouldn't stop the rest from loading */
+  function soft(p) { return Promise.resolve(p).then(function (r) { return r && r.error ? { data: null, missing: true } : r; }, function () { return { data: null, missing: true }; }); }
 
   /* ---------- loading ---------- */
   var loading = null;
@@ -78,6 +81,8 @@
       sb.from('members').select('*').eq('id', me), sb.from('profiles').select('*').eq('id', me), sb.from('circle_members').select('member_id').eq('member_id', me),
       sb.from('intros').select('*'), sb.from('messages').select('*').order('at'), sb.rpc('match_profiles'), sb.from('reads').select('*')
     ];
+    jobs.push(soft(sb.from('settings').select('data').eq('id', 1).maybeSingle()));
+    if (admin) jobs.push(soft(sb.from('team_notes').select('*').order('at')), soft(sb.rpc('team_list')));
     loading = Promise.all(jobs).then(function (r) {
       var members = check(r[0], 'members'), profiles = check(r[1], 'profiles'), circle = check(r[2], 'circle');
       var pById = {}; profiles.forEach(function (p) { pById[p.id] = p; });
@@ -94,6 +99,14 @@
       }
       cache.members = next.members; cache.intros = next.intros; cache.messages = next.messages;
       cache.reports = next.reports; cache.activity = next.activity; cache.reads = next.reads;
+      var set = r[admin ? 8 : 7];
+      cache.settings = set && set.data ? set.data.data || {} : {};
+      S.needsUpgrade = !!(set && set.missing);
+      if (admin) {
+        cache.notes = r[9].data ? r[9].data.map(noteRow) : [];
+        cache.team = r[10].data || [];
+        S.needsUpgrade = S.needsUpgrade || !!r[9].missing || !!r[10].missing;
+      }
       st.loaded = true; S._emit();
     }).catch(function (e) { fail(e.what ? 'Could not load ' + e.what : 'Could not load your data', e); })
       .then(function () { loading = null; });
@@ -131,6 +144,7 @@
     if (t === 'messages') remote(sb.from('messages').insert({ id: row.id, thread: row.thread, from_id: row.from, body: row.body }), undo);
     else if (t === 'intros') remote(sb.from('intros').insert({ id: row.id, from_id: row.from, to_id: row.to, note: row.note || '' }), undo);
     else if (t === 'reports') remote(sb.from('reports').insert({ id: row.id, by_id: row.by, about_id: row.about, thread: row.thread || null, reason: row.reason, details: row.details || '' }), undo);
+    else if (t === 'notes') remote(sb.from('team_notes').insert({ id: row.id, member_id: row.member, body: row.body }), undo);
     else { undo(); fail('', 'New ' + t + ' rows are created by the server'); return null; }
     return row;
   }
@@ -322,6 +336,53 @@
     if (!f) return Promise.resolve(null);
     if (!f.path) return Promise.resolve(f.dataUrl || null);
     return sb.storage.from('receipts').createSignedUrl(f.path, 3600).then(function (r) { return r.data ? r.data.signedUrl : null; });
+  };
+  /* ---------- team tools (admin only; the database refuses everyone else) ---------- */
+  S.saveSettings = function (data) {
+    var next = Object.assign({}, cache.settings, data);
+    return sb.from('settings').update({ data: next, updated_at: new Date().toISOString() }).eq('id', 1).select('id').then(function (r) {
+      if (r.error) throw r.error;
+      if (!r.data || !r.data.length) throw new Error('Settings are not set up yet. Run supabase/schema.sql again.');
+      cache.settings = next; S._emit();
+    });
+  };
+  S.sendMany = function (items, from) {
+    var rows = items.filter(function (i) { return String(i.body || '').trim(); })
+      .map(function (i) { return { id: uuid(), thread: i.thread, from: from, body: String(i.body).trim().slice(0, 2000), at: Date.now() }; });
+    if (!rows.length) return [];
+    rows.forEach(function (x) { cache.messages.push(x); }); S._emit();
+    var undo = function () { cache.messages = cache.messages.filter(function (x) { return rows.indexOf(x) < 0; }); S._emit(); };
+    var chain = Promise.resolve();
+    for (var i = 0; i < rows.length; i += 200) (function (part) {
+      chain = chain.then(function () { return sb.from('messages').insert(part.map(function (x) { return { id: x.id, thread: x.thread, from_id: x.from, body: x.body }; })).then(function (res) { if (res.error) throw res.error; }); });
+    })(rows.slice(i, i + 200));
+    remote(chain, undo);
+    return rows;
+  };
+  S.team = {
+    list: function () { return cache.team; },
+    load: function () { return sb.rpc('team_list').then(function (r) { if (r.error) throw r.error; cache.team = r.data || []; S._emit(); }); },
+    add: function (email) { return sb.rpc('team_add', { p_email: String(email).trim() }).then(function (r) { if (r.error) throw r.error; return S.team.load(); }); },
+    remove: function (id) { return sb.rpc('team_remove', { p_user: id }).then(function (r) { if (r.error) throw r.error; return S.team.load(); }); }
+  };
+  /* removes their photos and receipts from storage, then the account and everything linked to it */
+  S.deleteMember = function (id) {
+    function clear(bucket) {
+      return sb.storage.from(bucket).list(id, { limit: 1000 }).then(function (r) {
+        var paths = (r.data || []).map(function (o) { return id + '/' + o.name; });
+        return paths.length ? sb.storage.from(bucket).remove(paths) : null;
+      });
+    }
+    return Promise.all([clear('photos'), clear('receipts')]).then(function () { return sb.rpc('admin_delete_member', { p_member: id }); }).then(function (r) {
+      if (r.error) throw r.error;
+      var intros = cache.intros.filter(function (i) { return i.from === id || i.to === id; }).map(function (i) { return i.id; });
+      cache.members = cache.members.filter(function (x) { return x.id !== id; });
+      cache.intros = cache.intros.filter(function (i) { return intros.indexOf(i.id) < 0; });
+      cache.messages = cache.messages.filter(function (x) { return x.thread !== 'support:' + id && x.from !== id && intros.indexOf(x.thread) < 0; });
+      cache.reports = cache.reports.filter(function (x) { return x.by !== id && x.about !== id; });
+      cache.notes = cache.notes.filter(function (n) { return n.member !== id; });
+      S._emit(); reloadSoon(800);
+    });
   };
   S.supabase = sb;
 })();

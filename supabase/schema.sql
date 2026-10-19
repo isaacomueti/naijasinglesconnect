@@ -350,6 +350,107 @@ create policy "receipts: delete own" on storage.objects for delete to authentica
   using (bucket_id = 'receipts' and (storage.foldername(name))[1] = auth.uid()::text);
 
 -- ---------------------------------------------------------------------
+-- Team tools for /admin: site settings, private team notes, managing the
+-- team, and deleting an account on request (NDPA right to erasure).
+-- ---------------------------------------------------------------------
+alter table public.admins add column if not exists added_at timestamptz not null default now();
+
+-- one row of site settings (fee, bank details); every signed-in member can read it
+create table if not exists public.settings (
+  id          int primary key default 1 check (id = 1),
+  data        jsonb not null default '{}'::jsonb,
+  updated_at  timestamptz not null default now()
+);
+insert into public.settings(id) values (1) on conflict (id) do nothing;
+
+-- notes the team keeps about a member; members never see these
+create table if not exists public.team_notes (
+  id         uuid primary key default gen_random_uuid(),
+  member_id  uuid not null references public.members(id) on delete cascade,
+  body       text not null check (char_length(body) between 1 and 2000),
+  by_email   text not null default '',
+  at         timestamptz not null default now()
+);
+create index if not exists team_notes_member_idx on public.team_notes(member_id, at);
+
+create or replace function private.stamp_note() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  new.by_email := coalesce((select email from auth.users where id = auth.uid()), '');
+  new.at := now();
+  return new;
+end $$;
+drop trigger if exists stamp_note on public.team_notes;
+create trigger stamp_note before insert on public.team_notes
+  for each row execute function private.stamp_note();
+
+alter table public.settings   enable row level security;
+alter table public.team_notes enable row level security;
+drop policy if exists "settings: signed-in read" on public.settings;
+drop policy if exists "settings: admin write"    on public.settings;
+drop policy if exists "notes: admin only"        on public.team_notes;
+create policy "settings: signed-in read" on public.settings for select to authenticated using (true);
+create policy "settings: admin write"    on public.settings for update using (private.is_admin()) with check (private.is_admin());
+create policy "notes: admin only"        on public.team_notes for all using (private.is_admin()) with check (private.is_admin());
+
+create or replace function public.team_list()
+returns table (user_id uuid, email text, added_at timestamptz)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not private.is_admin() then raise exception 'Only the NSC team can see this'; end if;
+  return query select a.user_id, u.email::text, a.added_at
+               from public.admins a join auth.users u on u.id = a.user_id order by a.added_at;
+end $$;
+
+create or replace function public.team_add(p_email text) returns uuid
+language plpgsql security definer set search_path = public as $$
+declare uid uuid;
+begin
+  if not private.is_admin() then raise exception 'Only the NSC team can add team members'; end if;
+  select id into uid from auth.users where lower(email) = lower(trim(p_email));
+  if uid is null then raise exception 'No NSC login uses that email yet. Ask them to create an account first, or add the user in Supabase.'; end if;
+  insert into public.admins(user_id) values (uid) on conflict (user_id) do nothing;
+  insert into public.activity(text) values (lower(trim(p_email)) || ' was added to the team');
+  return uid;
+end $$;
+
+create or replace function public.team_remove(p_user uuid) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not private.is_admin() then raise exception 'Only the NSC team can remove team members'; end if;
+  if p_user = auth.uid() then raise exception 'You can''t remove yourself. Ask another team member.'; end if;
+  if (select count(*) from public.admins) <= 1 then raise exception 'The team needs at least one person'; end if;
+  delete from public.admins where user_id = p_user;
+  insert into public.activity(text) values ('A team member was removed');
+end $$;
+
+-- Permanently deletes a member and everything linked to them. Photos and
+-- receipts are removed from storage by the admin page before this runs.
+create or replace function public.admin_delete_member(p_member uuid) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not private.is_admin() then raise exception 'Only the NSC team can delete accounts'; end if;
+  if exists (select 1 from public.admins where user_id = p_member) then raise exception 'Remove this person from the team first'; end if;
+  delete from public.messages where thread = 'support:' || p_member::text or from_id = p_member::text
+     or thread in (select id::text from public.intros where p_member in (from_id, to_id));
+  delete from public.reads where reader = p_member::text or thread = 'support:' || p_member::text;
+  delete from auth.users where id = p_member;
+  insert into public.activity(text) values ('A member account was permanently deleted');
+end $$;
+
+revoke execute on function public.team_list() from anon, public;
+revoke execute on function public.team_add(text) from anon, public;
+revoke execute on function public.team_remove(uuid) from anon, public;
+revoke execute on function public.admin_delete_member(uuid) from anon, public;
+grant execute on function public.team_list(), public.team_add(text), public.team_remove(uuid), public.admin_delete_member(uuid) to authenticated;
+
+-- the team can list and remove any member's photos and receipts (for deletion requests)
+drop policy if exists "storage: team read"   on storage.objects;
+drop policy if exists "storage: team delete" on storage.objects;
+create policy "storage: team read"   on storage.objects for select to authenticated using (bucket_id in ('photos','receipts') and private.is_admin());
+create policy "storage: team delete" on storage.objects for delete to authenticated using (bucket_id in ('photos','receipts') and private.is_admin());
+
+-- ---------------------------------------------------------------------
 -- Make yourself an admin (run once, after creating your team login):
 --   insert into public.admins(user_id)
 --   select id from auth.users where email = 'admin@naijasinglesconnect.com';

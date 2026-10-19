@@ -275,7 +275,7 @@ table.t tbody tr:hover td{background:color-mix(in srgb,var(--panel-2) 60%,transp
   .irow{grid-template-columns:52px 1fr}
   .irow .ph{width:52px;height:52px}
   .irow .acts{grid-column:1/-1;justify-content:flex-start}
-  .who > button span{display:none}
+  .who > button span:not(.av){display:none}
   .who > button{padding:4px}
   .kv{grid-template-columns:1fr;gap:2px}
   .kv dd{margin-bottom:10px}

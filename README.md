@@ -6,7 +6,7 @@ Static site, ready for Vercel. No build step. Data, sign-in, files and live upda
 - `index.html`: homepage
 - `auth.html`: sign up, log in, reset password (served at `/auth`)
 - `dashboard.html`: member dashboard (`/dashboard`): overview, matches, member profiles, introductions, messages, my profile, privacy, membership
-- `admin.html`: team dashboard (`/admin`): overview, review queue, members, payments, support inbox, reports
+- `admin.html`: team dashboard (`/admin`): overview, review queue, payments, support inbox, reports, members, introductions, matchmaker, broadcasts, insights, activity log, team and settings. The member drawer also holds private team notes, data export and account deletion.
 - `404.html`: not-found page
 - `supabase/schema.sql`: database tables, security rules, triggers and storage buckets
 - `assets/js/config.js`: public Supabase URL and publishable key
@@ -28,7 +28,8 @@ Static site, ready for Vercel. No build step. Data, sign-in, files and live upda
    insert into public.admins(user_id)
    select id from auth.users where email = 'admin@naijasinglesconnect.com';
    ```
-   Repeat for every team member who should use `/admin`.
+   This is only needed for the first team member. After that, add or remove people from **Team** in `/admin`.
+5. **Settings:** in `/admin` > Settings, enter the membership fee and bank details. Members see them on their Membership page.
 
 `assets/js/config.js` holds the project URL and the publishable key. Both are meant to be public; the security rules in `schema.sql` decide what each visitor can read or change. Never put the secret or service_role key in this repository.
 

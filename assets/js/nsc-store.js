@@ -39,7 +39,14 @@
     if (backend) return backend.cache;
     if (!cache) cache = read();
     if (!cache) { cache = seed(); write(cache); }
+    if (!cache.notes) cache.notes = [];
+    if (!cache.settings) cache.settings = defaultSettings();
     return cache;
+  }
+
+  /* site settings the team edits in /admin and members see in their dashboard */
+  function defaultSettings() {
+    return { fee: '', feeNote: '', bank: '', accountName: 'NaijaSinglesConnect', accountNumber: '', reviewTime: 'usually within 24 hours', supportEmail: 'support@naijasinglesconnect.com' };
   }
 
   /* ---------- seed data (demo only) ---------- */
@@ -90,6 +97,8 @@
         { id: 'x5', thread: 'support:m_kemi', from: 'm_kemi', body: 'Good afternoon. I have uploaded my transfer receipt. Reference NSC-KEMI1.', at: t - 2 * H + 60e3 }
       ],
       reports: [],
+      notes: [],
+      settings: defaultSettings(),
       reads: {},
       activity: [
         { at: t - 2 * H, text: 'Kemi Alade uploaded a payment receipt' },
@@ -213,6 +222,8 @@
     body = String(body || '').trim(); if (!body) return null;
     return insert('messages', { id: NSC.uid('msg_'), thread: thread, from: from, body: body.slice(0, 2000), at: now() });
   }
+  /* items: [{ thread, body }] */
+  function sendMany(items, from) { return items.map(function (i) { return send(i.thread, from, i.body); }); }
   function log(text) { if (backend) return backend.log(text); tx(function (d) { d.activity.unshift({ at: now(), text: text }); d.activity = d.activity.slice(0, 200); }); }
 
   /* demo behaviour: seeded members respond so the flow can be reviewed alone */
@@ -288,10 +299,32 @@
     uploadReceipt: function (file, dataUrl) { return Promise.resolve({ name: file.name, type: file.type, dataUrl: dataUrl || null }); },
     receiptUrl: function (f) { return Promise.resolve(f && f.dataUrl || null); },
     error: function (msg) { try { window.dispatchEvent(new CustomEvent('nsc:error', { detail: msg })); } catch (e) {} console.warn('NSC:', msg); },
+    settings: function () { return Object.assign(defaultSettings(), db().settings || {}); },
+    saveSettings: function (data) { tx(function (d) { d.settings = Object.assign(defaultSettings(), d.settings, data); }); return Promise.resolve(); },
+    team: {
+      list: function () { return [{ user_id: 'admin', email: ADMIN.email, added_at: new Date(now() - 30 * D).toISOString() }]; },
+      load: function () { return Promise.resolve(); },
+      add: function () { return Promise.reject(new Error('Adding team members needs Supabase. Demo data has a single team login.')); },
+      remove: function () { return Promise.reject(new Error('The team needs at least one person.')); }
+    },
+    /* permanent: the member and everything linked to them */
+    deleteMember: function (id) {
+      tx(function (d) {
+        var intros = d.intros.filter(function (i) { return i.from === id || i.to === id; }).map(function (i) { return i.id; });
+        d.members = d.members.filter(function (x) { return x.id !== id; });
+        d.intros = d.intros.filter(function (i) { return intros.indexOf(i.id) < 0; });
+        d.messages = d.messages.filter(function (x) { return x.thread !== supportThread(id) && x.from !== id && intros.indexOf(x.thread) < 0; });
+        d.reports = d.reports.filter(function (r) { return r.by !== id && r.about !== id; });
+        d.notes = d.notes.filter(function (n) { return n.member !== id; });
+      });
+      log('A member account was permanently deleted');
+      return Promise.resolve();
+    },
+    needsUpgrade: false,
     COUNTRIES: COUNTRIES, groupOf: groupOf, accepts: accepts, eligible: eligible,
     hash: hash, age: age, fullName: fullName, initials: initials, compat: compat, breaks: breaks, genoRisk: genoRisk,
     view: view, connected: connected, introBetween: introBetween, religionLabel: religionLabel,
-    supportThread: supportThread, threadMessages: threadMessages, threadsFor: threadsFor, send: send, unread: unread, markRead: markRead,
+    supportThread: supportThread, threadMessages: threadMessages, threadsFor: threadsFor, send: send, sendMany: sendMany, unread: unread, markRead: markRead,
     acceptIntro: acceptIntro, onApproved: onApproved, demoReply: demoReply, demoAccept: demoAccept, log: log,
     ago: ago, clock: clock, day: day, esc: esc,
     memberByLogin: function (idf) {

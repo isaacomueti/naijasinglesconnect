@@ -359,10 +359,10 @@
               <h2>1. Transfer your membership fee</h2>
               <p class="sub">Use your reference so we can match your payment.</p>
               <dl class="acct" style="margin-top:20px">
-                <dt>Amount</dt><dd>To be confirmed by NSC</dd><span></span>
-                <dt>Bank</dt><dd>To be confirmed</dd><span></span>
-                <dt>Account name</dt><dd>NaijaSinglesConnect</dd><span></span>
-                <dt>Account number</dt><dd id="acctNo">0000000000</dd><button type="button" class="copy" data-copy="acctNo">Copy</button>
+                <dt>Amount</dt><dd id="payFee">To be confirmed by NSC</dd><span></span>
+                <dt>Bank</dt><dd id="payBank">To be confirmed</dd><span></span>
+                <dt>Account name</dt><dd id="payName">NaijaSinglesConnect</dd><span></span>
+                <dt>Account number</dt><dd id="acctNo">To be confirmed</dd><button type="button" class="copy" data-copy="acctNo" id="acctCopy" hidden>Copy</button>
                 <dt>Reference</dt><dd id="payRef"></dd><button type="button" class="copy" data-copy="payRef">Copy</button>
               </dl>
               <p class="sub" style="margin-top:18px"><span class="pill wait">Coming soon</span> Card and USSD payments through Paystack or Flutterwave.</p>
@@ -963,8 +963,12 @@ window.NSC.ready({ as: 'member' }).then(function(){
 
   /* ---------- membership ---------- */
   function renderMembership(m){
-    var p = m.payment;
+    var p = m.payment, cfg = S.settings();
     $('payRef').textContent = p.ref;
+    $('payFee').textContent = cfg.fee ? '₦' + Number(String(cfg.fee).replace(/[^\d.]/g, '')).toLocaleString('en-NG') + (cfg.feeNote ? ' · ' + cfg.feeNote : '') : 'To be confirmed by NSC';
+    $('payBank').textContent = cfg.bank || 'To be confirmed';
+    $('payName').textContent = cfg.accountName || 'NaijaSinglesConnect';
+    $('acctNo').textContent = cfg.accountNumber || 'To be confirmed'; $('acctCopy').hidden = !cfg.accountNumber;
     var map = { none:['off','Payment not received'], uploaded:['wait','Receipt in review'], confirmed:['ok','Payment confirmed'], rejected:['bad','Receipt not accepted'] };
     $('payPill').className = 'pill ' + map[p.status][0]; $('payPill').textContent = map[p.status][1];
     var has = p.file && p.status !== 'rejected';
