@@ -603,6 +603,8 @@ create policy "payments: cancel own pending" on public.payments for delete using
 -- ---------------------------------------------------------------------
 create extension if not exists pg_net;
 create table if not exists private.config (key text primary key, value text not null);
+-- no policies: only the database owner (and so private.notify) can read it
+alter table private.config enable row level security;
 revoke all on private.config from anon, authenticated;
 insert into private.config values ('notify_url', 'https://mnojvwqrlagezgiirbpt.supabase.co/functions/v1/notify') on conflict (key) do nothing;
 insert into private.config values ('notify_secret', replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')) on conflict (key) do nothing;
