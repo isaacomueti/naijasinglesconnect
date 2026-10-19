@@ -20,8 +20,13 @@
   if (!window.supabase || !window.supabase.createClient) { S.mode = 'demo'; console.error('NSC: Supabase library failed to load; using demo data.'); return; }
 
   var sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true,
+      /* Supabase's default cross-tab browser lock can stall sign-in forever when another NSC tab
+         is open or asleep. A pass-through lock keeps each tab independent. */
+      lock: function (name, acquireTimeout, fn) { return fn(); } }
   });
+  /* resolve with null instead of hanging if a request never settles */
+  function withTimeout(p, ms) { return Promise.race([p, new Promise(function (r) { setTimeout(function () { r(null); }, ms); })]); }
   var cache = { members: [], intros: [], messages: [], reports: [], activity: [], reads: {} };
   var st = { user: null, isAdmin: false, as: 'none', loaded: false, channel: null };
   var PROFILE_DEFAULTS = { first: '', last: '', gender: '', dob: '', location: '', nationality: '', heritage: '', openTo: 'both', origin: '', lga: '', qual: '', job: '',
@@ -217,7 +222,7 @@
     var m = e && e.message || String(e);
     if (/invalid login credentials/i.test(m)) return 'That email and password don’t match an account.';
     if (/email not confirmed/i.test(m)) return 'Please confirm your email first. Check your inbox for the code we sent.';
-    if (/token has expired|otp.*expired|expired/i.test(m)) return 'That code has expired. Tap \u201cResend code\u201d for a new one.';
+    if (/token has expired|otp.*expired|expired/i.test(m)) return 'That code isn\u2019t right or has expired. Check the latest email, or tap \u201cResend code\u201d for a new one.';
     if (/invalid.*(token|otp)|token.*invalid/i.test(m)) return 'That code isn\u2019t right. Check the email and try again.';
     if (/for security purposes|after \d+ seconds/i.test(m)) return 'Please wait a minute before asking for another code.';
     if (/already registered|already been registered/i.test(m)) return 'An account with this email already exists. Log in instead.';
@@ -243,8 +248,25 @@
     },
     /* confirm a sign-up with the code from the email; signs the member in */
     verifyOtp: function (email, code) {
-      return sb.auth.verifyOtp({ email: String(email).trim(), token: String(code).trim(), type: 'signup' })
-        .then(function (r) { if (r.error) throw new Error(friendly(r.error)); if (!r.data.session) throw new Error('Your email is confirmed. Please log in.'); st.user = r.data.user; return { id: r.data.user.id }; });
+      email = String(email).trim(); code = String(code).trim();
+      var call = sb.auth.verifyOtp({ email: email, token: code, type: 'email' }).then(function (r) {
+        // older projects confirm sign-ups with type "signup"; retry once with it
+        if (r.error && /otp_expired|invalid/i.test((r.error.code || '') + ' ' + r.error.message)) return sb.auth.verifyOtp({ email: email, token: code, type: 'signup' });
+        return r;
+      });
+      return withTimeout(call, 12000).then(function (r) {
+        if (r === null) {
+          // the request finished on the server but the browser never heard back: check whether we're signed in
+          return withTimeout(sb.auth.getSession(), 4000).then(function (g) {
+            var sess = g && g.data && g.data.session;
+            if (sess) { st.user = sess.user; return { id: sess.user.id }; }
+            throw new Error('This is taking longer than usual. Check your connection, then try the code again or tap \u201cResend code\u201d.');
+          });
+        }
+        if (r.error) throw new Error(friendly(r.error));
+        if (!r.data.session) throw new Error('Your email is confirmed. Please log in.');
+        st.user = r.data.user; return { id: r.data.user.id };
+      });
     },
     resend: function (email) {
       return sb.auth.resend({ type: 'signup', email: String(email).trim(), options: { emailRedirectTo: location.origin + '/dashboard' } })
