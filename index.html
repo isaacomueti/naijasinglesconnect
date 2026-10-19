@@ -175,8 +175,21 @@ p{margin:0}
 .checks svg{width:15px;height:15px;flex:none}
 .mcard .act{display:flex;gap:10px}
 .mcard .act .btn{flex:1;padding:14px 16px;font-size:.92rem}
-.example{font-size:.78rem;color:var(--ink-3);text-align:center;margin-top:14px}
+.example{font-size:.78rem;color:var(--ink-3);text-align:center;margin-top:10px}
 @media (max-width:520px){.stack .b1{left:-6%}.stack .b2{right:-6%}}
+/* swipeable hero deck */
+.mcard{touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab;will-change:transform}
+.mcard.drag{cursor:grabbing}
+.mcard:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+.stack .back img{transition:opacity .3s}
+.deckctl{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:6px}
+.dbtn{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--white);color:var(--ink);display:grid;place-items:center;cursor:pointer;transition:border-color .2s,color .2s}
+.dbtn:hover{border-color:var(--green);color:var(--green)}
+.dbtn svg{width:18px;height:18px}
+.dots{display:flex;gap:4px}
+.dots button{width:24px;height:24px;border:0;background:none;padding:0;cursor:pointer;display:grid;place-items:center}
+.dots button::before{content:"";width:8px;height:8px;border-radius:999px;background:var(--line);transition:width .25s,background .25s}
+.dots button[aria-current="true"]::before{width:22px;background:var(--green)}
 
 /* ---------- PROOF STRIP ---------- */
 .strip{border-block:1px solid var(--line);background:var(--cream);padding-block:22px}
@@ -463,20 +476,20 @@ footer .legal{margin-top:44px;padding-top:22px;border-top:1px solid rgba(248,245
       </div>
 
       <div>
-        <div class="stack" aria-label="Example of a match on NSC">
-          <div class="back b1" aria-hidden="true"><img src="/assets/img/face-daniel.webp" alt=""><div class="cap">Daniel, 32</div></div>
-          <div class="back b2" aria-hidden="true"><img src="/assets/img/face-amina.webp" alt=""><div class="cap">Amina, 28</div></div>
-          <article class="mcard">
+        <div class="stack" id="deck" role="region" aria-roledescription="carousel" aria-label="Example matches on NSC">
+          <div class="back b1" aria-hidden="true"><img src="/assets/img/face-tobi.jpg" alt=""><div class="cap">Tobi, 33</div></div>
+          <div class="back b2" aria-hidden="true"><img src="/assets/img/face-daniel.webp" alt=""><div class="cap">Daniel, 32</div></div>
+          <article class="mcard" id="mcard" tabindex="0" aria-live="polite">
             <div class="ph">
-              <img src="/assets/img/face-chiamaka.jpg" alt="Chiamaka, an example member" width="560" height="504" fetchpriority="high">
+              <img id="mcImg" src="/assets/img/face-chiamaka.jpg" alt="Chiamaka, an example member" width="560" height="504" fetchpriority="high" draggable="false">
               <span class="rev"><i></i>Reviewed by NSC</span>
-              <div class="ring" style="--p:86" aria-label="86 percent match"><b>86%<small>match</small></b></div>
+              <div class="ring" id="mcRing" style="--p:86" aria-label="86 percent match"><b><span id="mcPct">86%</span><small>match</small></b></div>
             </div>
             <div class="bd">
-              <div class="nm">Chiamaka, 29</div>
+              <div class="nm" id="mcName">Chiamaka, 29</div>
               <div class="meta">
-                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Lagos</span>
-                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M6 9h12"/></svg>Christian</span>
+                <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span id="mcCity">Lagos</span></span>
+                <span><svg id="mcFaithIc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M6 9h12"/></svg><span id="mcFaith">Christian</span></span>
                 <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/></svg>Looking for marriage</span>
               </div>
               <div class="checks">
@@ -488,7 +501,12 @@ footer .legal{margin-top:44px;padding-top:22px;border-top:1px solid rgba(248,245
             </div>
           </article>
         </div>
-        <p class="example">Example member, shown for illustration</p>
+        <div class="deckctl">
+          <button type="button" class="dbtn" id="deckPrev" aria-label="Previous example member"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+          <div class="dots" id="deckDots"></div>
+          <button type="button" class="dbtn" id="deckNext" aria-label="Next example member"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+        </div>
+        <p class="example">Swipe to see more · Example members, shown for illustration</p>
       </div>
     </div>
   </section>
@@ -789,6 +807,86 @@ footer .legal{margin-top:44px;padding-top:22px;border-top:1px solid rgba(248,245
     }) }, { rootMargin: '200px' }).observe(v);
     v.addEventListener('error', function(){ v.remove() });
   }
+})();
+</script>
+<script>
+/* Hero deck: swipe or drag the card (left = next, right = previous), or use the arrows, dots and arrow keys. */
+(function(){
+  var card = document.getElementById('mcard'); if (!card) return;
+  var CROSS = '<path d="M12 3v18M6 9h12"/>', MOON = '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/>';
+  var P = [
+    { n:'Chiamaka', a:29, c:'Lagos', f:'Christian', p:86, img:'/assets/img/face-chiamaka.jpg' },
+    { n:'Daniel', a:32, c:'London, UK', f:'Christian', p:91, img:'/assets/img/face-daniel.webp' },
+    { n:'Amina', a:28, c:'Abuja', f:'Muslim', p:85, img:'/assets/img/face-amina.webp' },
+    { n:'Akosua', a:31, c:'Accra, Ghana', f:'Christian', p:82, img:'/assets/img/face-akosua.webp' },
+    { n:'Tobi', a:33, c:'Abuja', f:'Christian', p:84, img:'/assets/img/face-tobi.jpg' }
+  ];
+  var $ = function(id){ return document.getElementById(id) }, i = 0, busy = false;
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var b1 = document.querySelector('.stack .b1'), b2 = document.querySelector('.stack .b2');
+  $('deckDots').innerHTML = P.map(function(x, k){ return '<button type="button" aria-label="Show ' + x.n + '"></button>' }).join('');
+  var dots = [].slice.call($('deckDots').children);
+  function at(k){ return P[(k + P.length) % P.length] }
+  function paint(){
+    var x = at(i);
+    $('mcImg').src = x.img; $('mcImg').alt = x.n + ', an example member';
+    $('mcName').textContent = x.n + ', ' + x.a; $('mcCity').textContent = x.c; $('mcFaith').textContent = x.f;
+    $('mcFaithIc').innerHTML = x.f === 'Muslim' ? MOON : CROSS;
+    $('mcRing').style.setProperty('--p', x.p); $('mcRing').setAttribute('aria-label', x.p + ' percent match'); $('mcPct').textContent = x.p + '%';
+    var pv = at(i - 1), nx = at(i + 1);
+    b1.querySelector('img').src = pv.img; b1.querySelector('.cap').textContent = pv.n + ', ' + pv.a;
+    b2.querySelector('img').src = nx.img; b2.querySelector('.cap').textContent = nx.n + ', ' + nx.a;
+    dots.forEach(function(d, k){ d.setAttribute('aria-current', String(k === i)) });
+  }
+  function go(to, dir){
+    if (busy || to === i) return;
+    to = (to + P.length) % P.length;
+    if (reduce) { i = to; paint(); return }
+    busy = true;
+    card.style.transition = 'transform .32s cubic-bezier(.3,.7,.4,1), opacity .32s';
+    card.style.transform = 'translateX(' + (dir < 0 ? -115 : 115) + '%) rotate(' + (dir < 0 ? -10 : 10) + 'deg)'; card.style.opacity = '0';
+    setTimeout(function(){
+      i = to; paint();
+      card.style.transition = 'none'; card.style.transform = 'scale(.94)'; card.style.opacity = '0';
+      card.offsetWidth;
+      card.style.transition = 'transform .3s ease, opacity .3s'; card.style.transform = ''; card.style.opacity = '';
+      setTimeout(function(){ busy = false; card.style.transition = '' }, 300);
+    }, 300);
+  }
+  $('deckNext').onclick = function(){ go(i + 1, -1) };
+  $('deckPrev').onclick = function(){ go(i - 1, 1) };
+  dots.forEach(function(d, k){ d.onclick = function(){ go(k, k > i ? -1 : 1) } });
+  card.addEventListener('keydown', function(e){ if (e.key === 'ArrowRight') go(i + 1, -1); if (e.key === 'ArrowLeft') go(i - 1, 1) });
+
+  /* drag */
+  var sx = 0, sy = 0, dx = 0, down = false, moved = false;
+  card.addEventListener('pointerdown', function(e){
+    if (busy || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    down = true; moved = false; sx = e.clientX; sy = e.clientY; dx = 0;
+  });
+  window.addEventListener('pointermove', function(e){
+    if (!down) return;
+    dx = e.clientX - sx;
+    if (!moved) {
+      if (Math.abs(e.clientY - sy) > Math.abs(dx) && Math.abs(e.clientY - sy) > 8) { down = false; return } // vertical: let the page scroll
+      if (Math.abs(dx) < 6) return;
+      moved = true; card.classList.add('drag'); try { card.setPointerCapture(e.pointerId) } catch (er) {}
+    }
+    card.style.transition = 'none';
+    card.style.transform = 'translateX(' + dx + 'px) rotate(' + (dx / 22) + 'deg)';
+  });
+  function end(){
+    if (!down) return; down = false; card.classList.remove('drag');
+    if (!moved) return;
+    if (Math.abs(dx) > Math.min(110, card.offsetWidth * .25)) go(dx < 0 ? i + 1 : i - 1, dx < 0 ? -1 : 1);
+    else { card.style.transition = 'transform .25s ease'; card.style.transform = '' }
+  }
+  window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end);
+  /* a drag must never count as tapping the buttons inside the card */
+  card.addEventListener('click', function(e){ if (moved) { e.preventDefault(); e.stopPropagation(); moved = false } }, true);
+
+  window.addEventListener('load', function(){ P.forEach(function(x){ var im = new Image(); im.src = x.img }) });
+  paint();
 })();
 </script>
 </body>
