@@ -216,7 +216,10 @@
   function friendly(e) {
     var m = e && e.message || String(e);
     if (/invalid login credentials/i.test(m)) return 'That email and password don’t match an account.';
-    if (/email not confirmed/i.test(m)) return 'Please confirm your email first. Check your inbox for the link we sent.';
+    if (/email not confirmed/i.test(m)) return 'Please confirm your email first. Check your inbox for the code we sent.';
+    if (/token has expired|otp.*expired|expired/i.test(m)) return 'That code has expired. Tap \u201cResend code\u201d for a new one.';
+    if (/invalid.*(token|otp)|token.*invalid/i.test(m)) return 'That code isn\u2019t right. Check the email and try again.';
+    if (/for security purposes|after \d+ seconds/i.test(m)) return 'Please wait a minute before asking for another code.';
     if (/already registered|already been registered/i.test(m)) return 'An account with this email already exists. Log in instead.';
     if (/password should be at least/i.test(m)) return 'Your password needs at least 8 characters.';
     if (/rate limit|too many/i.test(m)) return 'Too many attempts. Wait a minute and try again.';
@@ -233,7 +236,19 @@
     },
     signIn: function (email, password) {
       return sb.auth.signInWithPassword({ email: String(email).trim(), password: password })
-        .then(function (r) { if (r.error) throw new Error(friendly(r.error)); st.user = r.data.user; return { id: r.data.user.id }; });
+        .then(function (r) {
+          if (r.error) { var err = new Error(friendly(r.error)); err.code = /email not confirmed/i.test(r.error.message) ? 'email_not_confirmed' : (r.error.code || ''); throw err; }
+          st.user = r.data.user; return { id: r.data.user.id };
+        });
+    },
+    /* confirm a sign-up with the code from the email; signs the member in */
+    verifyOtp: function (email, code) {
+      return sb.auth.verifyOtp({ email: String(email).trim(), token: String(code).trim(), type: 'signup' })
+        .then(function (r) { if (r.error) throw new Error(friendly(r.error)); if (!r.data.session) throw new Error('Your email is confirmed. Please log in.'); st.user = r.data.user; return { id: r.data.user.id }; });
+    },
+    resend: function (email) {
+      return sb.auth.resend({ type: 'signup', email: String(email).trim(), options: { emailRedirectTo: location.origin + '/dashboard' } })
+        .then(function (r) { if (r.error) throw new Error(friendly(r.error)); });
     },
     signOut: function () { return sb.auth.signOut(); },
     resetPassword: function (email) {

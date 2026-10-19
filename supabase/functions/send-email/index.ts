@@ -64,17 +64,16 @@ function build(user: HookUser, d: EmailData) {
   switch (d.email_action_type) {
     case "signup":
       return {
-        subject: "Welcome to NaijaSinglesConnect. Please confirm your email",
+        subject: `${d.token} is your NaijaSinglesConnect code`,
         html: layout({
-          preheader: "Confirm your email to start building your profile.",
+          preheader: `Your code is ${d.token}. Enter it to confirm your email and log in.`,
           title: `Welcome to NSC${first ? ", " + first : ""}`,
-          body: `${hi}<br><br>Thank you for joining a community of people who are serious about marriage. Confirm your email and you can start your profile straight away.<br><br>
-            <b style="color:#13261D">What happens next</b><br>
-            1. Complete your profile, about 10 minutes<br>2. Pay by bank transfer and upload your receipt<br>3. Our team reviews you, usually within 24 hours<br>4. Meet members who share your faith and your plans`,
-          button: { label: "Confirm my email", url: verifyLink(d) },
-          foot: "This link expires in 24 hours. " + ignore,
+          body: `${hi}<br><br>Thank you for joining a community of people who are serious about marriage. Enter this code on the sign-up page to confirm your email. You'll go straight to your dashboard.`,
+          code: d.token,
+          foot: `<b style="color:#13261D">What happens next</b><br>1. Complete your profile, about 10 minutes<br>2. Pay by bank transfer and upload your receipt<br>3. Our team reviews you, usually within 24 hours<br>4. Meet members who share your faith and your plans<br><br>
+            Can't use the code? <a href="${verifyLink(d)}" style="color:#07764B">Confirm with this link instead</a>. The code expires in 1 hour. ${ignore}`,
         }),
-        text: `${hi}\n\nWelcome to NaijaSinglesConnect. Confirm your email to start your profile:\n${verifyLink(d)}\n\nThis link expires in 24 hours. ${ignore}`,
+        text: `${hi}\n\nWelcome to NaijaSinglesConnect. Your confirmation code is ${d.token}\n\nEnter it on the sign-up page to confirm your email and log in. Or open this link:\n${verifyLink(d)}\n\nThe code expires in 1 hour. ${ignore}`,
       };
     case "recovery":
       return {

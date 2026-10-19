@@ -291,17 +291,10 @@ form{display:grid;gap:18px}
     <div class="pane" id="v-verify" hidden>
       <div class="head">
         <h1>Check your email</h1>
-        <p>We sent a 6-digit code to <b id="vEmail">you@example.com</b>. Enter it below to verify your account.</p>
+        <p>We sent a <span id="vLen">6</span>-digit code to <b id="vEmail">you@example.com</b>. Enter it below to confirm your email and log in.</p>
       </div>
       <form id="f-verify" novalidate>
-        <div class="otp" id="otp">
-          <input id="o1" inputmode="numeric" maxlength="1" aria-label="Digit 1" autocomplete="one-time-code">
-          <input id="o2" inputmode="numeric" maxlength="1" aria-label="Digit 2">
-          <input id="o3" inputmode="numeric" maxlength="1" aria-label="Digit 3">
-          <input id="o4" inputmode="numeric" maxlength="1" aria-label="Digit 4">
-          <input id="o5" inputmode="numeric" maxlength="1" aria-label="Digit 5">
-          <input id="o6" inputmode="numeric" maxlength="1" aria-label="Digit 6">
-        </div>
+        <div class="otp" id="otp"></div>
         <p class="err" id="v-err" style="margin:0;color:var(--err);font-weight:600;font-size:.9rem" hidden></p>
         <button class="btn" type="submit" id="v-btn">Verify and continue</button>
         <div class="between">
@@ -353,7 +346,7 @@ form{display:grid;gap:18px}
           <li><span>3</span>Pay and upload your receipt</li>
           <li><span>4</span>Get approved and see your matches</li>
         </ol>
-        <a class="btn" href="/#profile" style="text-decoration:none">Start my profile
+        <a class="btn" href="/dashboard#profile" style="text-decoration:none">Start my profile
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       </div>
     </div>
@@ -470,9 +463,7 @@ window.NSC.ready({ as: 'none' }).then(function(){
       S.auth.signUp(details).then(function(r){
         busy(btn, false);
         if (!r.needsConfirm) { location.href = '/dashboard'; return; }
-        document.getElementById('doneTitle').textContent = 'Check your email, ' + first;
-        document.getElementById('doneText').textContent = 'We sent a confirmation link to ' + em + '. Open it to finish creating your account, then log in.';
-        view('done');
+        showVerify(em);
       }, function(e2){ busy(btn, false); err.hidden = false; err.textContent = e2.message || 'Something went wrong creating your account. Try again.' });
       return;
     }
@@ -494,8 +485,17 @@ window.NSC.ready({ as: 'none' }).then(function(){
     if (msg) return;
     var btn = document.getElementById('li-btn'); busy(btn, true, 'Logging in');
     if (CLOUD) {
-      S.auth.signIn(document.getElementById('li-id').value, document.getElementById('li-pass').value).then(function(){ location.href = '/dashboard' },
-        function(e2){ busy(btn, false); err.hidden = false; err.textContent = e2.message });
+      var liEmail = document.getElementById('li-id').value.trim();
+      S.auth.signIn(liEmail, document.getElementById('li-pass').value).then(function(){ location.replace('/dashboard') },
+        function(e2){
+          busy(btn, false);
+          if (e2.code === 'email_not_confirmed') {
+            S.auth.resend(liEmail).then(function(){}, function(){});
+            showVerify(liEmail, 'Your email isn\u2019t confirmed yet. We sent you a new code.');
+            return;
+          }
+          err.hidden = false; err.textContent = e2.message;
+        });
       return;
     }
     var mem = S.memberByLogin(document.getElementById('li-id').value);
@@ -507,23 +507,51 @@ window.NSC.ready({ as: 'none' }).then(function(){
     });
   });
 
+  var OTP_LEN = Math.max(4, Math.min(10, +((window.NSC_CONFIG || {}).otpLength) || 6)), verifyEmail = '';
+  (function(){
+    var wrap = document.getElementById('otp'), html = '';
+    for (var i = 1; i <= OTP_LEN; i++) html += '<input id="o' + i + '" inputmode="numeric" maxlength="1" aria-label="Digit ' + i + '"' + (i === 1 ? ' autocomplete="one-time-code"' : '') + '>';
+    wrap.innerHTML = html; wrap.style.gridTemplateColumns = 'repeat(' + OTP_LEN + ',1fr)';
+    document.getElementById('vLen').textContent = OTP_LEN;
+  })();
+  function showVerify(email, note){
+    verifyEmail = email; pending = pending || null;
+    document.getElementById('vEmail').textContent = email;
+    var e = document.getElementById('v-err'); e.hidden = !note; e.textContent = note || ''; e.style.color = note ? 'var(--ink-2)' : '';
+    boxes.forEach(function(b){ b.value = '' });
+    view('verify'); setTimeout(function(){ boxes[0].focus() }, 50);
+  }
   var boxes = Array.prototype.slice.call(document.querySelectorAll('#otp input'));
   boxes.forEach(function(b, i){
     b.addEventListener('input', function(){ b.value = b.value.replace(/\D/g,'').slice(-1); if (b.value && boxes[i+1]) boxes[i+1].focus() });
     b.addEventListener('keydown', function(e){ if (e.key === 'Backspace' && !b.value && boxes[i-1]) boxes[i-1].focus() });
     b.addEventListener('paste', function(e){
-      var t = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+      var t = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'').slice(0, OTP_LEN);
       if (!t) return; e.preventDefault();
-      boxes.forEach(function(x, j){ x.value = t[j] || '' }); (boxes[Math.min(t.length,5)]).focus();
+      boxes.forEach(function(x, j){ x.value = t[j] || '' }); (boxes[Math.min(t.length, OTP_LEN - 1)]).focus();
+      if (t.length === OTP_LEN) document.getElementById('f-verify').requestSubmit();
     });
   });
   document.getElementById('f-verify').addEventListener('submit', function(e){
     e.preventDefault();
-    var code = boxes.map(function(b){ return b.value }).join(''), err = document.getElementById('v-err');
-    err.hidden = code.length === 6; err.textContent = 'Enter all 6 digits from the email.';
-    if (code.length === 6) startSession(pending, true);
+    var code = boxes.map(function(b){ return b.value }).join(''), err = document.getElementById('v-err'), btn = document.getElementById('v-btn');
+    err.style.color = '';
+    if (code.length !== OTP_LEN) { err.hidden = false; err.textContent = 'Enter all ' + OTP_LEN + ' digits from the email.'; return }
+    err.hidden = true;
+    if (!CLOUD) { startSession(pending, true); return }
+    busy(btn, true, 'Checking code');
+    S.auth.verifyOtp(verifyEmail, code).then(function(){ location.replace('/dashboard') }, function(e2){
+      busy(btn, false); err.hidden = false; err.textContent = e2.message;
+      boxes.forEach(function(b){ b.value = '' }); boxes[0].focus();
+    });
   });
-  document.getElementById('resend').addEventListener('click', function(){ var b = this; b.textContent = 'Code sent again'; b.disabled = true; setTimeout(function(){ b.textContent = 'Resend code'; b.disabled = false }, 30000) });
+  document.getElementById('resend').addEventListener('click', function(){
+    var b = this, err = document.getElementById('v-err');
+    function cool(){ b.textContent = 'Code sent again'; b.disabled = true; setTimeout(function(){ b.textContent = 'Resend code'; b.disabled = false }, 60000) }
+    if (!CLOUD) return cool();
+    b.disabled = true;
+    S.auth.resend(verifyEmail).then(cool, function(e2){ b.disabled = false; err.hidden = false; err.style.color = ''; err.textContent = e2.message });
+  });
 
   /* ---------- country code picker ---------- */
   (function(){

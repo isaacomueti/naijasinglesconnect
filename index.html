@@ -31,6 +31,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700;800&display=swap">
+<script>
+/* Supabase falls back to the site's home address when a redirect isn't allow-listed.
+   Pass sign-in and reset links on to the right page instead of showing the homepage. */
+(function(){
+  var h = location.hash, q = location.search;
+  if (!/access_token=|error_description=|type=(signup|recovery|magiclink|invite|email_change)/.test(h) && !/[?&](code|token_hash|error_description)=/.test(q)) return;
+  var reset = /type=recovery/.test(h + q);
+  location.replace((reset ? '/auth?reset=1' : (/error_description=/.test(h + q) ? '/auth' : '/dashboard')) + (reset ? q.replace(/^\?/, '&') : q) + h);
+})();
+</script>
 <link rel="preload" as="image" href="/assets/img/hero-walk.webp" fetchpriority="high">
 <style>
 /* Two lives becoming one story. Editorial luxury x African warmth x modern matchmaking.
