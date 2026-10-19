@@ -25,8 +25,6 @@
          is open or asleep. A pass-through lock keeps each tab independent. */
       lock: function (name, acquireTimeout, fn) { return fn(); } }
   });
-  /* resolve with null instead of hanging if a request never settles */
-  function withTimeout(p, ms) { return Promise.race([p, new Promise(function (r) { setTimeout(function () { r(null); }, ms); })]); }
   var cache = { members: [], intros: [], messages: [], reports: [], activity: [], reads: {}, notes: [], settings: {}, team: [] };
   var st = { user: null, isAdmin: false, as: 'none', loaded: false, channel: null };
   var PROFILE_DEFAULTS = { first: '', last: '', gender: '', dob: '', location: '', nationality: '', heritage: '', openTo: 'both', origin: '', lga: '', qual: '', job: '',
@@ -261,25 +259,36 @@
         });
     },
     /* confirm a sign-up with the code from the email; signs the member in */
+    /* Confirms a sign-up with the emailed code. This talks to Supabase Auth directly and stores the
+       login where supabase-js reads it, because the library's own verify step can stall in some
+       browsers after a correct code. The dashboard picks the login up when it loads. */
     verifyOtp: function (email, code) {
       email = String(email).trim(); code = String(code).trim();
-      var call = sb.auth.verifyOtp({ email: email, token: code, type: 'email' }).then(function (r) {
-        // older projects confirm sign-ups with type "signup"; retry once with it
-        if (r.error && /otp_expired|invalid/i.test((r.error.code || '') + ' ' + r.error.message)) return sb.auth.verifyOtp({ email: email, token: code, type: 'signup' });
-        return r;
-      });
-      return withTimeout(call, 12000).then(function (r) {
-        if (r === null) {
-          // the request finished on the server but the browser never heard back: check whether we're signed in
-          return withTimeout(sb.auth.getSession(), 4000).then(function (g) {
-            var sess = g && g.data && g.data.session;
-            if (sess) { st.user = sess.user; return { id: sess.user.id }; }
-            throw new Error('This is taking longer than usual. Check your connection, then try the code again or tap \u201cResend code\u201d.');
-          });
-        }
-        if (r.error) throw new Error(friendly(r.error));
-        if (!r.data.session) throw new Error('Your email is confirmed. Please log in.');
-        st.user = r.data.user; return { id: r.data.user.id };
+      var key = 'sb-' + new URL(CFG.supabaseUrl).hostname.split('.')[0] + '-auth-token';
+      function attempt(type) {
+        var ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 15000);
+        return fetch(CFG.supabaseUrl.replace(/\/$/, '') + '/auth/v1/verify', {
+          method: 'POST', signal: ctl.signal,
+          headers: { 'Content-Type': 'application/json', apikey: CFG.supabaseKey, Authorization: 'Bearer ' + CFG.supabaseKey },
+          body: JSON.stringify({ type: type, email: email, token: code })
+        }).then(function (res) {
+          return res.json().catch(function () { return {}; }).then(function (j) { clearTimeout(t); return { ok: res.ok, body: j }; });
+        }, function (e) {
+          clearTimeout(t);
+          throw new Error(e && e.name === 'AbortError' ? 'The server took too long to answer. Check your connection and try again.' : 'Could not reach NSC. Check your connection and try again.');
+        });
+      }
+      function why(b) { return (b.error_code || '') + ' ' + (b.msg || b.error_description || b.message || ''); }
+      return attempt('email').then(function (r) {
+        // some projects confirm sign-ups only with type "signup"; retry once with it
+        return !r.ok && /otp_expired|invalid/i.test(why(r.body)) ? attempt('signup') : r;
+      }).then(function (r) {
+        if (!r.ok) throw new Error(friendly({ message: why(r.body).trim() || 'That code didn\u2019t work. Try again.' }));
+        var s = r.body;
+        if (!s.access_token || !s.user) throw new Error('Your email is confirmed. Please log in.');
+        if (!s.expires_at) s.expires_at = Math.round(Date.now() / 1000) + (s.expires_in || 3600);
+        try { localStorage.setItem(key, JSON.stringify(s)); } catch (e) { throw new Error('Your browser blocked saving the login. Turn off private browsing and try again.'); }
+        st.user = s.user; return { id: s.user.id };
       });
     },
     resend: function (email) {
