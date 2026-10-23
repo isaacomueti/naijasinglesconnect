@@ -614,19 +614,60 @@ language sql stable security definer set search_path = public as $$
   select coalesce(nullif((select data->>'alertEmail' from public.settings where id = 1), ''), 'justlynnonme@yahoo.com');
 $$;
 
+-- every email the database asks for, so the team can see in /admin whether it went out
+create table if not exists private.email_log (
+  id          bigint generated always as identity primary key,
+  at          timestamptz not null default now(),
+  kind        text not null,
+  recipient   text not null default '',
+  request_id  bigint,
+  error       text
+);
+alter table private.email_log enable row level security;
+revoke all on private.email_log from anon, authenticated;
+
 -- never lets an email problem stop the change that caused it
 create or replace function private.notify(p_kind text, p jsonb) returns void
 language plpgsql security definer set search_path = public as $$
-declare u text; s text;
+declare u text; s text; rid bigint; who text := coalesce(p->>'to', '');
 begin
   select value into u from private.config where key = 'notify_url';
   select value into s from private.config where key = 'notify_secret';
-  if u is null or s is null or coalesce(p->>'to', '') = '' then return; end if;
-  perform net.http_post(url := u, body := jsonb_build_object('kind', p_kind) || p,
-    headers := jsonb_build_object('Content-Type', 'application/json', 'x-nsc-secret', s));
+  if who = '' or who = '[]' then return; end if;
+  if u is null or s is null then
+    insert into private.email_log(kind, recipient, error) values (p_kind, who, 'Email is not set up: notify_url or notify_secret is missing');
+    return;
+  end if;
+  select net.http_post(url := u, body := jsonb_build_object('kind', p_kind) || p,
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-nsc-secret', s)) into rid;
+  insert into private.email_log(kind, recipient, request_id) values (p_kind, who, rid);
 exception when others then
+  begin insert into private.email_log(kind, recipient, error) values (p_kind, who, sqlerrm); exception when others then null; end;
   raise warning 'NSC email not sent (%): %', p_kind, sqlerrm;
 end $$;
+
+-- recent emails with the reply from the email function (pg_net keeps replies for about 6 hours)
+create or replace function public.admin_email_log(p_limit int default 40)
+returns table (at timestamptz, kind text, recipient text, status int, error text, reply text)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not private.is_admin() then raise exception 'Only the NSC team can see this'; end if;
+  return query
+  select l.at, l.kind, l.recipient, r.status_code, coalesce(l.error, r.error_msg), left(r.content::text, 300)
+  from private.email_log l left join net._http_response r on r.id = l.request_id
+  order by l.at desc limit greatest(1, least(p_limit, 200));
+end $$;
+
+-- sends a test email to the team alert address
+create or replace function public.admin_test_email() returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not private.is_admin() then raise exception 'Only the NSC team can send a test email'; end if;
+  perform private.notify('test', jsonb_build_object('to', private.alert_email()));
+end $$;
+revoke execute on function public.admin_email_log(int) from anon, public;
+revoke execute on function public.admin_test_email() from anon, public;
+grant execute on function public.admin_email_log(int), public.admin_test_email() to authenticated;
 
 create or replace function private.first_of(uid uuid) returns text
 language sql stable security definer set search_path = public as $$
@@ -721,6 +762,73 @@ begin
     perform private.notify('expired', jsonb_build_object('to', r.email, 'first', private.first_of(r.id), 'plan', r.plan, 'until', r.paid_until));
   end loop;
 end $$;
+-- ---------------------------------------------------------------------
+-- Visits and logins, counted by NSC itself (no third-party analytics).
+-- Visitors get a random ID kept in their browser; signed-in people are linked
+-- to their account by the database, never by what the page sends.
+-- ---------------------------------------------------------------------
+create table if not exists public.events (
+  id        bigint generated always as identity primary key,
+  at        timestamptz not null default now(),
+  kind      text not null check (kind in ('view','login','signup')),
+  path      text not null default '' check (char_length(path) <= 200),
+  referrer  text not null default '' check (char_length(referrer) <= 200),
+  visitor   text not null default '' check (char_length(visitor) <= 40),
+  session   text not null default '' check (char_length(session) <= 40),
+  device    text not null default '' check (device in ('','mobile','tablet','desktop')),
+  user_id   uuid references auth.users(id) on delete set null
+);
+create index if not exists events_at_idx on public.events(at);
+create index if not exists events_user_idx on public.events(user_id, at);
+
+create or replace function private.stamp_event() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  new.at := now();
+  new.user_id := auth.uid();
+  return new;
+end $$;
+drop trigger if exists stamp_event on public.events;
+create trigger stamp_event before insert on public.events
+  for each row execute function private.stamp_event();
+
+alter table public.events enable row level security;
+drop policy if exists "events: anyone records" on public.events;
+drop policy if exists "events: team reads"     on public.events;
+create policy "events: anyone records" on public.events for insert to anon, authenticated with check (true);
+create policy "events: team reads"     on public.events for select using (private.is_admin());
+grant insert on public.events to anon, authenticated;
+
+-- all-time counts, and when each account last signed in (from Supabase Auth)
+create or replace function public.admin_traffic_totals()
+returns table (views bigint, visitors bigint, logins bigint, first_at timestamptz)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not private.is_admin() then raise exception 'Only the NSC team can see this'; end if;
+  return query select count(*) filter (where kind = 'view'), count(distinct visitor) filter (where kind = 'view'),
+                      count(*) filter (where kind = 'login'), min(at) from public.events;
+end $$;
+create or replace function public.admin_last_sign_ins()
+returns table (user_id uuid, last_sign_in timestamptz)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not private.is_admin() then raise exception 'Only the NSC team can see this'; end if;
+  return query select id, last_sign_in_at from auth.users;
+end $$;
+revoke execute on function public.admin_traffic_totals() from anon, public;
+revoke execute on function public.admin_last_sign_ins() from anon, public;
+grant execute on function public.admin_traffic_totals(), public.admin_last_sign_ins() to authenticated;
+
+do $$ begin
+  create extension if not exists pg_cron;
+  perform cron.unschedule(jobid) from cron.job where jobname = 'nsc-tidy';
+  perform cron.schedule('nsc-tidy', '30 3 * * *', $job$
+    delete from public.events where at < now() - interval '13 months';
+    delete from private.email_log where at < now() - interval '90 days';
+  $job$);
+exception when others then raise notice 'Clean-up job was not scheduled: %', sqlerrm;
+end $$;
+
 do $$ begin
   create extension if not exists pg_cron;
   perform cron.unschedule(jobid) from cron.job where jobname = 'nsc-membership-reminders';

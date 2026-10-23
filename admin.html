@@ -145,6 +145,7 @@ table.t.plain tbody tr{cursor:default}
       <li><a href="#broadcasts" data-v="broadcasts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"><path d="M4 10v4h3l6 4V6L7 10H4Z"/><path d="M17 9a4 4 0 0 1 0 6"/></svg>Broadcasts</a></li>
       <li class="navhd">Business</li>
       <li><a href="#insights" data-v="insights"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 20h16"/><path d="M7 16v-4M12 16V7M17 16v-7"/></svg>Insights</a></li>
+      <li><a href="#traffic" data-v="traffic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 4 8-8"/><path d="M15 8h5v5"/></svg>Traffic</a></li>
       <li><a href="#activity" data-v="activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Activity log</a></li>
       <li class="navhd">Admin</li>
       <li><a href="#team" data-v="team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 3 4.5 6v6c0 4.4 3.2 8.2 7.5 9 4.3-.8 7.5-4.6 7.5-9V6L12 3Z"/></svg>Team</a></li>
@@ -292,6 +293,24 @@ table.t.plain tbody tr{cursor:default}
         </div>
       </section>
 
+      <section id="v-traffic" data-view hidden>
+        <div style="display:grid;gap:24px">
+          <div class="hello"><div><h2>Traffic</h2><p id="trSub">Visits, logins and what people use, counted by NSC itself. No cookies or outside trackers.</p></div>
+            <div class="seg" id="trRange"><button type="button" aria-pressed="false" data-d="1">Today</button><button type="button" aria-pressed="true" data-d="7">7 days</button><button type="button" aria-pressed="false" data-d="30">30 days</button></div></div>
+          <div class="stats" id="trStats"></div>
+          <div class="grid2">
+            <div class="card"><div class="chead"><h2 id="trViewsT">Page views per day</h2><span class="sub" id="trViewsS"></span></div><div class="bars" id="trViews" role="img"></div><div class="barx" id="trViewsX" aria-hidden="true"></div></div>
+            <div class="card"><div class="chead"><h2 id="trLoginsT">Logins per day</h2><span class="sub" id="trLoginsS"></span></div><div class="bars" id="trLogins" role="img"></div><div class="barx" id="trLoginsX" aria-hidden="true"></div></div>
+          </div>
+          <div class="grid3">
+            <div class="card"><div class="chead"><h2>Most visited</h2></div><div class="hbars" id="trPages"></div></div>
+            <div class="card"><div class="chead"><h2>Where visitors come from</h2></div><div class="hbars" id="trRefs"></div></div>
+            <div class="card"><div class="chead"><h2>Devices</h2></div><div class="hbars" id="trDev"></div></div>
+          </div>
+          <div class="card"><div class="chead"><h2>Recent logins and sign-ups</h2><span class="sub">Last 30 days</span></div><div class="tablewrap" style="border:0"><table class="t plain"><thead><tr><th>Who</th><th>What</th><th>Device</th><th>When</th></tr></thead><tbody id="trLog"></tbody></table></div></div>
+        </div>
+      </section>
+
       <section id="v-activity" data-view hidden>
         <div style="display:grid;gap:20px">
           <div class="hello"><div><h2>Activity log</h2><p>Everything members and the team have done, newest first.</p></div></div>
@@ -342,6 +361,10 @@ table.t.plain tbody tr{cursor:default}
             </form>
             <div class="card" style="align-self:start"><h2>What members see</h2><p class="sub">Membership page</p><dl class="acct" id="stPrev"></dl></div>
           </div>
+          <div class="card">
+            <div class="chead"><div><h2>Email delivery</h2><p class="sub">The latest emails NSC tried to send, and what happened to each.</p></div><div style="display:flex;gap:8px"><button type="button" class="btn btn-ghost btn-sm" id="emRefresh">Refresh</button><button type="button" class="btn btn-primary btn-sm" id="emTest">Send a test email</button></div></div>
+            <div class="tablewrap" style="border:0"><table class="t plain"><thead><tr><th>Email</th><th>To</th><th>Result</th><th>When</th></tr></thead><tbody id="emLog"></tbody></table></div>
+          </div>
         </div>
       </section>
     </main>
@@ -362,6 +385,7 @@ table.t.plain tbody tr{cursor:default}
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script src="/assets/js/config.js"></script>
+<script src="/assets/js/nsc-track.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js"></script>
 <script src="/assets/js/countries.js"></script>
 <script src="/assets/js/nsc-store.js"></script>
@@ -416,7 +440,8 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   function teamIds(){ return (S.team.list() || []).map(function(t){ return t.user_id }) }
   /* team logins also get a member row when they sign up; keep them out of every member list */
   function members(){ var t = teamIds(); return S.all('members').filter(function(m){ return t.indexOf(m.id) < 0 }) }
-  function member(id){ var m = S.get('members', id); return m && teamIds().indexOf(id) < 0 ? m : null }
+  /* any account by id, team included, so a receipt or profile never vanishes from view */
+  function member(id){ return S.get('members', id) }
   function supportThreads(){
     return members().map(function(m){
       var id = S.supportThread(m.id), ms = S.threadMessages(id);
@@ -433,7 +458,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
 
   /* ---------- routing ---------- */
   var titles = { overview:'Overview', review:'Review queue', members:'Members', payments:'Payments', support:'Support inbox', reports:'Reports',
-    intros:'Introductions', matchmaker:'Matchmaker', broadcasts:'Broadcasts', insights:'Insights', activity:'Activity log', team:'Team', settings:'Settings' };
+    intros:'Introductions', matchmaker:'Matchmaker', broadcasts:'Broadcasts', insights:'Insights', traffic:'Traffic', activity:'Activity log', team:'Team', settings:'Settings' };
   var view = 'overview', curThread = null, drawerId = null, mmId = null;
   function route(){
     var h = (location.hash || '#overview').slice(1).split('/');
@@ -444,7 +469,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     document.querySelectorAll('[data-v]').forEach(function(a){ if (a.dataset.v === view) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current') });
     $('pageTitle').textContent = titles[view]; $('whoMenu').hidden = true; $('gres').hidden = true;
     closeDrawer(); closeModal();
-    if (view === 'settings') fillSettings();
+    if (view === 'settings') { fillSettings(); emRows = null; setTimeout(function(){ paintEmails(); loadEmails() }, 0) }
     if (view === 'team' && S.team.load) S.team.load().catch(function(){});
     render();
     window.scrollTo(0, 0);
@@ -457,7 +482,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     badges();
     $('upgrade').hidden = !S.needsUpgrade;
     ({ overview: rOverview, review: rReview, members: rMembers, payments: rPayments, support: rSupport, reports: rReports,
-       intros: rIntros, matchmaker: rMatchmaker, broadcasts: rBroadcasts, insights: rInsights, activity: rActivity, team: rTeam, settings: rSettings })[view]();
+       intros: rIntros, matchmaker: rMatchmaker, broadcasts: rBroadcasts, insights: rInsights, traffic: rTraffic, activity: rActivity, team: rTeam, settings: rSettings })[view]();
     if (drawerId) rDrawer();
   }
   S.on(render);
@@ -876,6 +901,77 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   document.addEventListener('mouseover', showTip); document.addEventListener('focusin', showTip);
   document.addEventListener('scroll', function(){ $('tip').hidden = true }, true);
 
+  /* ---------- traffic ---------- */
+  var tr = { data: null, at: 0, busy: false, err: '', days: 7 };
+  function loadTraffic(force){
+    if (tr.busy || (!force && tr.data && Date.now() - tr.at < 60000)) return;
+    tr.busy = true;
+    S.traffic().then(function(d){ tr.data = d; tr.at = Date.now(); tr.err = '' }, function(e){ tr.err = errMsg(e) })
+      .then(function(){ tr.busy = false; render() });
+  }
+  $('trRange').addEventListener('click', function(e){ var b = e.target.closest('[data-d]'); if (!b) return; tr.days = +b.dataset.d; this.querySelectorAll('button').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)) }); render() });
+  var PAGE_NAMES = { '/':'Home page', '/auth':'Sign in and sign up', '/dashboard':'Dashboard: overview', '/privacy':'Privacy policy', '/terms':'Terms of use' };
+  function pageName(p){ if (PAGE_NAMES[p]) return PAGE_NAMES[p]; var m = /^\/dashboard#(\w+)/.exec(p); return m ? 'Dashboard: ' + m[1] : p }
+  function whoIs(uid){
+    if (!uid) return null;
+    var m = S.get('members', uid); if (m) return { m: m, name: S.fullName(m), sub: m.email };
+    var t = (S.team.list() || []).filter(function(x){ return x.user_id === uid })[0];
+    return { m: null, name: t ? t.email : 'Deleted account', sub: t ? 'NSC team' : '' };
+  }
+  /* one column per day (or per hour for "Today"), single series in NSC green */
+  function dayBars(el, xel, list, days, noun){
+    var hourly = days === 1, n = hourly ? 24 : days, start = new Date(); start.setMinutes(0, 0, 0);
+    if (!hourly) { start.setHours(0); start = new Date(+start - (days - 1) * D) } else start = new Date(+start - 23 * 36e5);
+    var step = hourly ? 36e5 : D, b = []; for (var i = 0; i < n; i++) b.push(0);
+    list.forEach(function(e){ var k = Math.floor((e.at - start) / step); if (k >= 0 && k < n) b[k]++ });
+    var max = Math.max.apply(null, b.concat(1));
+    var lbl = function(k){ var t = new Date(+start + k * step); return hourly ? t.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) : t.toLocaleDateString('en-GB', { day:'numeric', month:'short' }) };
+    $(el).setAttribute('aria-label', b.map(function(v, k){ return lbl(k) + ': ' + v + ' ' + noun }).join('; '));
+    $(el).innerHTML = b.map(function(v, k){ return '<div class="col" tabindex="0" data-tip="' + lbl(k) + ': ' + v + ' ' + noun + '"><i style="height:' + (v / max * 100) + '%"></i></div>' }).join('');
+    var every = Math.ceil(n / 6);
+    $(xel).innerHTML = b.map(function(v, k){ return '<span>' + (k % every === 0 || k === n - 1 ? lbl(k) : '') + '</span>' }).join('');
+  }
+  function lastSeen(m){
+    if (!tr.data) { loadTraffic(false); return '' }
+    var at = tr.data.lastSignIn[m.id], n = tr.data.events.filter(function(e){ return e.user === m.id && e.kind === 'login' }).length;
+    var used = tr.data.events.filter(function(e){ return e.user === m.id })[0];
+    return '<p class="sub">' + (at ? 'Last signed in ' + S.ago(at).toLowerCase() : 'Has not signed in yet') + ' · ' + n + ' logins in 30 days' + (used ? ' · last active ' + S.ago(used.at).toLowerCase() : '') + '</p>';
+  }
+  function rTraffic(){
+    loadTraffic(false);
+    if (!tr.data) {
+      $('trStats').innerHTML = '<div class="stat"><span>' + (tr.err ? 'Could not load traffic' : 'Loading…') + '</span><b>—</b><small>' + esc(tr.err ? (/events|admin_traffic/.test(tr.err) ? 'Run the latest schema.sql in Supabase to start counting.' : tr.err) : 'Counting visits') + '</small></div>';
+      return;
+    }
+    var days = tr.days, from = days === 1 ? Date.now() - D : (function(){ var t = new Date(); t.setHours(0, 0, 0, 0); return +t - (days - 1) * D })();
+    var ev = tr.data.events.filter(function(e){ return e.at >= from });
+    var views = ev.filter(function(e){ return e.kind === 'view' }), logins = ev.filter(function(e){ return e.kind === 'login' }), signups = ev.filter(function(e){ return e.kind === 'signup' });
+    var uniq = function(l, k){ var s = {}; l.forEach(function(e){ if (e[k]) s[e[k]] = 1 }); return Object.keys(s).length };
+    var span = days === 1 ? 'in the last 24 hours' : 'in the last ' + days + ' days', t = tr.data.totals || {};
+    var joined = members().filter(function(m){ return m.createdAt >= from }).length;
+    $('trStats').innerHTML = [
+      ['Page views', views.length, uniq(views, 'session') + ' visits ' + span],
+      ['Unique visitors', uniq(views, 'visitor'), span],
+      ['Logins', logins.length, uniq(logins, 'user') + ' different people'],
+      ['New accounts', joined, signups.length + ' confirmed by email code'],
+      ['Members active', uniq(ev.filter(function(e){ return e.user && S.get('members', e.user) && teamIds().indexOf(e.user) < 0 }), 'user'), 'Signed in and used NSC'],
+      ['All-time page views', Number(t.views || 0).toLocaleString('en-GB'), Number(t.visitors || 0).toLocaleString('en-GB') + ' visitors' + (t.first_at ? ' since ' + date(Date.parse(t.first_at)) : '')]
+    ].map(function(s){ return '<div class="stat"><span>' + s[0] + '</span><b>' + s[1] + '</b><small>' + s[2] + '</small></div>' }).join('');
+    $('trViewsT').textContent = views.length + ' page views'; $('trViewsS').textContent = days === 1 ? 'By hour' : 'By day';
+    $('trLoginsT').textContent = logins.length + ' logins'; $('trLoginsS').textContent = days === 1 ? 'By hour' : 'By day';
+    dayBars('trViews', 'trViewsX', views, days, 'page views');
+    dayBars('trLogins', 'trLoginsX', logins, days, 'logins');
+    $('trPages').innerHTML = views.length ? hbars(tally(views, function(e){ return pageName(e.path) }, 7), views.length) : '<p class="sub">No visits yet.</p>';
+    $('trRefs').innerHTML = views.length ? hbars(tally(views, function(e){ return e.referrer || 'Direct, bookmarks or apps' }, 6), views.length) : '<p class="sub">No visits yet.</p>';
+    $('trDev').innerHTML = views.length ? hbars(tally(views, function(e){ return { mobile:'Phone', tablet:'Tablet', desktop:'Computer' }[e.device] || 'Unknown' }), views.length) : '<p class="sub">No visits yet.</p>';
+    var acts = tr.data.events.filter(function(e){ return e.kind !== 'view' }).slice(0, 40);
+    $('trLog').innerHTML = acts.length ? acts.map(function(e){
+      var w = whoIs(e.user);
+      return '<tr><td>' + (w && w.m ? '<button type="button" class="linkp" data-open="' + w.m.id + '">' + person(w.m) + '</button>' : '<b>' + esc(w ? w.name : 'Unknown') + '</b>' + (w && w.sub ? '<br><span class="sub">' + esc(w.sub) + '</span>' : '')) + '</td>' +
+        '<td>' + (e.kind === 'signup' ? '<span class="pill ok">Confirmed sign-up</span>' : e.path === '/admin' ? '<span class="pill wait">Team login</span>' : '<span class="pill off">Login</span>') + '</td><td>' + ({ mobile:'Phone', tablet:'Tablet', desktop:'Computer' }[e.device] || '—') + '</td><td>' + S.ago(e.at) + '<br><span class="sub">' + new Date(e.at).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) + '</span></td></tr>' }).join('')
+      : '<tr><td colspan="4"><div class="empty"><b>No logins yet</b><span>Logins appear here as members sign in.</span></div></td></tr>';
+  }
+
   /* ---------- activity ---------- */
   $('acSearch').addEventListener('input', render);
   function rActivity(){
@@ -937,6 +1033,38 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     S.saveSettings(s).then(function(){ S.log('Settings updated'); toast('Saved. Members see the new details straight away.') }, function(e2){ $('stErr').hidden = false; $('stErr').textContent = 'Could not save: ' + errMsg(e2) });
   });
 
+  /* email delivery: what the database asked for, and the reply from the email function */
+  var EMAIL_KINDS = { receipt:'New receipt (team)', paid:'Payment confirmed', receipt_rejected:'Receipt not accepted', status:'Profile decision', new_match:'New match',
+    intro_request:'Introduction request', intro_accepted:'Introduction accepted', member_message:'New message', team_message:'Message from the team',
+    support_in:'Support message (team)', expiring:'Membership ending soon', expired:'Membership ended', test:'Test email' };
+  function emailResult(x){
+    var age = Date.now() - Date.parse(x.at), reply = x.reply || '';
+    if (x.error) return ['bad', x.error];
+    if (x.status === 200) return /skipped/.test(reply) ? ['wait', 'Not sent: redeploy the notify function to send this kind of email'] : ['ok', 'Sent'];
+    if (x.status === 401) return ['bad', 'The email function refused it: NOTIFY_SECRET in Edge Functions › Secrets doesn\'t match the database secret'];
+    if (x.status === 404) return ['bad', 'The notify function isn\'t deployed'];
+    if (x.status === 500 && /RESEND_API_KEY/.test(reply)) return ['bad', 'RESEND_API_KEY is missing from Edge Functions › Secrets'];
+    if (x.status) return ['bad', 'Failed (' + x.status + ')' + (reply ? ': ' + reply : '')];
+    return age < 120000 ? ['wait', 'Sending…'] : ['off', 'No reply kept (replies are stored for about 6 hours)'];
+  }
+  var emRows = null, emErr = '';
+  function loadEmails(){ S.emailLog().then(function(r){ emRows = r; emErr = '' }, function(e){ emErr = errMsg(e) }).then(paintEmails) }
+  function paintEmails(){
+    if (view !== 'settings') return;
+    if (emErr) { $('emLog').innerHTML = '<tr><td colspan="4"><p class="sub">' + esc(/admin_email_log/.test(emErr) ? 'Run the latest schema.sql in Supabase to see email delivery here.' : emErr) + '</p></td></tr>'; return }
+    if (!emRows) { $('emLog').innerHTML = '<tr><td colspan="4"><p class="sub">Loading…</p></td></tr>'; return }
+    $('emLog').innerHTML = emRows.length ? emRows.map(function(x){
+      var r = emailResult(x), to = String(x.recipient || '');
+      if (/^\[/.test(to)) { try { var l = JSON.parse(to); to = l.length + (l.length === 1 ? ' member' : ' members') } catch (e) {} }
+      return '<tr><td><b>' + esc(EMAIL_KINDS[x.kind] || x.kind) + '</b></td><td>' + esc(to) + '</td><td><span class="pill ' + r[0] + '" style="white-space:normal;text-align:left">' + esc(r[1]) + '</span></td><td>' + S.ago(Date.parse(x.at)) + '</td></tr>' }).join('')
+      : '<tr><td colspan="4"><div class="empty"><b>No emails yet</b><span>Send a test email to check everything is connected.</span></div></td></tr>';
+  }
+  $('emRefresh').addEventListener('click', loadEmails);
+  $('emTest').addEventListener('click', function(){
+    var b = this; b.disabled = true;
+    S.testEmail().then(function(){ toast('Test email queued for ' + S.settings().alertEmail); setTimeout(loadEmails, 4000) }, function(e){ toast(errMsg(e)) }).then(function(){ setTimeout(function(){ b.disabled = false }, 4000); loadEmails() });
+  });
+
   /* ---------- global member search ---------- */
   $('gq').addEventListener('input', function(){
     var q = this.value.trim().toLowerCase(), box = $('gres');
@@ -978,7 +1106,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
       '<div class="db">' +
         (m.adminNote && ['changes','rejected','suspended'].indexOf(m.status) >= 0 ? '<div class="banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><div><b>Last note to member</b><p>' + esc(m.adminNote) + '</p></div></div>' : '') +
         (pr.circle ? '<div class="banner ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><div><b>Private Circle member · sensitive</b><p>This member is living with HIV and has opted into the Private Circle. Never mention this outside the circle or in messages that other people could see.</p></div></div>' : '') +
-        '<div class="card" style="display:flex;gap:20px;align-items:center;flex-wrap:wrap"><div class="ring" style="--p:' + p + ';width:72px;height:72px"><b style="width:56px;height:56px;font-size:1rem">' + p + '%</b></div><div style="flex:1;min-width:200px"><b>Profile ' + p + '% complete</b><p class="sub">Joined ' + date(m.createdAt, true) + (m.submittedAt ? ' · Submitted ' + S.ago(m.submittedAt).toLowerCase() : '') + '</p><p class="sub">' + intros.length + ' introductions · ' + reports.length + ' reports about them</p></div></div>' +
+        '<div class="card" style="display:flex;gap:20px;align-items:center;flex-wrap:wrap"><div class="ring" style="--p:' + p + ';width:72px;height:72px"><b style="width:56px;height:56px;font-size:1rem">' + p + '%</b></div><div style="flex:1;min-width:200px"><b>Profile ' + p + '% complete</b><p class="sub">Joined ' + date(m.createdAt, true) + (m.submittedAt ? ' · Submitted ' + S.ago(m.submittedAt).toLowerCase() : '') + '</p><p class="sub">' + intros.length + ' introductions · ' + reports.length + ' reports about them</p>' + lastSeen(m) + '</div></div>' +
         '<div><b>Photos</b><div class="gallery" style="margin-top:10px">' + [0,1,2].map(function(i){ return pr.photos[i] ? '<img src="' + esc(pr.photos[i]) + '" alt="Photo ' + (i + 1) + '">' : '<div class="ph">No photo</div>' }).join('') + '</div></div>' +
         (pr.bio ? '<div><b>About me</b><p style="margin:6px 0 0">' + esc(pr.bio) + '</p></div>' : '') +
         (pr.lookfor ? '<div><b>The partner they hope for</b><p style="margin:6px 0 0">' + esc(pr.lookfor) + '</p></div>' : '') +

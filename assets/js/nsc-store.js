@@ -381,6 +381,21 @@
       return Promise.resolve();
     },
     needsUpgrade: false,
+    /* demo only: made-up visits so the Traffic page can be shown */
+    traffic: function () {
+      var ev = [], pages = ['/', '/', '/', '/auth', '/dashboard#overview', '/dashboard#matches', '/dashboard#messages', '/privacy', '/terms'], refs = ['', '', 'google.com', 'instagram.com', 'facebook.com', 'whatsapp.com'];
+      var users = all('members').map(function (x) { return x.id; }), r = 7;
+      function rnd() { r = (r * 16807) % 2147483647; return r / 2147483647; }
+      for (var d = 0; d < 30; d++) for (var k = 0, n = 25 + Math.round(rnd() * 40 + d % 7 * 3); k < n; k++) {
+        var v = 'v' + Math.floor(rnd() * 400), p = pages[Math.floor(rnd() * pages.length)], u = /dashboard/.test(p) ? users[Math.floor(rnd() * users.length)] : null;
+        ev.push({ at: now() - d * D - Math.floor(rnd() * D), kind: 'view', path: p, referrer: refs[Math.floor(rnd() * refs.length)], visitor: v, session: v + d, device: rnd() < .72 ? 'mobile' : rnd() < .5 ? 'desktop' : 'tablet', user: u });
+        if (u && rnd() < .25) ev.push({ at: now() - d * D - Math.floor(rnd() * D), kind: 'login', path: '/auth', referrer: '', visitor: v, session: v + d, device: 'mobile', user: u });
+      }
+      var seen = {}; ev.forEach(function (e) { if (e.kind === 'login' && (!seen[e.user] || seen[e.user] < e.at)) seen[e.user] = e.at; });
+      return Promise.resolve({ events: ev.sort(function (a, b) { return b.at - a.at; }), totals: { views: ev.filter(function (e) { return e.kind === 'view'; }).length * 3, visitors: 1180, logins: 640, first_at: new Date(now() - 90 * D).toISOString() }, lastSignIn: seen });
+    },
+    emailLog: function () { return Promise.resolve([]); },
+    testEmail: function () { return Promise.reject(new Error('Emails are sent by Supabase. Demo data can\'t send them.')); },
     PLAN_NAMES: PLAN_NAMES, TERMS: TERMS, active: active, planPrice: planPrice, paymentsOf: paymentsOf, membership: membership,
     applyCredit: applyCredit, confirmPayment: confirmPayment, grantMembership: grantMembership, introsLeft: introsLeft,
     rejectPayment: function (pid, note) { return update('payments', pid, { status: 'rejected', note: note || '', reviewedAt: now() }); },

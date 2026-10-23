@@ -130,6 +130,14 @@ function build(e: Event): Email | null {
         button: { label: "Open the support inbox", path: "/admin#support" },
         foot: "Sent to the NSC team. We send at most one alert per conversation each hour.",
       });
+    case "test":
+      return mail({
+        subject: "Test email from NaijaSinglesConnect",
+        title: "Emails are working",
+        body: "This test was sent from the NSC admin dashboard. Receipt alerts, approval emails and match notifications will arrive the same way.",
+        button: { label: "Open the admin dashboard", path: "/admin#settings" },
+        foot: "Sent to the NSC team alert address.",
+      });
     case "expiring":
       return mail({
         subject: `Your ${plan} membership ends on ${day(e.until)}`,
@@ -158,6 +166,7 @@ Deno.serve(async (req) => {
   const msg = build(e);
   if (!msg) return Response.json({ skipped: e.kind });
   const r = await send(RESEND_API_KEY, e.to, msg);
-  if (!r.ok) { console.error("Resend error", e.kind, r.status, r.detail); return new Response("Email failed", { status: 502 }); }
+  // Resend's reason (for example an unverified domain) is shown in /admin > Settings > Email delivery
+  if (!r.ok) { console.error("Resend error", e.kind, r.status, r.detail); return new Response(`Resend refused it (${r.status}): ${r.detail}`.slice(0, 280), { status: 502 }); }
   return Response.json({ sent: e.kind });
 });

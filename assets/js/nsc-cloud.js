@@ -19,8 +19,13 @@
   if (demo || !CFG.supabaseUrl || !CFG.supabaseKey) { S.mode = 'demo'; return; }
   if (!window.supabase || !window.supabase.createClient) { S.mode = 'demo'; console.error('NSC: Supabase library failed to load; using demo data.'); return; }
 
+  var REF = new URL(CFG.supabaseUrl).hostname.split('.')[0];
+  /* The team login is stored apart from the member login, so testing a member account in
+     another tab of the same browser can't swap the admin page's session. */
+  var ADMIN_PAGE = /^\/admin/.test(location.pathname);
   var sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true,
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: !ADMIN_PAGE,
+      storageKey: ADMIN_PAGE ? 'sb-' + REF + '-admin-auth' : 'sb-' + REF + '-auth-token',
       /* Supabase's default cross-tab browser lock can stall sign-in forever when another NSC tab
          is open or asleep. A pass-through lock keeps each tab independent. */
       lock: function (name, acquireTimeout, fn) { return fn(); } }
@@ -277,6 +282,7 @@
       return sb.auth.signInWithPassword({ email: String(email).trim(), password: password })
         .then(function (r) {
           if (r.error) { var err = new Error(friendly(r.error)); err.code = /email not confirmed/i.test(r.error.message) ? 'email_not_confirmed' : (r.error.code || ''); throw err; }
+          if (window.nscTrack && r.data.session) window.nscTrack('login', { token: r.data.session.access_token, path: ADMIN_PAGE ? '/admin' : '/auth' });
           st.user = r.data.user; return { id: r.data.user.id };
         });
     },
@@ -286,7 +292,7 @@
        browsers after a correct code. The dashboard picks the login up when it loads. */
     verifyOtp: function (email, code) {
       email = String(email).trim(); code = String(code).trim();
-      var key = 'sb-' + new URL(CFG.supabaseUrl).hostname.split('.')[0] + '-auth-token';
+      var key = 'sb-' + REF + '-auth-token';
       function attempt(type) {
         var ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 15000);
         return fetch(CFG.supabaseUrl.replace(/\/$/, '') + '/auth/v1/verify', {
@@ -310,6 +316,7 @@
         if (!s.access_token || !s.user) throw new Error('Your email is confirmed. Please log in.');
         if (!s.expires_at) s.expires_at = Math.round(Date.now() / 1000) + (s.expires_in || 3600);
         try { localStorage.setItem(key, JSON.stringify(s)); } catch (e) { throw new Error('Your browser blocked saving the login. Turn off private browsing and try again.'); }
+        if (window.nscTrack) window.nscTrack('signup', { token: s.access_token, path: '/auth' });
         st.user = s.user; return { id: s.user.id };
       });
     },
@@ -397,6 +404,23 @@
     add: function (email) { return sb.rpc('team_add', { p_email: String(email).trim() }).then(function (r) { if (r.error) throw r.error; return S.team.load(); }); },
     remove: function (id) { return sb.rpc('team_remove', { p_user: id }).then(function (r) { if (r.error) throw r.error; return S.team.load(); }); }
   };
+  /* visits and logins for the team's Traffic page: the last 30 days in detail, plus all-time totals */
+  S.traffic = function () {
+    var since = new Date(Date.now() - 30 * 864e5).toISOString();
+    function page(from) {
+      return sb.from('events').select('at,kind,path,referrer,visitor,session,device,user_id').gte('at', since).order('at', { ascending: false }).range(from, from + 999)
+        .then(function (r) { if (r.error) throw r.error; return r.data; });
+    }
+    function all(from, acc) { return page(from).then(function (rows) { acc = acc.concat(rows); return rows.length === 1000 && acc.length < 20000 ? all(from + 1000, acc) : acc; }); }
+    return Promise.all([all(0, []), sb.rpc('admin_traffic_totals'), sb.rpc('admin_last_sign_ins')]).then(function (r) {
+      if (r[1].error) throw r[1].error;
+      var seen = {}; (r[2].data || []).forEach(function (x) { seen[x.user_id] = ms(x.last_sign_in); });
+      return { events: r[0].map(function (e) { return { at: ms(e.at), kind: e.kind, path: e.path, referrer: e.referrer, visitor: e.visitor, session: e.session, device: e.device, user: e.user_id }; }),
+        totals: (r[1].data || [])[0] || {}, lastSignIn: seen };
+    });
+  };
+  S.emailLog = function () { return sb.rpc('admin_email_log', { p_limit: 40 }).then(function (r) { if (r.error) throw r.error; return r.data || []; }); };
+  S.testEmail = function () { return sb.rpc('admin_test_email').then(function (r) { if (r.error) throw r.error; }); };
   /* removes their photos and receipts from storage, then the account and everything linked to it */
   S.deleteMember = function (id) {
     function clear(bucket) {
