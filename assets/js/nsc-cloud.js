@@ -74,7 +74,7 @@
   function soft(p) { return Promise.resolve(p).then(function (r) { return r && r.error ? { data: null, missing: true } : r; }, function () { return { data: null, missing: true }; }); }
 
   /* ---------- loading ---------- */
-  var loading = null;
+  var loading = null, retried = false;
   function load() {
     if (loading) return loading;
     var me = st.user && st.user.id; if (!me) return Promise.resolve();
@@ -105,6 +105,9 @@
       var intros = check(r.intros, 'intros').map(introRow), messages = check(r.messages, 'messages').map(msgRow), reads = {};
       check(r.reads, 'reads').forEach(function (x) { reads[x.reader + '|' + x.thread] = ms(x.at); });
       if (!admin) check(r.matches, 'matches').forEach(function (x) { members.push(otherRow(x)); });
+      /* A member's own row is always readable while signed in. If it's missing, the request
+         ran without a valid login (usually mid token refresh): keep what we have and retry. */
+      if (!admin && !members.some(function (m) { return m.id === me; })) throw Object.assign(new Error('your account'), { what: 'your account', retry: true });
       cache.members = members; cache.intros = intros; cache.messages = messages; cache.reads = reads;
       cache.reports = admin ? check(r.reports, 'reports').map(reportRow) : [];
       cache.activity = admin ? check(r.activity, 'activity').map(function (a) { return { at: ms(a.at), text: a.text }; }) : [];
@@ -116,9 +119,12 @@
         cache.team = r.team.data || [];
         S.needsUpgrade = S.needsUpgrade || !!r.notes.missing || !!r.team.missing;
       }
-      st.loaded = true; S._emit();
-    }).catch(function (e) { fail(e.what ? 'Could not load ' + e.what : 'Could not load your data', e); })
-      .then(function () { loading = null; });
+      st.loaded = true; st.loadError = null; retried = false; S._emit();
+    }).catch(function (e) {
+      st.loadError = e;
+      if (e.retry && !retried) { retried = true; return sb.auth.refreshSession().then(function () { loading = null; return load(); }, function () {}); }
+      fail(e.what ? 'Could not load ' + e.what : 'Could not load your data', e);
+    }).then(function () { loading = null; });
     return loading;
   }
   var reloadT = null;
@@ -239,6 +245,9 @@
   S._useBackend({ cache: cache, insert: insert, update: update, remove: removeRow, markRead: markRead, log: log });
   S.uid = function () { return uuid(); };
 
+  /* whether this tab's data arrived, so pages never mistake a network failure for "no account" */
+  S.loadState = function () { return { loaded: st.loaded, error: st.loadError || null }; };
+  S.reload = function () { return load(); };
   S.ready = function (opts) {
     st.as = (opts && opts.as) || 'none';
     return sb.auth.getSession().then(function (res) {

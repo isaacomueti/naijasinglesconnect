@@ -427,6 +427,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     var ms = S.membership(m);
     if (ms.active) return '<span class="pill ok">' + PN[ms.plan] + ' · until ' + date(ms.until) + '</span>';
     if (ms.pending) return '<span class="pill wait">Receipt to confirm</span>';
+    if (ms.credit && m.status === 'approved') return '<span class="pill bad" title="Paid months were never started. Run supabase/schema.sql again to repair.">' + PN[ms.plan] + ' · paid, not started</span>';
     if (ms.credit) return '<span class="pill ok">' + PN[ms.plan] + ' · starts on approval</span>';
     if (ms.paid) return '<span class="pill bad">' + PN[ms.plan] + ' · ended</span>';
     return '<span class="pill off">No plan</span>';

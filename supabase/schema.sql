@@ -544,7 +544,9 @@ create or replace function private.payment_after() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare m public.members; who text; first text;
 begin
-  select * into m from public.members where id = new.member_id;
+  -- lock the member row, so an approval sent at the same moment finishes first
+  -- and we see the member's real status
+  select * into m from public.members where id = new.member_id for update;
   select coalesce(profile->>'first', '') into first from public.profiles where id = new.member_id;
   who := trim(first || ' ' || coalesce((select profile->>'last' from public.profiles where id = new.member_id), ''));
   if tg_op = 'INSERT' and new.status = 'uploaded' then
@@ -560,7 +562,8 @@ begin
       update public.members set plan = new.plan, credit_months = credit_months + new.months where id = new.member_id;
     end if;
     perform private.notify('paid', jsonb_build_object('to', m.email, 'first', first, 'plan', new.plan, 'months', new.months, 'amount', new.amount,
-      'until', (select paid_until from public.members where id = new.member_id), 'approved', m.status = 'approved'));
+      'until', (select paid_until from public.members where id = new.member_id),
+      'approved', (select status = 'approved' from public.members where id = new.member_id)));
   end if;
   if tg_op = 'UPDATE' and new.status = 'rejected' and old.status <> 'rejected' then
     perform private.notify('receipt_rejected', jsonb_build_object('to', m.email, 'first', first, 'note', new.note));
@@ -571,11 +574,13 @@ drop trigger if exists payment_after on public.payments;
 create trigger payment_after after insert or update on public.payments
   for each row execute function private.payment_after();
 
--- months paid before approval start counting on approval day
+-- Months paid before approval start counting on approval day. This runs on every
+-- change, not only the approval itself, so credit that lands on an already approved
+-- member (for example a payment confirmed at the same moment) starts straight away.
 create or replace function private.member_membership() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
-  if new.status = 'approved' and old.status <> 'approved' and new.credit_months > 0 then
+  if new.status = 'approved' and new.credit_months > 0 then
     new.paid_until := greatest(coalesce(new.paid_until, now()), now()) + make_interval(months => new.credit_months);
     new.credit_months := 0;
   end if;
@@ -584,6 +589,11 @@ end $$;
 drop trigger if exists member_membership on public.members;
 create trigger member_membership before update on public.members
   for each row execute function private.member_membership();
+
+-- Repair: approved members whose paid months were held as credit and never started
+-- (the approval and the payment confirmation arrived at the same moment). Touching the
+-- row runs member_membership, which starts their months from today. Safe to run again.
+update public.members set credit_months = credit_months where status = 'approved' and credit_months > 0;
 
 alter table public.payments enable row level security;
 drop policy if exists "payments: own or team read"   on public.payments;

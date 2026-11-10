@@ -381,6 +381,8 @@
       return Promise.resolve();
     },
     needsUpgrade: false,
+    loadState: function () { return { loaded: true, error: null }; },
+    reload: function () { return Promise.resolve(); },
     /* demo only: made-up visits so the Traffic page can be shown */
     traffic: function () {
       var ev = [], pages = ['/', '/', '/', '/auth', '/dashboard#overview', '/dashboard#matches', '/dashboard#messages', '/privacy', '/terms'], refs = ['', '', 'google.com', 'instagram.com', 'facebook.com', 'whatsapp.com'];

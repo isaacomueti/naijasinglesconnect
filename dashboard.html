@@ -464,7 +464,16 @@
 window.NSC.ready({ as: 'member' }).then(function(){
   var S = window.NSC, esc = S.esc, $ = function(id){ return document.getElementById(id) };
   var sess = S.session.get();
-  if (!sess || !S.get('members', sess.id)) { Promise.resolve(S.session.clear()).then(function(){ location.replace('/auth#login') }); return; }
+  if (!sess) { location.replace('/auth#login'); return; }
+  /* Signed in but the account didn't load: almost always a weak connection. Keep them
+     signed in and offer a retry; only a load that succeeded without their account signs out. */
+  if (!S.get('members', sess.id)) {
+    if (S.loadState().loaded) { Promise.resolve(S.session.clear()).then(function(){ location.replace('/auth#login') }); return; }
+    document.querySelector('.content').innerHTML = '<div class="card" style="max-width:520px;margin:40px auto;text-align:center;display:grid;gap:14px;justify-items:center">' +
+      '<h2 style="font-family:var(--display);font-size:2rem;font-weight:600">We couldn\'t reach NSC</h2><p class="sub">Your connection may be slow right now. You\'re still signed in, and nothing has been lost.</p>' +
+      '<button type="button" class="btn btn-primary" onclick="location.reload()">Try again</button></div>';
+    return;
+  }
   window.addEventListener('nsc:error', function(e){ toast(e.detail) });
   var ME = sess.id;
   function me(){ return S.get('members', ME) }
@@ -534,7 +543,7 @@ window.NSC.ready({ as: 'member' }).then(function(){
 
   /* ---------- render ---------- */
   function render(){
-    var m = me(); if (!m) { location.replace('/auth#login'); return; }
+    var m = me(); if (!m) { if (!S.session.get()) location.replace('/auth#login'); return; }
     renderTop(m); renderOverview(m); renderBadges(m);
     if (view === 'matches') renderMatches(m);
     if (view === 'member') renderMember(m);
