@@ -12,7 +12,7 @@ const SECRET = Deno.env.get("NOTIFY_SECRET") ?? "";
 
 type Event = {
   kind: string; to: string | string[]; first?: string; name?: string; email?: string; other?: string;
-  plan?: string; months?: number; amount?: number; ref?: string; until?: string | null; approved?: boolean;
+  plan?: string; months?: number; amount?: number; paid?: number | null; ref?: string; until?: string | null; approved?: boolean;
   status?: string; note?: string; active?: boolean; credit?: boolean; preview?: string;
 };
 
@@ -40,7 +40,8 @@ function build(e: Event): Email | null {
       return mail({
         subject: `New receipt: ${e.name}, ${plan} ${term(e.months)} (${naira(e.amount)})`,
         title: "A new receipt to check",
-        body: `<b>${esc(e.name)}</b> (${esc(e.email)}) uploaded a bank transfer receipt.<br><br>Plan: <b>${plan}, ${term(e.months)}</b><br>Amount due: <b>${naira(e.amount)}</b><br>Reference: <b>${esc(e.ref)}</b><br><br>Match it against the Best of Nature Ventures account before confirming.`,
+        body: `<b>${esc(e.name)}</b> (${esc(e.email)}) uploaded a bank transfer receipt.<br><br>Plan: <b>${plan}, ${term(e.months)}</b><br>Price: <b>${naira(e.amount)}</b><br>` +
+          (e.paid ? `They say they sent: <b>${naira(e.paid)}</b><br>` : "") + `Reference: <b>${esc(e.ref)}</b><br><br>Check the Best of Nature Ventures bank statement shows at least <b>${naira(e.amount)}</b> before confirming. Anything less can't be confirmed.`,
         button: { label: "Review the receipt", path: "/admin#payments" },
         foot: "Sent to the NSC team because a member uploaded a payment receipt.",
       });

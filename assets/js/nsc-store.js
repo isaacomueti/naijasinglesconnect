@@ -176,7 +176,9 @@
   function groupOf(mem) { var pr = mem.profile || {}; return (!pr.nationality || pr.nationality === 'Nigeria' || pr.heritage === 'Yes') ? 'nigerian' : 'international'; }
   function accepts(a, b) { var o = (a.profile || {}).openTo || 'both'; return o === 'both' || o === groupOf(b); }
   /* Private Circle: members living with HIV who opted in are matched only with each other */
-  function eligible(a, b) { return active(a) && active(b) && accepts(a, b) && accepts(b, a) && !!a.profile.circle === !!b.profile.circle; }
+  /* who can see whom: approved members, both open to each other's background, same side of the Private Circle.
+     Browsing is free; sending or accepting introductions needs an active membership. */
+  function eligible(a, b) { return a.status === 'approved' && b.status === 'approved' && accepts(a, b) && accepts(b, a) && !!a.profile.circle === !!b.profile.circle; }
 
   /* ---------- membership ---------- */
   function active(mem) { return !!mem && mem.status === 'approved' && (mem.paidUntil || 0) > now(); }
@@ -199,8 +201,11 @@
     else r.creditMonths = (r.creditMonths || 0) + pay.months;
   }
   function applyCredit(r) { if (r.creditMonths > 0) { r.paidUntil = addMonths(Math.max(r.paidUntil || 0, now()), r.creditMonths); r.creditMonths = 0; } }
-  function confirmPayment(pid) {
-    var pay = update('payments', pid, { status: 'confirmed', reviewedAt: now() }); if (!pay) return null;
+  /* received: the amount on the bank statement; less than the plan price can't be confirmed */
+  function confirmPayment(pid, received) {
+    var p0 = get('payments', pid); if (!p0) return null;
+    if (p0.amount > 0 && !(+received >= p0.amount)) throw new Error('The bank statement must show at least ₦' + Number(p0.amount).toLocaleString('en-NG') + ' for this plan.');
+    var pay = update('payments', pid, { status: 'confirmed', reviewedAt: now(), amountReceived: +received || null }); if (!pay) return null;
     update('members', pay.member, function (r) { applyPayment(r, pay); });
     return pay;
   }
@@ -401,6 +406,8 @@
     PLAN_NAMES: PLAN_NAMES, TERMS: TERMS, active: active, planPrice: planPrice, paymentsOf: paymentsOf, membership: membership,
     applyCredit: applyCredit, confirmPayment: confirmPayment, grantMembership: grantMembership, introsLeft: introsLeft,
     rejectPayment: function (pid, note) { return update('payments', pid, { status: 'rejected', note: note || '', reviewedAt: now() }); },
+    /* team correction: move or end a membership (ts in the past ends it now) */
+    setMembershipEnd: function (id, ts) { return update('members', id, function (r) { r.paidUntil = ts; if (backend) r._setEnd = true; }); },
     remove: remove,
     COUNTRIES: COUNTRIES, groupOf: groupOf, accepts: accepts, eligible: eligible,
     hash: hash, age: age, fullName: fullName, initials: initials, compat: compat, breaks: breaks, genoRisk: genoRisk,

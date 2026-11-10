@@ -123,6 +123,9 @@ create table if not exists public.payments (
   created_at   timestamptz not null default now(),
   reviewed_at  timestamptz
 );
+-- what the member says they transferred, and what the team saw on the bank statement
+alter table public.payments add column if not exists amount_paid int;
+alter table public.payments add column if not exists amount_received int;
 create index if not exists payments_member_idx on public.payments(member_id, created_at);
 
 -- ---------------------------------------------------------------------
@@ -160,7 +163,8 @@ $$;
 create or replace function private.eligible(a uuid, b uuid) returns boolean
 language sql stable security definer set search_path = public as $$
   select a <> b
-     and private.is_active(a) and private.is_active(b)
+     -- every approved member can browse; sending and accepting introductions needs a paid plan (guard_intro)
+     and private.is_approved(a) and private.is_approved(b)
      and private.in_circle(a) = private.in_circle(b)
      and exists (
        select 1 from public.profiles pa, public.profiles pb
@@ -181,9 +185,10 @@ $$;
 -- Profiles another member is allowed to see, with privacy applied:
 -- last name, place of worship and the circle flag are never shared;
 -- photos and first name follow the member's privacy setting until an
--- introduction is accepted.
+-- introduction is accepted. "joined" is when they were approved, for "new members" lists.
+drop function if exists public.match_profiles();
 create or replace function public.match_profiles()
-returns table (id uuid, profile jsonb, privacy text, circle boolean, connected boolean)
+returns table (id uuid, profile jsonb, privacy text, circle boolean, connected boolean, joined timestamptz)
 language plpgsql stable security definer set search_path = public as $$
 #variable_conflict use_column
 declare me uuid := auth.uid();
@@ -198,7 +203,8 @@ begin
          end,
          p.privacy,
          private.in_circle(p.id) and private.in_circle(me),
-         private.connected(me, p.id)
+         private.connected(me, p.id),
+         (select coalesce(m.approved_at, m.created_at) from public.members m where m.id = p.id)
   from public.profiles p
   where p.id <> me
     and (private.eligible(me, p.id)
@@ -237,6 +243,10 @@ begin
   if tg_op = 'INSERT' then
     if not private.is_admin() and not private.eligible(new.from_id, new.to_id) then
       raise exception 'You can only request introductions to your matches';
+    end if;
+    -- browsing is free; asking to be introduced needs a paid plan
+    if not private.is_admin() and not private.is_active(new.from_id) then
+      raise exception 'Choose a Gold or Platinum plan to send introduction requests';
     end if;
     -- Gold includes a set number of requests every 30 days; Platinum is unlimited
     if not private.is_admin() and (select plan from public.members where id = new.from_id) = 'gold'
@@ -523,6 +533,11 @@ begin
       end if;
       new.status := 'uploaded'; new.note := ''; new.reviewed_at := null;
       new.amount := private.plan_price(new.plan, new.months);
+      new.amount_received := null;
+      -- the plan price is the minimum: a smaller transfer can't be filed against it
+      if coalesce(new.amount_paid, 0) < new.amount then
+        raise exception 'This plan costs ₦%. Please transfer the full amount, then upload your receipt.', to_char(new.amount, 'FM999,999,999');
+      end if;
     elsif new.status <> 'uploaded' then
       new.reviewed_at := now();
     end if;
@@ -531,6 +546,10 @@ begin
     return new;
   end if;
   if old.status <> 'uploaded' and new.status <> old.status then raise exception 'This payment has already been reviewed'; end if;
+  -- the team confirms only once the bank statement shows at least the plan price
+  if new.status = 'confirmed' and old.status <> 'confirmed' and new.amount > 0 and coalesce(new.amount_received, 0) < new.amount then
+    raise exception 'The bank statement must show at least ₦% for this plan. Reject the receipt and ask the member to pay the balance.', to_char(new.amount, 'FM999,999,999');
+  end if;
   if new.status <> old.status then new.reviewed_at := now(); end if;
   return new;
 end $$;
@@ -552,7 +571,7 @@ begin
   if tg_op = 'INSERT' and new.status = 'uploaded' then
     insert into public.activity(text) values (coalesce(nullif(who, ''), m.email) || ' uploaded a receipt for ' || initcap(new.plan) || ', ' || new.months || ' months');
     perform private.notify('receipt', jsonb_build_object('to', private.alert_email(), 'name', coalesce(nullif(who, ''), m.email), 'email', m.email,
-      'plan', new.plan, 'months', new.months, 'amount', new.amount, 'ref', new.ref));
+      'plan', new.plan, 'months', new.months, 'amount', new.amount, 'paid', new.amount_paid, 'ref', new.ref));
   end if;
   if new.status = 'confirmed' and (tg_op = 'INSERT' or old.status <> 'confirmed') then
     if m.status = 'approved' then
@@ -684,7 +703,7 @@ language sql stable security definer set search_path = public as $$
   select coalesce((select profile->>'first' from public.profiles where id = uid), '');
 $$;
 
--- profile decisions, and "you have a new match" for everyone who can now see a newly active member
+-- profile decisions, and "you have a new match" for everyone who can now see a newly approved member
 create or replace function private.member_notify() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare was boolean; now_on boolean; g text; list jsonb;
@@ -693,8 +712,8 @@ begin
     perform private.notify('status', jsonb_build_object('to', new.email, 'first', private.first_of(new.id), 'status', new.status,
       'note', new.admin_note, 'until', new.paid_until, 'active', new.paid_until > now(), 'credit', new.credit_months > 0));
   end if;
-  was := old.status = 'approved' and coalesce(old.paid_until > now(), false);
-  now_on := new.status = 'approved' and coalesce(new.paid_until > now(), false);
+  was := old.status = 'approved';
+  now_on := new.status = 'approved';
   if now_on and not was then
     select profile->>'gender' into g from public.profiles where id = new.id;
     select coalesce(jsonb_agg(o.email), '[]'::jsonb) into list from (

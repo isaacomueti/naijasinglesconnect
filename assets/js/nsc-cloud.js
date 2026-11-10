@@ -58,14 +58,15 @@
       profile: Object.assign({}, PROFILE_DEFAULTS, p ? p.profile : {}, { circle: !!inCircle })
     };
   }
-  /* match_profiles() only returns members who are active, or already linked by an introduction */
+  /* match_profiles() returns approved members this person may see, plus anyone linked by an introduction.
+     Their payment status is private, so it isn't known here. */
   function otherRow(r) {
     var pr = Object.assign({}, PROFILE_DEFAULTS, r.profile || {}, { circle: !!r.circle });
     if (pr.hiddenPhotos) pr.photos = ['hidden'];
-    return { id: r.id, email: '', phone: '', status: 'approved', adminNote: '', submittedAt: null, approvedAt: null, blocked: [],
-      payment: {}, plan: null, paidUntil: 8.64e15, creditMonths: 0, createdAt: 0, privacy: r.privacy || 'full', demo: false, profile: pr };
+    return { id: r.id, email: '', phone: '', status: 'approved', adminNote: '', submittedAt: null, approvedAt: ms(r.joined), blocked: [],
+      payment: {}, plan: null, paidUntil: null, creditMonths: 0, createdAt: 0, privacy: r.privacy || 'full', demo: false, profile: pr };
   }
-  function payRow(x) { return { id: x.id, member: x.member_id, plan: x.plan, months: x.months, amount: x.amount, ref: x.ref, file: x.file, status: x.status, note: x.note || '', createdAt: ms(x.created_at), reviewedAt: ms(x.reviewed_at) }; }
+  function payRow(x) { return { id: x.id, member: x.member_id, plan: x.plan, months: x.months, amount: x.amount, amountPaid: x.amount_paid, amountReceived: x.amount_received, ref: x.ref, file: x.file, status: x.status, note: x.note || '', createdAt: ms(x.created_at), reviewedAt: ms(x.reviewed_at) }; }
   function introRow(i) { return { id: i.id, from: i.from_id, to: i.to_id, status: i.status, note: i.note || '', createdAt: ms(i.created_at), respondedAt: ms(i.responded_at) }; }
   function msgRow(x) { return { id: x.id, thread: x.thread, from: x.from_id, body: x.body, at: ms(x.at) }; }
   function reportRow(r) { return { id: r.id, by: r.by_id, about: r.about_id, thread: r.thread, reason: r.reason, details: r.details || '', status: r.status, action: r.action, at: ms(r.at), resolvedAt: ms(r.resolved_at) }; }
@@ -162,7 +163,7 @@
     else if (t === 'notes') remote(sb.from('team_notes').insert({ id: row.id, member_id: row.member, body: row.body }), undo);
     /* the database sets the amount, reference and (for members) the status */
     else if (t === 'payments') remote(sb.from('payments').insert({ id: row.id, member_id: row.member, plan: row.plan, months: row.months, file: row.file || null,
-      status: row.status, amount: row.amount || 0, note: row.note || '' }), undo);
+      status: row.status, amount: row.amount || 0, amount_paid: row.amountPaid || null, amount_received: row.amountReceived || null, note: row.note || '' }), undo);
     else { undo(); fail('', 'New ' + t + ' rows are created by the server'); return null; }
     return row;
   }
@@ -183,6 +184,9 @@
       if (row.approvedAt !== b.approvedAt) m.approved_at = iso(row.approvedAt);
       if (JSON.stringify(row.blocked) !== JSON.stringify(b.blocked)) m.blocked = row.blocked;
       if (JSON.stringify(row.payment) !== JSON.stringify(b.payment)) m.payment = row.payment;
+      /* Only a deliberate end-date change by the team is sent. Other local date changes just mirror
+         what the database works out itself when a payment is confirmed or a member approved. */
+      if (row._setEnd) { m.paid_until = iso(row.paidUntil); delete row._setEnd; delete b._setEnd; }
       var pNew = Object.assign({}, row.profile), pOld = Object.assign({}, b.profile);
       var circleNew = !!pNew.circle, circleOld = !!pOld.circle; delete pNew.circle; delete pOld.circle;
       var pPatch = {};
@@ -202,6 +206,7 @@
       var pp = {};
       if (row.status !== before.status) pp.status = row.status;
       if (row.note !== before.note) pp.note = row.note;
+      if (row.amountReceived !== before.amountReceived) pp.amount_received = row.amountReceived;
       if (Object.keys(pp).length) jobs.push(function () { return sb.from('payments').update(pp).eq('id', id); });
     } else if (t === 'reports') {
       var rp = {};

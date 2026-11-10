@@ -586,17 +586,32 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     var list = all.filter(function(p){ return p.status === pyTab }).sort(function(a, b){ return pyTab === 'uploaded' ? a.createdAt - b.createdAt : (b.reviewedAt || b.createdAt) - (a.reviewedAt || a.createdAt) });
     $('pyBody').innerHTML = list.length ? list.map(function(p){
       var m = member(p.member), f = p.file;
-      return '<tr data-open="' + m.id + '"><td>' + person(m) + '</td><td><b>' + PN[p.plan] + '</b><br><span class="sub">' + term(p.months) + '</span></td><td><b>' + (p.amount ? naira(p.amount) : '—') + '</b>' + (p.note && p.status !== 'uploaded' ? '<br><span class="sub">' + esc(p.note) + '</span>' : '') + '</td><td>' + esc(p.ref || m.payment.ref) + '</td>' +
+      return '<tr data-open="' + m.id + '"><td>' + person(m) + '</td><td><b>' + PN[p.plan] + '</b><br><span class="sub">' + term(p.months) + '</span></td><td><b>' + (p.amount ? naira(p.amount) : '—') + '</b>' +
+        (p.amountReceived ? '<br><span class="sub">' + naira(p.amountReceived) + ' received</span>' : p.amountPaid ? '<br><span class="sub' + (p.amountPaid < p.amount ? '" style="color:var(--err);font-weight:700' : '') + '">' + naira(p.amountPaid) + ' sent, they say</span>' : '') +
+        (p.note && p.status !== 'uploaded' ? '<br><span class="sub">' + esc(p.note) + '</span>' : '') + '</td><td>' + esc(p.ref || m.payment.ref) + '</td>' +
         '<td>' + (f ? esc(f.name) + '<br><span class="sub">' + esc(f.size || '') + '</span>' : '<span class="sub">—</span>') + '</td><td>' + S.ago(p.createdAt) + '</td>' +
         '<td>' + (p.status === 'uploaded' ? '<div style="display:flex;gap:8px"><button type="button" class="btn btn-ghost btn-sm" data-payrej="' + p.id + '">Reject</button><button type="button" class="btn btn-primary btn-sm" data-payok="' + p.id + '">Confirm</button></div>' : pill(PAY, p.status)) + '</td></tr>' }).join('')
       : '<tr><td colspan="7"><div class="empty"><b>Nothing here</b><span>' + (pyTab === 'uploaded' ? 'No receipts are waiting.' : 'No payments in this list yet.') + '</span></div></td></tr>';
   }
-  function confirmPay(pid, approving){
+  /* received: what the bank statement shows. Less than the plan price is refused here and by the database. */
+  function amountOk(p, received){ return !(p.amount > 0) || received >= p.amount }
+  function confirmPay(pid, received, approving){
     var p = S.get('payments', pid), m = member(p.member);
     var willStart = approving || m.status === 'approved';
-    S.confirmPayment(pid);
+    try { S.confirmPayment(pid, received) } catch (e) { toast(errMsg(e)); return false }
     S.send(S.supportThread(m.id), 'admin', 'We have confirmed your payment of ' + naira(p.amount) + ' for ' + PN[p.plan] + ', ' + term(p.months) + '. Thank you.' + (willStart ? ' Your membership is active now.' : ' Your membership starts the day your profile is approved.'));
-    S.log('Payment confirmed for ' + S.fullName(m) + ': ' + PN[p.plan] + ', ' + term(p.months)); toast('Payment confirmed for ' + m.profile.first);
+    S.log('Payment confirmed for ' + S.fullName(m) + ': ' + PN[p.plan] + ', ' + term(p.months) + ' (' + naira(received) + ' received)'); toast('Payment confirmed for ' + m.profile.first);
+    return true;
+  }
+  function amountField(p){
+    return '<dl class="kv" style="margin:0"><dt>Plan</dt><dd>' + PN[p.plan] + ', ' + term(p.months) + '</dd><dt>Price</dt><dd>' + naira(p.amount) + '</dd><dt>They say they sent</dt><dd>' + (p.amountPaid ? naira(p.amountPaid) : '<span class="sub">Not given</span>') + '</dd></dl>' +
+      '<div class="field"><label for="rcvAmt">Amount on the bank statement (₦)</label><input id="rcvAmt" inputmode="numeric" autocomplete="off" placeholder="e.g. ' + Number(p.amount).toLocaleString('en-NG') + '"><span class="hint" id="rcvHint">Check the Best of Nature Ventures account. Less than ' + naira(p.amount) + ' can\'t be confirmed.</span></div>';
+  }
+  function readAmount(p){
+    var v = parseInt(String(($('rcvAmt') || {}).value || '').replace(/\D/g, ''), 10) || 0, h = $('rcvHint');
+    if (!v) { h.textContent = 'Enter the amount the bank statement shows.'; h.style.color = 'var(--err)'; $('rcvAmt').focus(); return 0 }
+    if (!amountOk(p, v)) { h.textContent = naira(v) + ' is less than the ' + naira(p.amount) + ' price. Reject the receipt and ask them to pay the remaining ' + naira(p.amount - v) + '.'; h.style.color = 'var(--err)'; return 0 }
+    return v;
   }
   function rejectPay(pid, note){
     var p = S.get('payments', pid), m = member(p.member);
@@ -1116,7 +1131,8 @@ window.NSC.ready({ as: 'admin' }).then(function(){
             '<div class="meta"><span><b>' + PN[shown.plan] + ', ' + term(shown.months) + '</b> · ' + (shown.amount ? naira(shown.amount) : 'no charge') + (f ? ' · ' + esc(f.name) : '') + (f && !f.dataUrl && !f.path ? ' <span class="sub">(preview not stored)</span>' : '') + '</span>' +
             (shown.status === 'uploaded' ? '<span style="display:flex;gap:8px"><button type="button" class="btn btn-ghost btn-sm" data-payrej="' + shown.id + '">Reject receipt</button><button type="button" class="btn btn-primary btn-sm" data-payok="' + shown.id + '">Confirm payment</button></span>' : pill(PAY, shown.status)) + '</div></div>' : '') +
           (ms.list.length > 1 || (ms.list.length && !shown) ? '<ul class="feed" style="margin-top:8px">' + ms.list.filter(function(x){ return x !== shown }).map(function(x){ return '<li><span>' + PN[x.plan] + ', ' + term(x.months) + ' · ' + (x.amount ? naira(x.amount) : esc(x.note || 'Added by the team')) + ' · ' + PAY[x.status][1] + '</span><time>' + date(x.createdAt) + '</time></li>' }).join('') + '</ul>' : '') +
-          '<button type="button" class="btn btn-ghost btn-sm" id="grantAsk" style="margin-top:12px">Add months manually</button></div>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button type="button" class="btn btn-ghost btn-sm" id="grantAsk">Add months manually</button>' +
+          (ms.until ? '<button type="button" class="btn btn-ghost btn-sm" id="endAsk">Change end date</button>' : '') + '</div></div>' +
         '<div><b>Team notes</b> <span class="sub">Only the team sees these.</span>' +
           (notes.length ? '<div class="notes">' + notes.map(function(n){ return '<div class="note"><p>' + esc(n.body) + '</p><span>' + esc(n.by || 'Team') + ' · ' + S.ago(n.at) + '</span></div>' }).join('') + '</div>' : '') +
           '<div class="noteadd"><textarea id="noteText" rows="2" maxlength="2000" placeholder="Add a note, e.g. called to confirm details" aria-label="New team note"></textarea><button type="button" class="btn btn-ghost btn-sm" id="noteAdd">Add note</button></div></div>' +
@@ -1127,6 +1143,25 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     document.querySelector('.drawer .db').scrollTop = keepScroll;
     if (f && (f.dataUrl || f.path)) showReceipt(f, m.id);
   }
+  /* corrections, e.g. a membership confirmed on an underpayment: move the end date, or end it today */
+  document.addEventListener('click', function(e){
+    if (e.target.id === 'endAsk') {
+      var em = member(drawerId), cur = new Date(em.paidUntil || Date.now());
+      var iso = cur.getFullYear() + '-' + ('0' + (cur.getMonth() + 1)).slice(-2) + '-' + ('0' + cur.getDate()).slice(-2);
+      modal('<h3>Change ' + esc(em.profile.first) + '\'s membership</h3><p class="sub">Currently ' + (S.active(em) ? 'active until ' + date(em.paidUntil, true) : 'ended on ' + date(em.paidUntil, true)) + '.</p>' +
+        '<div class="field"><label for="endDate">New end date</label><input id="endDate" type="date" value="' + iso + '"></div>' +
+        '<div class="field"><label for="endWhy">Reason (kept in the activity log)</label><input id="endWhy" placeholder="e.g. Paid ₦1,000 instead of ₦18,000"></div>' +
+        '<div class="acts"><button type="button" class="btn btn-danger-ghost" id="endNow">End it today</button><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-primary" id="endGo">Save date</button></div>');
+    }
+    if (e.target.id === 'endGo' || e.target.id === 'endNow') {
+      var who = member(drawerId), why = $('endWhy').value.trim();
+      var ts = e.target.id === 'endNow' ? Date.now() - 60000 : (function(){ var d = new Date($('endDate').value + 'T23:59:00'); return +d })();
+      if (!ts || isNaN(ts)) { $('endDate').focus(); return }
+      S.setMembershipEnd(who.id, ts);
+      S.log((e.target.id === 'endNow' ? 'Ended ' + S.fullName(who) + '\'s membership' : 'Changed ' + S.fullName(who) + '\'s membership end to ' + date(ts, true)) + (why ? ' (' + why + ')' : ''));
+      closeModal(); toast(e.target.id === 'endNow' ? 'Membership ended' : 'End date changed');
+    }
+  });
   /* for cash payments, gifts or corrections: adds a confirmed, no-charge payment */
   document.addEventListener('click', function(e){
     if (e.target.id === 'grantAsk') {
@@ -1205,7 +1240,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     var m = member(drawerId), act = b.dataset.act;
     if (act === 'approve') {
       var ms = S.membership(m), payTxt = '';
-      if (ms.pending) payTxt = '<label style="display:flex;gap:10px;align-items:center;font-size:.95rem"><input type="checkbox" id="apPay" checked style="width:18px;height:18px;accent-color:var(--green)">Also confirm the receipt for ' + PN[ms.pending.plan] + ', ' + term(ms.pending.months) + ' (' + naira(ms.pending.amount) + ')</label>';
+      if (ms.pending) payTxt = '<label style="display:flex;gap:10px;align-items:center;font-size:.95rem"><input type="checkbox" id="apPay" checked style="width:18px;height:18px;accent-color:var(--green)">Also confirm the receipt for ' + PN[ms.pending.plan] + ', ' + term(ms.pending.months) + ' (' + naira(ms.pending.amount) + ')</label><div id="apAmtBox">' + amountField(ms.pending) + '</div>';
       else if (!ms.paid) payTxt = '<div class="banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div><b>No payment yet</b><p>They can be approved now, but they\'ll only see matches once they choose a plan and you confirm the receipt.</p></div></div>';
       modal('<h3>Approve ' + esc(m.profile.first) + '?</h3><p class="sub">' + (ms.paid || ms.pending ? 'Their membership starts today, and other active members will be able to find them.' : 'Their profile is approved. Matches open once they pay.') + '</p>' + payTxt + '<div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-primary" id="apGo">Approve</button></div>');
       return;
@@ -1222,7 +1257,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     var m = drawerId && member(drawerId);
     if (e.target.id === 'apGo') {
       var pay = $('apPay') && $('apPay').checked, pend = S.membership(m).pending;
-      if (pay && pend) confirmPay(pend.id, true);
+      if (pay && pend) { var got = readAmount(pend); if (!got || !confirmPay(pend.id, got, true)) return; }
       S.update('members', m.id, function(r){ r.status = 'approved'; r.approvedAt = Date.now(); r.adminNote = ''; S.applyCredit(r) });
       S.send(S.supportThread(m.id), 'admin', 'Good news, ' + m.profile.first + '! Your profile has been approved. Your matches are ready on your dashboard.');
       S.onApproved(m.id); S.log(S.fullName(m) + ' was approved'); closeModal(); toast(m.profile.first + ' is approved');
@@ -1236,7 +1271,16 @@ window.NSC.ready({ as: 'admin' }).then(function(){
       closeModal(); toast({ changes:'Changes requested', reject:'Profile rejected', suspend:'Account paused' }[act]);
     }
     var ok = e.target.closest('[data-payok]'), rj = e.target.closest('[data-payrej]');
-    if (ok) confirmPay(ok.dataset.payok);
+    if (ok) {
+      var cp = S.get('payments', ok.dataset.payok), cm = member(cp.member);
+      modal('<h3>Confirm ' + esc(cm.profile.first) + '\'s payment</h3>' + amountField(cp) + '<div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-primary" id="payGo" data-pid="' + cp.id + '">Confirm payment</button></div>');
+      setTimeout(function(){ $('rcvAmt') && $('rcvAmt').focus() }, 30);
+    }
+    if (e.target.id === 'payGo') {
+      var gp = S.get('payments', e.target.dataset.pid), amt = readAmount(gp);
+      if (amt && confirmPay(gp.id, amt)) closeModal();
+    }
+    if (e.target.id === 'apPay') { var box = $('apAmtBox'); if (box) box.hidden = !e.target.checked }
     if (rj) {
       var rp = S.get('payments', rj.dataset.payrej), who = member(rp.member);
       modal('<h3>Reject receipt</h3><p class="sub">' + PN[rp.plan] + ', ' + term(rp.months) + ' · ' + naira(rp.amount) + ' due</p><div class="field"><label for="pyNote">Message to ' + esc(who.profile.first) + '</label><textarea id="pyNote">We could not match your receipt to a payment of ' + naira(rp.amount) + ' in our account. Please check the amount and the reference ' + esc(rp.ref || who.payment.ref) + ', then upload the receipt again.</textarea></div><div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-danger" id="pyGo" data-pid="' + rp.id + '">Reject receipt</button></div>');
