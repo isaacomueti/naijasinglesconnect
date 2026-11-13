@@ -58,6 +58,12 @@ create table if not exists public.intros (
 );
 create index if not exists intros_from_idx on public.intros(from_id);
 create index if not exists intros_to_idx on public.intros(to_id);
+-- request: asked and waiting for an answer · direct: a paid member started a chat ·
+-- admin: the NSC team connected the two (shown to both as "Matched by NSC")
+alter table public.intros add column if not exists kind text not null default 'request';
+do $$ begin
+  alter table public.intros add constraint intros_kind_check check (kind in ('request','direct','admin'));
+exception when duplicate_object then null; end $$;
 
 -- thread = an intro id, or 'support:<member id>'
 -- from_id = a member id, 'admin' or 'system'
@@ -127,6 +133,9 @@ create table if not exists public.payments (
 alter table public.payments add column if not exists amount_paid int;
 alter table public.payments add column if not exists amount_received int;
 create index if not exists payments_member_idx on public.payments(member_id, created_at);
+-- "reversed": a confirmation the team undid (for example a fake receipt); its months are taken back
+alter table public.payments drop constraint if exists payments_status_check;
+alter table public.payments add constraint payments_status_check check (status in ('uploaded','confirmed','rejected','reversed'));
 
 -- ---------------------------------------------------------------------
 -- Helper functions (security definer so policies can use them safely)
@@ -159,12 +168,19 @@ language sql immutable as $$
               then 'nigerian' else 'international' end;
 $$;
 
+-- visible to other members: everyone registered, except accounts the team rejected or paused
+create or replace function private.is_visible(uid uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.members where id = uid and status not in ('rejected','suspended'));
+$$;
+
 -- can members a and b ever see each other?
 create or replace function private.eligible(a uuid, b uuid) returns boolean
 language sql stable security definer set search_path = public as $$
   select a <> b
-     -- every approved member can browse; sending and accepting introductions needs a paid plan (guard_intro)
-     and private.is_approved(a) and private.is_approved(b)
+     -- everyone sees everyone from sign-up; chatting needs a paid plan (messages policy, guard_intro).
+     -- The Private Circle only ever sees itself.
+     and private.is_visible(a) and private.is_visible(b)
      and private.in_circle(a) = private.in_circle(b)
      and exists (
        select 1 from public.profiles pa, public.profiles pb
@@ -196,6 +212,8 @@ begin
   if me is null then return; end if;
   return query
   select p.id,
+         -- never the full last name: only its first letter, as "Chiamaka O."
+         jsonb_build_object('lastInitial', upper(left(coalesce(p.profile->>'last', ''), 1))) ||
          case when private.connected(me, p.id) then (p.profile - 'last' - 'circle')
               else (p.profile - 'last' - 'circle' - 'worship')
                    || case when p.privacy = 'full' then '{}'::jsonb else jsonb_build_object('photos','[]'::jsonb,'hiddenPhotos', jsonb_array_length(coalesce(p.profile->'photos','[]'::jsonb)) > 0) end
@@ -236,25 +254,50 @@ drop trigger if exists guard_member_update on public.members;
 create trigger guard_member_update before update on public.members
   for each row execute function private.guard_member_update();
 
--- Intro rules: only the recipient answers; requests only between eligible members.
+-- Intro rules: only the recipient answers a request; members only connect with people they can see.
+-- A paid member can start a chat straight away ("direct"); the team can connect anyone ("admin").
 create or replace function private.guard_intro() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
   if tg_op = 'INSERT' then
-    if not private.is_admin() and not private.eligible(new.from_id, new.to_id) then
-      raise exception 'You can only request introductions to your matches';
+    if exists (select 1 from public.intros i where i.status <> 'declined'
+               and ((i.from_id = new.from_id and i.to_id = new.to_id) or (i.from_id = new.to_id and i.to_id = new.from_id))) then
+      raise exception 'You are already connected with this member';
     end if;
-    -- browsing is free; asking to be introduced needs a paid plan
-    if not private.is_admin() and not private.is_active(new.from_id) then
-      raise exception 'Choose a Gold or Platinum plan to send introduction requests';
+    if private.is_admin() then
+      new.kind := case when new.kind = 'admin' then 'admin' else new.kind end;
+      if new.kind = 'admin' then
+        new.status := 'accepted'; new.responded_at := now();
+        insert into public.messages(thread, from_id, body)
+        values (new.id::text, 'system', 'The NSC team matched you with each other. Be kind, take your time, and keep conversations on NSC until you are comfortable.');
+      else new.status := 'pending';
+      end if;
+      return new;
     end if;
-    -- Gold includes a set number of requests every 30 days; Platinum is unlimited
-    if not private.is_admin() and (select plan from public.members where id = new.from_id) = 'gold'
-       and (select count(*) from public.intros where from_id = new.from_id and created_at > now() - interval '30 days')
+    if new.kind = 'admin' then raise exception 'Only the NSC team can make a matched connection'; end if;
+    if not private.eligible(new.from_id, new.to_id) then
+      raise exception 'You can only connect with members you can see';
+    end if;
+    -- seeing everyone is free; starting a conversation needs a paid plan
+    if not private.is_active(new.from_id) then
+      raise exception 'Choose a Gold or Platinum plan to message members';
+    end if;
+    if (select count(*) from public.intros where from_id = new.from_id and created_at > now() - interval '1 day') >= 40 then
+      raise exception 'You have reached today''s limit for new conversations. Try again tomorrow.';
+    end if;
+    -- Gold includes a set number of new conversations every 30 days; Platinum is unlimited
+    if (select plan from public.members where id = new.from_id) = 'gold'
+       and (select count(*) from public.intros where from_id = new.from_id and kind <> 'admin' and created_at > now() - interval '30 days')
            >= coalesce((select (data->>'goldIntroLimit')::int from public.settings where id = 1), 5) then
-      raise exception 'You have used this month''s introduction requests on Gold. Upgrade to Platinum for unlimited requests.';
+      raise exception 'You have used this month''s new conversations on Gold. Upgrade to Platinum for unlimited conversations.';
     end if;
-    new.status := 'pending';
+    if new.kind = 'direct' then
+      new.status := 'accepted'; new.responded_at := now();
+      insert into public.messages(thread, from_id, body)
+      values (new.id::text, 'system', 'Conversation started. Be kind, take your time, and keep conversations on NSC until you are comfortable.');
+      return new;
+    end if;
+    new.kind := 'request'; new.status := 'pending';
     return new;
   end if;
   if not private.is_admin() and auth.uid() <> old.to_id then
@@ -331,13 +374,16 @@ create policy "circle: join yourself"     on public.circle_members for insert wi
 create policy "circle: leave yourself"    on public.circle_members for delete using (member_id = auth.uid() or private.is_admin());
 
 create policy "intros: parties or admin read" on public.intros for select using (auth.uid() in (from_id, to_id) or private.is_admin());
-create policy "intros: request as yourself"   on public.intros for insert with check (from_id = auth.uid());
+create policy "intros: request as yourself"   on public.intros for insert with check (from_id = auth.uid() or private.is_admin());
 create policy "intros: answer"                on public.intros for update using (auth.uid() = to_id or private.is_admin());
 
+-- Chat between members is for paid members: without an active plan the messages stay hidden
+-- (my_thread_counts() tells them how many are waiting). Support messages are always readable.
 create policy "messages: read your threads" on public.messages for select using (
   private.is_admin()
   or thread = 'support:' || auth.uid()
-  or exists (select 1 from public.intros i where i.id::text = messages.thread and i.status = 'accepted' and auth.uid() in (i.from_id, i.to_id))
+  or (private.is_active(auth.uid())
+      and exists (select 1 from public.intros i where i.id::text = messages.thread and i.status = 'accepted' and auth.uid() in (i.from_id, i.to_id)))
 );
 create policy "messages: write your threads" on public.messages for insert with check (
   (from_id = 'admin' and private.is_admin())
@@ -545,7 +591,16 @@ begin
     new.created_at := now();
     return new;
   end if;
-  if old.status <> 'uploaded' and new.status <> old.status then raise exception 'This payment has already been reviewed'; end if;
+  -- the only change after a decision: reversing a confirmation
+  if old.status <> 'uploaded' and new.status <> old.status and not (old.status = 'confirmed' and new.status = 'reversed') then
+    raise exception 'This payment has already been reviewed';
+  end if;
+  -- while a receipt waits, the team can move it to the plan the member actually paid for
+  if old.status = 'uploaded' and (new.plan <> old.plan or new.months <> old.months) then
+    new.amount := private.plan_price(new.plan, new.months);
+  elsif new.plan <> old.plan or new.months <> old.months or new.amount <> old.amount then
+    raise exception 'A reviewed payment can''t be changed';
+  end if;
   -- the team confirms only once the bank statement shows at least the plan price
   if new.status = 'confirmed' and old.status <> 'confirmed' and new.amount > 0 and coalesce(new.amount_received, 0) < new.amount then
     raise exception 'The bank statement must show at least ₦% for this plan. Reject the receipt and ask the member to pay the balance.', to_char(new.amount, 'FM999,999,999');
@@ -585,6 +640,16 @@ begin
       'approved', (select status = 'approved' from public.members where id = new.member_id)));
   end if;
   if tg_op = 'UPDATE' and new.status = 'rejected' and old.status <> 'rejected' then
+    perform private.notify('receipt_rejected', jsonb_build_object('to', m.email, 'first', first, 'note', new.note));
+  end if;
+  -- reversed: take back the months this payment added (or the credit still waiting for approval)
+  if tg_op = 'UPDATE' and new.status = 'reversed' and old.status = 'confirmed' then
+    if m.credit_months >= new.months then
+      update public.members set credit_months = credit_months - new.months where id = new.member_id;
+    elsif m.paid_until is not null then
+      update public.members set paid_until = m.paid_until - make_interval(months => new.months) where id = new.member_id;
+    end if;
+    insert into public.activity(text) values ('Payment reversed for ' || coalesce(nullif(who, ''), m.email) || ': ' || initcap(new.plan) || ', ' || new.months || ' months');
     perform private.notify('receipt_rejected', jsonb_build_object('to', m.email, 'first', first, 'note', new.note));
   end if;
   return null;
@@ -864,6 +929,88 @@ do $$ begin
   perform cron.schedule('nsc-membership-reminders', '0 8 * * *', 'select private.membership_reminders()');
 exception when others then raise notice 'Membership reminders were not scheduled: %', sqlerrm;
 end $$;
+
+-- ---------------------------------------------------------------------
+-- Chat safety
+-- Members' messages are checked as they are sent. Bank details and outside
+-- links are refused (the usual first step of romance scams); requests for money,
+-- scam phrases, phone numbers and abuse are let through but flagged to the team.
+-- ---------------------------------------------------------------------
+create table if not exists public.message_flags (
+  id          uuid primary key default gen_random_uuid(),
+  message_id  uuid,
+  thread      text not null,
+  from_id     uuid references public.members(id) on delete cascade,
+  reason      text not null,
+  excerpt     text not null default '',
+  status      text not null default 'open' check (status in ('open','resolved')),
+  action      text,
+  at          timestamptz not null default now()
+);
+create index if not exists message_flags_at_idx on public.message_flags(at);
+alter table public.message_flags enable row level security;
+drop policy if exists "flags: team only" on public.message_flags;
+create policy "flags: team only" on public.message_flags for all using (private.is_admin()) with check (private.is_admin());
+
+create or replace function private.message_guard() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare b text := lower(coalesce(new.body, '')); digits text; reason text;
+begin
+  -- team, system and support messages are not checked
+  if new.from_id in ('admin','system') or new.thread like 'support:%' then return new; end if;
+  if (select count(*) from public.messages where from_id = new.from_id and at > now() - interval '1 minute') >= 12 then
+    raise exception 'You are sending messages very quickly. Please wait a minute.';
+  end if;
+  digits := regexp_replace(b, '[^0-9]', '', 'g');
+  -- (PostgreSQL regex: \m and \M mark the start and end of a word)
+  if b ~ '(https?://|www\.|\.com\M|\.ng\M|bit\.ly|t\.me/|wa\.me/)' then
+    raise exception 'For your safety, links can''t be shared in chat. Keep conversations on NSC until you are comfortable.';
+  end if;
+  if b ~ '[0-9][0-9 .-]{8,}[0-9]' and b ~ '(account|acct|a/c|bank|opay|palmpay|moniepoint|kuda|gtb|zenith|access|uba|first ?bank|wema|sterling|fidelity|transfer|sort code|iban)' then
+    raise exception 'For your safety, bank details can''t be shared in chat. Never send money to someone you have met online.';
+  end if;
+  if b ~ '(send (me )?money|transfer (me|to me)|lend me|borrow|loan|gift ?card|itunes|bitcoin|btc|crypto|usdt|forex|investment|invest with|western union|moneygram|customs fee|clearance fee|hospital bill|school fees|urgent(ly)? need|recharge card|airtime)' then
+    reason := 'Mentions money or a payment';
+  elsif length(digits) >= 10 and b ~ '[0-9][0-9 +()-]{8,}[0-9]' then
+    reason := 'Shares a phone number';
+  elsif b ~ '(\mfuck|\mbitch|\mbastard|\mslut|\mwhore|\mashawo|\mmumu|\mode\M|\mnude|\mnaked|\msex\M|\mkill you|\mi will kill)' then
+    reason := 'Possibly abusive or sexual';
+  end if;
+  if reason is not null then
+    insert into public.message_flags(message_id, thread, from_id, reason, excerpt)
+    values (new.id, new.thread, nullif(new.from_id, '')::uuid, reason, left(new.body, 300));
+  end if;
+  return new;
+end $$;
+drop trigger if exists message_guard on public.messages;
+create trigger message_guard before insert on public.messages
+  for each row execute function private.message_guard();
+
+-- How many messages are waiting in each of my conversations. Lets members without a
+-- plan see that someone wrote to them, without reading the messages themselves.
+create or replace function public.my_thread_counts()
+returns table (thread text, waiting bigint, last_at timestamptz)
+language sql stable security definer set search_path = public as $$
+  select m.thread, count(*) filter (where m.from_id <> auth.uid()::text and m.from_id <> 'system'), max(m.at)
+  from public.messages m join public.intros i on i.id::text = m.thread
+  where i.status = 'accepted' and auth.uid() in (i.from_id, i.to_id)
+  group by m.thread;
+$$;
+revoke execute on function public.my_thread_counts() from anon, public;
+grant execute on function public.my_thread_counts() to authenticated;
+
+-- reports: one person can't flood the team
+create or replace function private.report_guard() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if (select count(*) from public.reports where by_id = new.by_id and at > now() - interval '1 day') >= 10 then
+    raise exception 'You have sent a lot of reports today. Our team is reviewing them.';
+  end if;
+  return new;
+end $$;
+drop trigger if exists report_guard on public.reports;
+create trigger report_guard before insert on public.reports
+  for each row execute function private.report_guard();
 
 -- ---------------------------------------------------------------------
 -- Make yourself an admin (run once, after creating your team login):

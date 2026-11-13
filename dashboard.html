@@ -512,7 +512,7 @@ window.NSC.ready({ as: 'member' }).then(function(){
   function candidates(){
     var m = me(), want = m.profile.gender === 'Man' ? 'Woman' : m.profile.gender === 'Woman' ? 'Man' : null;
     return S.all('members').filter(function(x){
-      return x.id !== ME && x.status === 'approved' && (!want || !x.profile.gender || x.profile.gender === want) &&
+      return x.id !== ME && S.visible(x) && (!want || !x.profile.gender || x.profile.gender === want) &&
         (m.blocked || []).indexOf(x.id) < 0 && (x.blocked || []).indexOf(ME) < 0 && S.eligible(m, x) && !S.breaks(m, x);
     }).map(function(x){ return { m: x, score: S.compat(m, x) } }).sort(function(a, b){ return b.score - a.score });
   }
@@ -593,7 +593,7 @@ window.NSC.ready({ as: 'member' }).then(function(){
   }
 
   function renderOverview(m){
-    var pr = m.profile, pct = completion(pr), approved = m.status === 'approved', on = S.active(m), mem = S.membership(m);
+    var pr = m.profile, pct = completion(pr), approved = m.status === 'approved', on = S.active(m), mem = S.membership(m), see = S.visible(m);
     var h = new Date().getHours();
     $('greet').textContent = (h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening') + (pr.first ? ', ' + pr.first : '');
     $('statusBanner').innerHTML = statusBanner(m);
@@ -612,9 +612,9 @@ window.NSC.ready({ as: 'member' }).then(function(){
     document.querySelector('[data-jt="review"]').textContent = approved ? 'Approved.' : steps.profile && paid ? 'In review. Usually within 24 hours.' : 'Usually within 24 hours of payment.';
     $('journey').hidden = approved;
     /* approved members browse freely; a plan unlocks introductions and chat */
-    $('stats').hidden = !approved;
-    $('introPreview').hidden = !approved;
-    $('greetSub').textContent = on ? 'Here is what is new since your last visit.' : approved ? 'Browse your matches. Choose a plan to send introductions and chat.' : 'Finish these steps and our team will review your profile.';
+    $('stats').hidden = !see;
+    $('introPreview').hidden = !see;
+    $('greetSub').textContent = on ? 'Here is what is new since your last visit.' : see ? 'Browse your matches. Choose a plan to message the people you like.' : 'Message our team if you have questions about your account.';
 
     var cta = $('heroCta'), label = cta.querySelector('span');
     cta.removeAttribute('data-support');
@@ -633,11 +633,11 @@ window.NSC.ready({ as: 'member' }).then(function(){
     ].map(function(t){ return '<li class="' + (t[1] ? 'ok' : '') + '">' + t[0] + '</li>' }).join('');
 
     var list = candidates();
-    $('topSub').textContent = approved ? list.length + ' members match what you are looking for' : 'Unlocks after approval';
+    $('topSub').textContent = see ? list.length + ' members match what you are looking for' : 'Not available while your account is paused';
     var top = list.slice(0, 3).map(function(c){ return card(c, true) }).join('') || '<div class="empty"><b>No matches yet</b><span>New members are approved every day.</span></div>';
-    $('topMatches').innerHTML = approved ? '<div class="mgrid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">' + top + '</div>'
+    $('topMatches').innerHTML = see ? '<div class="mgrid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">' + top + '</div>'
       : '<div class="locked" style="min-height:300px"><div class="mgrid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">' + top + '</div>' + lockMsg(m, true) + '</div>';
-    if (approved) {
+    if (see) {
       $('sMatches').textContent = list.length;
       $('sMatchesHi').textContent = list.filter(function(c){ return c.score >= 80 }).length + ' above 80%';
       var recv = S.all('intros').filter(function(i){ return i.to === ME && i.status === 'pending' });
@@ -650,7 +650,7 @@ window.NSC.ready({ as: 'member' }).then(function(){
   }
 
   function card(c, compact){
-    var x = c.m, v = S.view(x, ME), pr = x.profile, rel = relation(x.id), m = me(), approved = m.status === 'approved';
+    var x = c.m, v = S.view(x, ME), pr = x.profile, rel = relation(x.id), m = me();
     var ph = v.photo ? '<img src="' + v.photo + '" alt="' + esc(v.name) + '">' : '<span class="ini">' + esc(v.initials) + (v.hiddenPhoto ? '<small>Photos after introduction</small>' : '') + '</span>';
     var risk = S.genoRisk(m.profile.genotype, pr.genotype);
     var btn = '';
@@ -659,7 +659,7 @@ window.NSC.ready({ as: 'member' }).then(function(){
       else if (rel.kind === 'sent') btn = '<button type="button" class="btn btn-ghost btn-sm" disabled>Request sent</button>';
       else if (rel.kind === 'received') btn = '<a class="btn btn-gold btn-sm" href="#introductions">Respond to request</a>';
       else if (rel.kind === 'declined') btn = '<button type="button" class="btn btn-ghost btn-sm" disabled>Not available</button>';
-      else btn = '<button type="button" class="btn btn-primary btn-sm" data-req="' + x.id + '"' + (approved ? '' : ' disabled') + '>Request introduction</button>';
+      else btn = '<button type="button" class="btn btn-primary btn-sm" data-chat="' + x.id + '">Message</button>';
       btn = '<a class="btn btn-ghost btn-sm" href="#member/' + x.id + '">View</a>' + btn;
     }
     return '<article class="m"><a href="#member/' + x.id + '" class="ph" style="display:block">' + ph + '<span class="score">' + c.score + '%</span></a><div class="bd">' +
@@ -667,23 +667,18 @@ window.NSC.ready({ as: 'member' }).then(function(){
       '<div class="chips">' + (isNew(x, 7) ? '<span class="chip w">New</span>' : '') + (pr.circle && m.profile.circle ? '<span class="chip g">Private Circle</span>' : '') + (S.groupOf(x) === 'international' ? '<span class="chip w">' + esc(pr.nationality) + '</span>' : '') + '<span class="chip">' + esc(S.religionLabel(pr.religion)) + '</span>' + (risk ? '<span class="chip w">Genotype check</span>' : '<span class="chip g">Genotype ' + esc(pr.genotype || '—') + '</span>') + '<span class="chip">' + esc(pr.marital) + '</span></div>' +
       '<div class="intent">' + esc(pr.intent) + '</div>' + (compact ? '' : '<div class="acts">' + btn + '</div>') + '</div></article>';
   }
+  /* matches are open to every member; only paused or rejected accounts see this */
   function lockMsg(m, small){
-    var t = m.status === 'pending' ? 'Your profile is in review' : 'Your matches unlock after approval';
-    var s = m.status === 'pending' ? 'Matches open as soon as our team approves you.' : 'Complete your profile, choose a plan and upload your payment receipt. Our team reviews every member before matches open.';
-    var a = m.status === 'pending' ? '' : '<a class="btn btn-primary btn-sm" href="#profile">Finish my profile</a>';
-    if (m.status === 'approved') {
-      var ms = S.membership(m);
-      t = ms.pending ? 'Your receipt is being checked' : ms.paid ? 'Your membership has ended' : 'Choose a plan to see your matches';
-      s = ms.pending ? 'Your matches open as soon as our team confirms your payment.' : 'Gold and Platinum both include your matches, introductions and chat.';
-      a = ms.pending ? '' : '<a class="btn btn-primary btn-sm" href="#membership">' + (ms.paid ? 'Renew' : 'See plans') + '</a>';
-    }
+    var t = m.status === 'suspended' ? 'Your account is paused' : 'Your profile was not approved';
+    var s = 'Matches aren\'t available on this account. Message our team if you think this is a mistake.';
+    var a = '<a class="btn btn-primary btn-sm" href="#messages" data-support>Message support</a>';
     return '<div class="lockmsg"><div>' + ICON.lock + '<b>' + t + '</b>' + (small ? '' : '<p class="sub">' + s + '</p>') + a + '</div></div>';
   }
 
   var filter = 'all';
   function isNew(x, days){ return !!x.approvedAt && Date.now() - x.approvedAt < days * 864e5 }
   function renderMatches(m){
-    var approved = m.status === 'approved', on = S.active(m), list = candidates().filter(function(c){
+    var see = S.visible(m), on = S.active(m), list = candidates().filter(function(c){
       var pr = c.m.profile;
       if (filter === 'new') return isNew(c.m, 14);
       if (filter === '80') return c.score >= 80;
@@ -695,10 +690,10 @@ window.NSC.ready({ as: 'member' }).then(function(){
     if (filter === 'new') list.sort(function(a, b){ return (b.m.approvedAt || 0) - (a.m.approvedAt || 0) });
     var grid = '<div class="mgrid">' + (list.length ? list.map(function(c){ return card(c) }).join('') : '<div class="empty card" style="grid-column:1/-1"><b>' + (filter === 'new' ? 'No new members in the last two weeks' : 'No matches for this filter yet') + '</b><span>Try another filter. New members are approved every day.</span></div>') + '</div>';
     var left = S.introsLeft(m), ms = S.membership(m), note = '';
-    if (on && left !== Infinity) note = '<div class="banner" style="margin-bottom:18px">' + ICON.info + '<div><b>' + left + ' of ' + (+S.settings().goldIntroLimit || 5) + ' introduction requests left this month</b><p>Gold includes a set number each month. <a class="textbtn" href="#membership">Upgrade to Platinum</a> for unlimited requests.</p></div></div>';
-    else if (approved && !on) note = '<div class="banner" style="margin-bottom:18px">' + ICON.lock + '<div><b>' + (ms.pending ? 'Your receipt is being checked' : ms.paid ? 'Your membership has ended' : 'Like someone? Choose a plan to say hello') + '</b><p>' + (ms.pending ? 'You can browse now. Introductions and chat open as soon as our team confirms your payment.' : 'Browsing is free. Gold or Platinum lets you send introduction requests and chat.') + (ms.pending ? '' : ' <a class="textbtn" href="#membership">See plans</a>') + '</p></div></div>';
-    $('matchWrap').className = approved ? '' : 'locked';
-    $('matchWrap').innerHTML = approved ? note + grid : grid + lockMsg(m);
+    if (on && left !== Infinity) note = '<div class="banner" style="margin-bottom:18px">' + ICON.info + '<div><b>' + left + ' of ' + (+S.settings().goldIntroLimit || 5) + ' new conversations left this month</b><p>Gold includes a set number each month. <a class="textbtn" href="#membership">Upgrade to Platinum</a> for unlimited conversations.</p></div></div>';
+    else if (see && !on) note = '<div class="banner" style="margin-bottom:18px">' + ICON.lock + '<div><b>' + (ms.pending ? 'Your receipt is being checked' : ms.paid ? 'Your membership has ended' : 'Like someone? Choose a plan to say hello') + '</b><p>' + (ms.pending ? 'You can browse now. Chat opens as soon as our team confirms your payment.' : 'Seeing members is free. Gold or Platinum lets you message them and read their replies.') + (ms.pending ? '' : ' <a class="textbtn" href="#membership">See plans</a>') + '</p></div></div>';
+    $('matchWrap').className = see ? '' : 'locked';
+    $('matchWrap').innerHTML = see ? note + grid : grid + lockMsg(m);
   }
   $('filters').addEventListener('click', function(e){
     var b = e.target.closest('button'); if (!b) return; filter = b.dataset.f;
@@ -707,13 +702,15 @@ window.NSC.ready({ as: 'member' }).then(function(){
 
   function renderMember(m){
     var x = S.get('members', viewing);
-    if (!x || x.status !== 'approved') { $('memberView').innerHTML = '<div class="empty card"><b>This profile is not available</b></div>'; return; }
-    var v = S.view(x, ME), pr = x.profile, rel = relation(x.id), score = S.compat(m, x), approved = m.status === 'approved';
+    if (!x || !S.visible(x)) { $('memberView').innerHTML = '<div class="empty card"><b>This profile is not available</b></div>'; return; }
+    var v = S.view(x, ME), pr = x.profile, rel = relation(x.id), score = S.compat(m, x);
+    var nsc = rel.intro && rel.intro.kind === 'admin';
     var action = rel.kind === 'connected' ? '<a class="btn btn-primary" href="#messages/' + rel.intro.id + '">Message ' + esc(v.name) + '</a>'
       : rel.kind === 'sent' ? '<button class="btn btn-ghost" disabled>Request sent</button>'
       : rel.kind === 'received' ? '<a class="btn btn-gold" href="#introductions">Respond to their request</a>'
       : rel.kind === 'declined' ? '<button class="btn btn-ghost" disabled>Not available</button>'
-      : '<button class="btn btn-primary" data-req="' + x.id + '"' + (approved ? '' : ' disabled') + '>Request introduction</button>';
+      : '<button class="btn btn-primary" data-chat="' + x.id + '">Message ' + esc(v.name) + '</button>';
+    if (nsc) action = '<span class="pill ok" style="align-self:center">Matched by NSC</span>' + action;
     var rows = [['Faith', S.religionLabel(pr.religion) + (pr.denom ? ' · ' + pr.denom : '')], ['Intent', pr.intent], ['Lives in', pr.location], ['From', S.groupOf(x) === 'international' ? pr.nationality : (pr.origin ? (pr.lga ? pr.lga + ', ' : '') + pr.origin + ' State' : pr.nationality)],
       ['Work', pr.job + (pr.qual ? ' · ' + pr.qual : '')], ['Marital status', pr.marital], ['Children', pr.children], ['Wants children', pr.wantkids],
       ['Genotype', v.open ? pr.genotype : (pr.genotype ? pr.genotype : '—')], ['Looking for', pr.agemin && pr.agemax ? 'Ages ' + pr.agemin + ' to ' + pr.agemax + (pr.ploc ? ' · ' + pr.ploc : '') : pr.ploc]];
@@ -728,6 +725,19 @@ window.NSC.ready({ as: 'member' }).then(function(){
       (v.photos.length > 1 ? '<div class="gallery" style="margin-top:16px">' + v.photos.slice(1).map(function(p){ return '<img src="' + p + '" alt="">' }).join('') + '</div>' : '');
   }
 
+  /* "Message": opens the chat, starting one if needed. Seeing members is free; chatting needs a plan. */
+  document.addEventListener('click', function(e){
+    var c = e.target.closest('[data-chat]'); if (!c) return;
+    var m = me(), to = S.get('members', c.dataset.chat); if (!to) return;
+    var rel = relation(to.id);
+    if (rel.kind === 'connected') { go('#messages/' + rel.intro.id); return; }
+    if (!S.active(m)) { toast('Choose a Gold or Platinum plan to message ' + S.view(to, ME).name + '.'); go('#membership'); return; }
+    if (S.introsLeft(m) <= 0) { toast('You have used this month\'s new conversations on Gold. Upgrade to Platinum for unlimited conversations.'); go('#membership'); return; }
+    var i = S.startChat(ME, to.id); if (!i) return;
+    S.log(S.fullName(m) + ' started a conversation with ' + S.fullName(to));
+    curThread = i.id; go('#messages/' + i.id);
+    if (to.demo) setTimeout(function(){ S.demoReply(i.id, to.id, 2500) }, 1500);
+  });
   document.addEventListener('click', function(e){
     var b = e.target.closest('[data-req]'); if (!b) return;
     var m = me(); if (!S.active(m)) { toast('Choose a plan to request introductions.'); go('#membership'); return; }
@@ -774,19 +784,36 @@ window.NSC.ready({ as: 'member' }).then(function(){
     var v = S.view(t.other, ME);
     return { name: v.name, sub: (t.other.profile.job || '') + (t.other.profile.location ? ' · ' + t.other.profile.location : ''), av: avatarHtml(v), other: t.other };
   }
+  /* turns links to a member's profile on NSC into a button; any other address stays plain text */
+  function linkify(escaped){
+    return escaped.replace(/(?:https:\/\/(?:www\.)?naijasinglesconnect\.com)?\/dashboard#member\/([A-Za-z0-9_-]{4,40})/g, function(_, id){
+      return '<a class="btn btn-ghost btn-sm" style="margin:6px 0 2px;display:inline-flex" href="#member/' + id + '">View profile</a>';
+    });
+  }
   function renderChat(m){
     var threads = S.threadsFor(ME);
     if (curThread && !threads.some(function(t){ return t.id === curThread })) curThread = null;
     $('threadList').innerHTML = threads.map(function(t){
-      var meta = threadMeta(t), last = t.last;
-      var prev = last ? (last.from === ME ? 'You: ' : last.from === 'system' ? '' : '') + last.body : (t.kind === 'support' ? 'Ask us anything about your account' : 'Say hello');
+      var meta = threadMeta(t), last = t.last, nsc = t.intro && t.intro.kind === 'admin';
+      var prev = t.locked ? (t.unread ? t.unread + (t.unread === 1 ? ' message' : ' messages') + ' waiting. Choose a plan to read.' : 'Choose a plan to chat')
+        : last ? (last.from === ME ? 'You: ' : '') + last.body : (t.kind === 'support' ? 'Ask us anything about your account' : 'Say hello');
       return '<li><button type="button" class="citem' + (t.unread ? ' unread' : '') + '" data-thread="' + t.id + '" aria-current="' + (t.id === curThread) + '">' + meta.av +
-        '<span class="t"><b>' + esc(meta.name) + '</b><span>' + esc(prev) + '</span></span><span class="r">' + (last ? S.ago(last.at) : '') + (t.unread ? '<span class="count" style="margin:0">' + t.unread + '</span>' : '') + '</span></button></li>';
+        '<span class="t"><b>' + esc(meta.name) + (nsc ? ' <span class="chip g" style="font-size:.68rem;padding:2px 7px">Matched by NSC</span>' : '') + '</b><span>' + esc(prev) + '</span></span><span class="r">' + (last ? S.ago(last.at) : '') + (t.unread ? '<span class="count" style="margin:0">' + t.unread + '</span>' : '') + '</span></button></li>';
     }).join('');
     $('chat').classList.toggle('open', !!curThread);
     var th = threads.filter(function(t){ return t.id === curThread })[0];
     if (!th) {
-      $('thread').innerHTML = '<div class="empty" style="margin:auto">' + ICON.chat + '<b>Choose a conversation</b><span>' + (m.status === 'approved' ? 'Accept an introduction to start chatting, or message our team.' : 'You can message our team while your profile is in review.') + '</span></div>';
+      $('thread').innerHTML = '<div class="empty" style="margin:auto">' + ICON.chat + '<b>Choose a conversation</b><span>' + (S.active(m) ? 'Open someone\'s profile from Matches and tap Message, or message our team.' : 'Choose a plan to message members. You can message our team any time.') + '</span></div>';
+      return;
+    }
+    /* chat with members is for paid members: show who wrote, not what they wrote */
+    if (th.locked) {
+      var lm = threadMeta(th), ms0 = S.membership(m);
+      $('thread').innerHTML = '<div class="hd"><button type="button" class="back" id="chatBack" aria-label="Back to conversations">' + ICON.back + '</button>' + lm.av + '<div class="who-t"><b>' + esc(lm.name) + '</b><span>' + esc(lm.sub) + '</span></div><a class="btn btn-ghost btn-sm" href="#member/' + lm.other.id + '">Profile</a></div>' +
+        '<div class="empty" style="margin:auto;max-width:420px">' + ICON.lock + '<b>' + (th.unread ? esc(lm.name) + ' sent you ' + th.unread + (th.unread === 1 ? ' message' : ' messages') : 'You\'re connected with ' + esc(lm.name)) + '</b>' +
+        (th.intro.kind === 'admin' ? '<span class="chip g">Matched by NSC</span>' : '') +
+        '<span>' + (ms0.pending ? 'Your receipt is being checked. You can read and reply as soon as our team confirms your payment.' : 'Chatting is for Gold and Platinum members. Choose a plan to read and reply.') + '</span>' +
+        (ms0.pending ? '' : '<a class="btn btn-primary" href="#membership">See plans</a>') + '</div>';
       return;
     }
     var meta = threadMeta(th), msgs = S.threadMessages(th.id), box = $('msgs');
@@ -795,15 +822,16 @@ window.NSC.ready({ as: 'member' }).then(function(){
     var html = '', lastDay = '';
     msgs.forEach(function(x){
       var d = S.day(x.at); if (d !== lastDay) { html += '<div class="daysep">' + d + '</div>'; lastDay = d; }
-      if (x.from === 'system') { html += '<div class="sys">' + esc(x.body) + '</div>'; return; }
+      if (x.from === 'system') { html += '<div class="sys">' + linkify(esc(x.body)) + '</div>'; return; }
       var cls = x.from === ME ? 'me' : x.from === 'admin' ? 'staff' : 'them';
-      html += '<div class="bub ' + cls + '">' + (cls === 'staff' ? '<span class="from">NSC Support</span>' : '') + esc(x.body) + '<time>' + S.clock(x.at) + '</time></div>';
+      /* only the team's messages get clickable links (members can't send links at all) */
+      html += '<div class="bub ' + cls + '">' + (cls === 'staff' ? '<span class="from">NSC Support</span>' : '') + (cls === 'staff' ? linkify(esc(x.body)) : esc(x.body)) + '<time>' + S.clock(x.at) + '</time></div>';
     });
     if (!msgs.length) html = '<div class="sys">' + (th.kind === 'support' ? 'Send us a message and the NSC team will reply here.' : 'Say hello to ' + esc(meta.name) + '.') + '</div>';
     var replied = msgs.some(function(x){ return x.from !== ME && x.from !== 'system' && x.at >= (typing[th.id] || Infinity) });
     if (typing[th.id] && !replied && Date.now() - typing[th.id] < 8000) html += '<div class="typing">' + esc(meta.name) + ' is typing…</div>';
     $('thread').innerHTML = '<div class="hd"><button type="button" class="back" id="chatBack" aria-label="Back to conversations">' + ICON.back + '</button>' + meta.av +
-      '<div class="who-t"><b>' + esc(meta.name) + '</b><span>' + esc(meta.sub) + '</span></div>' +
+      '<div class="who-t"><b>' + esc(meta.name) + (th.intro && th.intro.kind === 'admin' ? ' <span class="chip g" style="font-size:.7rem;padding:2px 8px">Matched by NSC</span>' : '') + '</b><span>' + esc(meta.sub) + '</span></div>' +
       (meta.other ? '<a class="btn btn-ghost btn-sm" href="#member/' + meta.other.id + '">Profile</a><button type="button" class="iconbtn" id="threadMore" aria-label="More options">' + ICON.more + '</button><div class="menu" id="threadMenu" hidden style="top:60px;right:14px"><button type="button" data-report="' + meta.other.id + '" data-thread-id="' + th.id + '">Report ' + esc(meta.name) + '</button><button type="button" class="out" data-block="' + meta.other.id + '">Block ' + esc(meta.name) + '</button></div>' : '') + '</div>' +
       (th.kind === 'intro' ? '<div class="safety">' + ICON.shield + '<span>Never send money or share bank details. Keep chatting on NSC until you are comfortable.</span></div>' : '') +
       '<div class="msgs" id="msgs">' + html + '</div>' +
@@ -823,6 +851,8 @@ window.NSC.ready({ as: 'member' }).then(function(){
   document.addEventListener('submit', function(e){
     if (e.target.id !== 'compose') return; e.preventDefault();
     var ta = $('composeText'), body = ta.value.trim(); if (!body || !curThread) return;
+    /* the database runs the same check; this explains it before anything is sent */
+    if (curThread.indexOf('support:') !== 0) { var chk = S.checkMessage(body); if (chk.block) { toast(chk.block); return } }
     ta.value = '';
     S.send(curThread, ME, body);
     var th = S.threadsFor(ME).filter(function(t){ return t.id === curThread })[0];
@@ -1083,7 +1113,7 @@ window.NSC.ready({ as: 'member' }).then(function(){
     }
     if (ms.pending) st += '<div class="banner ok">' + ICON.check + '<div><b>Receipt received for ' + name[ms.pending.plan] + ', ' + term(ms.pending.months) + ' (' + naira(ms.pending.amount) + ')</b><p>Our team has been notified and is checking it, ' + esc(cfg.reviewTime || 'usually within 24 hours') + '. We\'ll email you when it\'s confirmed.</p><p><button type="button" class="textbtn" id="cancelPay" style="color:var(--err)">Cancel and choose another plan</button></p></div></div>';
     else if (ms.credit) st += '<div class="banner ok">' + ICON.check + '<div><b>Payment confirmed: ' + name[ms.plan] + ', ' + term(ms.credit) + '</b><p>Your membership starts the day our team approves your profile, so you don\'t lose any time.</p></div></div>';
-    else if (!ms.active && ms.last && ms.last.status === 'rejected') st += '<div class="banner bad">' + ICON.info + '<div><b>We couldn\'t confirm your last receipt</b><p>' + esc(ms.last.note || 'Please check the amount and reference, then upload it again.') + '</p></div></div>';
+    else if (!ms.active && ms.last && (ms.last.status === 'rejected' || ms.last.status === 'reversed')) st += '<div class="banner bad">' + ICON.info + '<div><b>We couldn\'t confirm your last receipt</b><p>' + esc(ms.last.note || 'Please check the amount and reference, then upload it again.') + '</p></div></div>';
     else if (!ms.active && ms.paid && m.status === 'approved') st += '<div class="banner bad">' + ICON.lock + '<div><b>Your membership ended on ' + longDate(ms.until) + '</b><p>Your profile and conversations are saved. Choose a plan to see your matches and keep chatting.</p></div></div>';
     $('memStatus').innerHTML = st;
 
@@ -1110,7 +1140,7 @@ window.NSC.ready({ as: 'member' }).then(function(){
 
     /* history */
     $('payHist').hidden = !ms.list.length;
-    var PS = { uploaded:['wait','In review'], confirmed:['ok','Confirmed'], rejected:['bad','Not accepted'] };
+    var PS = { uploaded:['wait','In review'], confirmed:['ok','Confirmed'], rejected:['bad','Not accepted'], reversed:['bad','Reversed'] };
     $('payHist').innerHTML = '<h2>Payment history</h2><ul class="hist">' + ms.list.map(function(x){
       return '<li><span><b>' + name[x.plan] + ', ' + term(x.months) + '</b><br><span class="sub">' + longDate(x.createdAt) + ' · ' + (x.amount ? naira(x.amount) : esc(x.note || 'Added by the NSC team')) + '</span></span><span class="pill ' + PS[x.status][0] + '">' + PS[x.status][1] + '</span></li>' }).join('') + '</ul>';
   }

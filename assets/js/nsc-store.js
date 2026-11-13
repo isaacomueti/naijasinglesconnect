@@ -41,6 +41,7 @@
     if (!cache) { cache = seed(); write(cache); }
     if (!cache.notes) cache.notes = [];
     if (!cache.payments) cache.payments = [];
+    if (!cache.flags) cache.flags = [];
     if (!cache.settings) cache.settings = defaultSettings();
     return cache;
   }
@@ -113,6 +114,7 @@
         { id: 'x5', thread: 'support:m_kemi', from: 'm_kemi', body: 'Good afternoon. I have uploaded my transfer receipt. Reference NSC-KEMI1.', at: t - 2 * H + 60e3 }
       ],
       reports: [],
+      flags: [],
       notes: [],
       settings: defaultSettings(),
       reads: {},
@@ -176,9 +178,10 @@
   function groupOf(mem) { var pr = mem.profile || {}; return (!pr.nationality || pr.nationality === 'Nigeria' || pr.heritage === 'Yes') ? 'nigerian' : 'international'; }
   function accepts(a, b) { var o = (a.profile || {}).openTo || 'both'; return o === 'both' || o === groupOf(b); }
   /* Private Circle: members living with HIV who opted in are matched only with each other */
-  /* who can see whom: approved members, both open to each other's background, same side of the Private Circle.
-     Browsing is free; sending or accepting introductions needs an active membership. */
-  function eligible(a, b) { return a.status === 'approved' && b.status === 'approved' && accepts(a, b) && accepts(b, a) && !!a.profile.circle === !!b.profile.circle; }
+  /* who can see whom: every registered member except rejected or paused accounts, both open to each
+     other's background, same side of the Private Circle. Seeing is free; chatting needs an active plan. */
+  function visible(mem) { return !!mem && ['rejected', 'suspended'].indexOf(mem.status) < 0; }
+  function eligible(a, b) { return visible(a) && visible(b) && accepts(a, b) && accepts(b, a) && !!a.profile.circle === !!b.profile.circle; }
 
   /* ---------- membership ---------- */
   function active(mem) { return !!mem && mem.status === 'approved' && (mem.paidUntil || 0) > now(); }
@@ -246,9 +249,11 @@
     var open = viewerId === 'admin' || viewerId === mem.id || connected(mem.id, viewerId);
     var pr = mem.profile, mode = mem.privacy || 'full';
     var showName = open || mode !== 'name', showPhoto = open || mode === 'full';
+    /* members never see each other's full name: first name and last initial, as "Chiamaka O." */
+    var li = String(pr.lastInitial || (pr.last || '').charAt(0) || '').toUpperCase();
     return {
       id: mem.id,
-      name: showName ? (pr.first || 'Member') : initials(mem).split('').join('. ') + '.',
+      name: showName ? (pr.first || 'Member') + (li ? ' ' + li + '.' : '') : initials(mem).split('').join('. ') + '.',
       initials: initials(mem),
       photo: showPhoto ? (pr.photos || [])[0] || null : null,
       photos: showPhoto ? pr.photos || [] : [],
@@ -268,6 +273,16 @@
     var lr = lastRead(reader, thread);
     return threadMessages(thread).filter(function (x) { return x.at > lr && x.from !== reader && x.from !== 'system'; }).length;
   }
+  /* messages waiting from the other person; without a plan the messages themselves aren't loaded,
+     so the count comes from my_thread_counts() (cloud) */
+  function waiting(memberId, thread) {
+    var counts = db().threadCounts;
+    if (backend && counts && !active(get('members', memberId))) {
+      var c = counts[thread], lr = lastRead(memberId, thread);
+      return c && c.lastAt > lr ? c.waiting : 0;
+    }
+    return unread(memberId, thread);
+  }
   function threadsFor(memberId) {
     var me = get('members', memberId); if (!me) return [];
     var out = all('intros').filter(function (i) { return i.status === 'accepted' && (i.from === memberId || i.to === memberId); }).map(function (i) {
@@ -276,15 +291,25 @@
       return { id: i.id, kind: 'intro', other: other, intro: i };
     }).filter(Boolean);
     out.push({ id: supportThread(memberId), kind: 'support', other: null });
+    var on = active(me), counts = db().threadCounts || {};
     out.forEach(function (t) {
-      var ms = threadMessages(t.id); t.last = ms[ms.length - 1] || null; t.unread = unread(memberId, t.id);
-      t.sortAt = t.last ? t.last.at : (t.intro ? t.intro.respondedAt || t.intro.createdAt : 0);
+      var ms = threadMessages(t.id); t.last = ms[ms.length - 1] || null;
+      /* chat with members is for paid members; support is always open */
+      t.locked = t.kind === 'intro' && !on;
+      t.unread = t.locked ? waiting(memberId, t.id) : unread(memberId, t.id);
+      t.sortAt = t.last ? t.last.at : counts[t.id] ? counts[t.id].lastAt : (t.intro ? t.intro.respondedAt || t.intro.createdAt : 0);
     });
     return out.sort(function (a, b) { return b.sortAt - a.sortAt; });
   }
   function send(thread, from, body) {
     body = String(body || '').trim(); if (!body) return null;
-    return insert('messages', { id: NSC.uid('msg_'), thread: thread, from: from, body: body.slice(0, 2000), at: now() });
+    var row = insert('messages', { id: NSC.uid('msg_'), thread: thread, from: from, body: body.slice(0, 2000), at: now() });
+    /* demo only: the database flags these itself */
+    if (!backend && row && from !== 'admin' && from !== 'system' && thread.indexOf('support:') !== 0) {
+      var c = NSC.checkMessage(body);
+      if (c.flag) insert('flags', { id: uid('f_'), messageId: row.id, thread: thread, from: from, reason: c.flag, excerpt: body.slice(0, 300), status: 'open', action: null, at: now() });
+    }
+    return row;
   }
   /* items: [{ thread, body }] */
   function sendMany(items, from) { return items.map(function (i) { return send(i.thread, from, i.body); }); }
@@ -313,6 +338,18 @@
       acceptIntro(introId);
       setTimeout(function () { send(introId, i.to, 'Hello! Thank you for the request. I am glad to be introduced.'); }, 1200);
     }, delay || 3500);
+  }
+  /* a paid member starts a conversation straight away */
+  function startChat(fromId, toId) {
+    var i = insert('intros', { id: uid('i_'), from: fromId, to: toId, kind: 'direct', status: 'accepted', note: '', createdAt: now(), respondedAt: now() });
+    if (i && !backend) insert('messages', { id: uid('msg_'), thread: i.id, from: 'system', body: 'Conversation started. Be kind, take your time, and keep conversations on NSC until you are comfortable.', at: now() });
+    return i;
+  }
+  /* the NSC team connects two members ("Matched by NSC") */
+  function connect(aId, bId, note) {
+    var i = insert('intros', { id: uid('i_'), from: aId, to: bId, kind: 'admin', status: 'accepted', note: note || '', createdAt: now(), respondedAt: now() });
+    if (i && !backend) insert('messages', { id: uid('msg_'), thread: i.id, from: 'system', body: 'The NSC team matched you with each other. Be kind, take your time, and keep conversations on NSC until you are comfortable.', at: now() });
+    return i;
   }
   function acceptIntro(id) {
     var i = update('intros', id, { status: 'accepted', respondedAt: now() });
@@ -387,6 +424,18 @@
     },
     needsUpgrade: false,
     loadState: function () { return { loaded: true, error: null }; },
+    visible: visible, startChat: startChat, connect: connect, waiting: waiting,
+    /* the same checks the database runs on every chat message (schema.sql: message_guard).
+       block: refused for safety · flag: sent, but the team is told */
+    checkMessage: function (text) {
+      var b = String(text || '').toLowerCase();
+      if (/(https?:\/\/|www\.|\.com\b|\.ng\b|bit\.ly|t\.me\/|wa\.me\/)/.test(b)) return { block: 'For your safety, links can\'t be shared in chat. Keep conversations on NSC until you are comfortable.' };
+      if (/[0-9][0-9 .-]{8,}[0-9]/.test(b) && /(account|acct|a\/c|bank|opay|palmpay|moniepoint|kuda|gtb|zenith|access|uba|first ?bank|wema|sterling|fidelity|transfer|sort code|iban)/.test(b))
+        return { block: 'For your safety, bank details can\'t be shared in chat. Never send money to someone you have met online.' };
+      if (/(send (me )?money|transfer (me|to me)|lend me|borrow|loan|gift ?card|itunes|bitcoin|btc|crypto|usdt|forex|investment|invest with|western union|moneygram|customs fee|clearance fee|hospital bill|school fees|urgent(ly)? need|recharge card|airtime)/.test(b))
+        return { flag: 'Mentions money or a payment' };
+      return {};
+    },
     reload: function () { return Promise.resolve(); },
     /* demo only: made-up visits so the Traffic page can be shown */
     traffic: function () {
@@ -406,6 +455,18 @@
     PLAN_NAMES: PLAN_NAMES, TERMS: TERMS, active: active, planPrice: planPrice, paymentsOf: paymentsOf, membership: membership,
     applyCredit: applyCredit, confirmPayment: confirmPayment, grantMembership: grantMembership, introsLeft: introsLeft,
     rejectPayment: function (pid, note) { return update('payments', pid, { status: 'rejected', note: note || '', reviewedAt: now() }); },
+    /* the team moves a waiting receipt to the plan the member actually paid for (the database re-prices it too) */
+    changePaymentPlan: function (pid, plan, months) { return update('payments', pid, { plan: plan, months: +months, amount: planPrice(plan, +months).total }); },
+    /* the team undoes a confirmation (for example a fake receipt) and takes its months back */
+    reversePayment: function (pid, note) {
+      var pay = get('payments', pid); if (!pay || pay.status !== 'confirmed') return null;
+      update('payments', pid, { status: 'reversed', note: note || '', reviewedAt: now() });
+      update('members', pay.member, function (r) {
+        if ((r.creditMonths || 0) >= pay.months) r.creditMonths -= pay.months;
+        else if (r.paidUntil) r.paidUntil = addMonths(r.paidUntil, -pay.months);
+      });
+      return pay;
+    },
     /* team correction: move or end a membership (ts in the past ends it now) */
     setMembershipEnd: function (id, ts) { return update('members', id, function (r) { r.paidUntil = ts; if (backend) r._setEnd = true; }); },
     remove: remove,

@@ -141,7 +141,7 @@ table.t.plain tbody tr{cursor:default}
       <li class="navhd">Community</li>
       <li><a href="#members" data-v="members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6.5 6.5 0 0 1 3.5 6"/></svg>Members</a></li>
       <li><a href="#intros" data-v="intros"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h12M12 4l4 4-4 4"/><path d="M20 16H8M12 12l-4 4 4 4"/></svg>Introductions<span class="count" data-badge="intros" hidden></span></a></li>
-      <li><a href="#matchmaker" data-v="matchmaker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/></svg>Matchmaker</a></li>
+      <li><a href="#matchmaker" data-v="matchmaker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/></svg>Connect</a></li>
       <li><a href="#broadcasts" data-v="broadcasts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"><path d="M4 10v4h3l6 4V6L7 10H4Z"/><path d="M17 9a4 4 0 0 1 0 6"/></svg>Broadcasts</a></li>
       <li class="navhd">Business</li>
       <li><a href="#insights" data-v="insights"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 20h16"/><path d="M7 16v-4M12 16V7M17 16v-7"/></svg>Insights</a></li>
@@ -219,6 +219,7 @@ table.t.plain tbody tr{cursor:default}
             <button role="tab" aria-selected="true" data-t="uploaded">To confirm</button>
             <button role="tab" aria-selected="false" data-t="confirmed">Confirmed</button>
             <button role="tab" aria-selected="false" data-t="rejected">Rejected</button>
+            <button role="tab" aria-selected="false" data-t="reversed">Reversed</button>
           </div>
           <div class="tablewrap"><table class="t"><thead><tr><th>Member</th><th>Plan</th><th>Amount</th><th>Reference</th><th>Receipt</th><th>Uploaded</th><th></th></tr></thead><tbody id="pyBody"></tbody></table></div>
         </div>
@@ -237,14 +238,14 @@ table.t.plain tbody tr{cursor:default}
       <section id="v-reports" data-view hidden>
         <div style="display:grid;gap:20px">
           <div class="hello"><div><h2>Reports</h2><p>Members' reports about other members. Reporters are never revealed to the person reported.</p></div></div>
-          <div class="tabs" role="tablist" id="rpTabs"><button role="tab" aria-selected="true" data-t="open">Open</button><button role="tab" aria-selected="false" data-t="resolved">Resolved</button></div>
+          <div class="tabs" role="tablist" id="rpTabs"><button role="tab" aria-selected="true" data-t="open">Open</button><button role="tab" aria-selected="false" data-t="resolved">Resolved</button><button role="tab" aria-selected="false" data-t="flags">Safety checks<span class="count" data-badge="flags" hidden style="margin-left:6px"></span></button></div>
           <div class="tablewrap"><table class="t"><thead><tr><th>Reported member</th><th>Reason</th><th>Reported by</th><th>When</th><th>Status</th></tr></thead><tbody id="rpBody"></tbody></table></div>
         </div>
       </section>
 
       <section id="v-intros" data-view hidden>
         <div style="display:grid;gap:20px">
-          <div class="hello"><div><h2>Introductions</h2><p>Every request between members. Conversations stay private: you see how active they are, never what they say, unless a member reports one.</p></div><a class="btn btn-primary btn-sm" href="#matchmaker">Suggest a match</a></div>
+          <div class="hello"><div><h2>Introductions</h2><p>Every request between members. Conversations stay private: you see how active they are, never what they say, unless a member reports one.</p></div><a class="btn btn-primary btn-sm" href="#matchmaker">Connect members</a></div>
           <div class="stats" id="inStats"></div>
           <div class="tabs" role="tablist" id="inTabs">
             <button role="tab" aria-selected="true" data-t="pending">Waiting for an answer</button>
@@ -257,10 +258,16 @@ table.t.plain tbody tr{cursor:default}
 
       <section id="v-matchmaker" data-view hidden>
         <div style="display:grid;gap:20px">
-          <div class="hello"><div><h2>Matchmaker</h2><p>Pick an active member to see who suits them best. Personal suggestions are a Platinum benefit, so start with Platinum members. Suggestions go to their support inbox, and they decide whether to send a request.</p></div></div>
+          <div class="hello"><div><h2>Connect</h2><p>Pick a member, tick the people you'd like to pair them with, then connect. Both people see "Matched by NSC" and get a message with a link to the other's profile.</p></div></div>
           <div class="mm">
-            <div class="card pick"><input class="input" id="mmSearch" type="search" placeholder="Search active members" aria-label="Search active members" style="border-radius:999px;padding:10px 16px"><div class="plist" id="mmList"></div></div>
-            <div id="mmBody" style="display:grid;gap:14px;min-width:0"></div>
+            <div class="card pick"><input class="input" id="mmSearch" type="search" placeholder="Find a member" aria-label="Find a member" style="border-radius:999px;padding:10px 16px"><div class="plist" id="mmList"></div></div>
+            <div style="display:grid;gap:14px;min-width:0">
+              <input class="input" id="mmFind" type="search" placeholder="Search the people they could be paired with" aria-label="Search possible matches" style="border-radius:999px;padding:10px 16px">
+              <div id="mmBody" style="display:grid;gap:14px;min-width:0"></div>
+            </div>
+          </div>
+          <div class="savebar" id="mmBar" hidden style="position:sticky;bottom:16px;z-index:10;display:flex;justify-content:space-between;align-items:center;gap:16px;background:var(--green-deep);color:var(--on-green);border-radius:18px;padding:12px 14px 12px 22px;flex-wrap:wrap">
+            <b id="mmCount"></b><button type="button" class="btn btn-gold" id="mmGo">Connect</button>
           </div>
         </div>
       </section>
@@ -418,7 +425,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
 
   /* ---------- helpers ---------- */
   var STATUS = { draft:['off','Not submitted'], pending:['wait','In review'], changes:['wait','Changes requested'], approved:['ok','Approved'], rejected:['bad','Rejected'], suspended:['bad','Paused'] };
-  var PAY = { uploaded:['wait','To confirm'], confirmed:['ok','Confirmed'], rejected:['bad','Rejected'] };
+  var PAY = { uploaded:['wait','To confirm'], confirmed:['ok','Confirmed'], rejected:['bad','Rejected'], reversed:['bad','Reversed'] };
   function pill(map, k){ var v = map[k] || ['off', k]; return '<span class="pill ' + v[0] + '">' + v[1] + '</span>' }
   var PN = S.PLAN_NAMES;
   function term(n){ return n === 1 ? '1 month' : n + ' months' }
@@ -459,7 +466,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
 
   /* ---------- routing ---------- */
   var titles = { overview:'Overview', review:'Review queue', members:'Members', payments:'Payments', support:'Support inbox', reports:'Reports',
-    intros:'Introductions', matchmaker:'Matchmaker', broadcasts:'Broadcasts', insights:'Insights', traffic:'Traffic', activity:'Activity log', team:'Team', settings:'Settings' };
+    intros:'Introductions', matchmaker:'Connect', broadcasts:'Broadcasts', insights:'Insights', traffic:'Traffic', activity:'Activity log', team:'Team', settings:'Settings' };
   var view = 'overview', curThread = null, drawerId = null, mmId = null;
   function route(){
     var h = (location.hash || '#overview').slice(1).split('/');
@@ -494,7 +501,8 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     var n = { review: all.filter(function(m){ return m.status === 'pending' }).length,
       payments: payments().filter(function(p){ return p.status === 'uploaded' }).length,
       support: supportThreads().reduce(function(a, t){ return a + t.unread }, 0),
-      reports: S.all('reports').filter(function(r){ return r.status === 'open' }).length,
+      flags: S.all('flags').filter(function(f){ return f.status === 'open' }).length,
+      reports: S.all('reports').filter(function(r){ return r.status === 'open' }).length + S.all('flags').filter(function(f){ return f.status === 'open' }).length,
       intros: staleIntros().length };
     n.more = n.payments + n.reports + n.intros;
     Object.keys(n).forEach(function(k){ document.querySelectorAll('[data-badge="' + k + '"]').forEach(function(b){ b.textContent = n[k]; b.hidden = !n[k] }) });
@@ -590,7 +598,8 @@ window.NSC.ready({ as: 'admin' }).then(function(){
         (p.amountReceived ? '<br><span class="sub">' + naira(p.amountReceived) + ' received</span>' : p.amountPaid ? '<br><span class="sub' + (p.amountPaid < p.amount ? '" style="color:var(--err);font-weight:700' : '') + '">' + naira(p.amountPaid) + ' sent, they say</span>' : '') +
         (p.note && p.status !== 'uploaded' ? '<br><span class="sub">' + esc(p.note) + '</span>' : '') + '</td><td>' + esc(p.ref || m.payment.ref) + '</td>' +
         '<td>' + (f ? esc(f.name) + '<br><span class="sub">' + esc(f.size || '') + '</span>' : '<span class="sub">—</span>') + '</td><td>' + S.ago(p.createdAt) + '</td>' +
-        '<td>' + (p.status === 'uploaded' ? '<div style="display:flex;gap:8px"><button type="button" class="btn btn-ghost btn-sm" data-payrej="' + p.id + '">Reject</button><button type="button" class="btn btn-primary btn-sm" data-payok="' + p.id + '">Confirm</button></div>' : pill(PAY, p.status)) + '</td></tr>' }).join('')
+        '<td>' + (p.status === 'uploaded' ? '<div style="display:flex;gap:8px"><button type="button" class="btn btn-ghost btn-sm" data-payrej="' + p.id + '">Reject</button><button type="button" class="btn btn-primary btn-sm" data-payok="' + p.id + '">Review</button></div>'
+          : '<div style="display:flex;gap:8px;align-items:center">' + pill(PAY, p.status) + '<button type="button" class="btn btn-ghost btn-sm" data-payok="' + p.id + '">Details</button></div>') + '</td></tr>' }).join('')
       : '<tr><td colspan="7"><div class="empty"><b>Nothing here</b><span>' + (pyTab === 'uploaded' ? 'No receipts are waiting.' : 'No payments in this list yet.') + '</span></div></td></tr>';
   }
   /* received: what the bank statement shows. Less than the plan price is refused here and by the database. */
@@ -662,9 +671,25 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') render() });
 
   /* ---------- reports ---------- */
+  /* both people in a report or flag, each with their profile and a direct line to them */
+  function partiesBox(list){
+    return '<div style="display:grid;gap:8px">' + list.filter(function(p){ return p[0] }).map(function(p){
+      var x = p[0];
+      return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-radius:14px">' + person(x, p[1] + ' · ' + STATUS[x.status][1]) + '<span style="flex:1"></span>' +
+        '<button type="button" class="btn btn-ghost btn-sm" data-open="' + x.id + '" data-close>Profile</button><a class="btn btn-ghost btn-sm" href="#support/' + encodeURIComponent(S.supportThread(x.id)) + '" data-close>Message</a></div>' }).join('') + '</div>';
+  }
   var rpTab = 'open';
   tabs('rpTabs', function(t){ rpTab = t });
+  function flagOther(f){ var i = S.get('intros', f.thread); return i ? member(i.from === f.from ? i.to : i.from) : null }
   function rReports(){
+    if (rpTab === 'flags') {
+      var fl = S.all('flags').slice().sort(function(a, b){ return (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1) || b.at - a.at });
+      $('rpBody').innerHTML = fl.length ? fl.map(function(f){
+        var from = member(f.from), to = flagOther(f); if (!from) return '';
+        return '<tr data-flag="' + f.id + '"><td>' + person(from, STATUS[from.status][1]) + '</td><td><b>' + esc(f.reason) + '</b><br><span class="sub">“' + esc(String(f.excerpt || '').slice(0, 90)) + '”</span></td><td>' + (to ? esc(S.fullName(to)) : '—') + '<br><span class="sub">Automatic check</span></td><td>' + S.ago(f.at) + '</td><td>' + (f.status === 'open' ? '<span class="pill bad">To review</span>' : '<span class="pill off">' + esc(f.action || 'Reviewed') + '</span>') + '</td></tr>' }).join('')
+        : '<tr><td colspan="5"><div class="empty"><b>Nothing flagged</b><span>Messages that mention money, phone numbers or abusive words appear here automatically. Bank details and links are blocked before they are sent.</span></div></td></tr>';
+      return;
+    }
     var list = S.all('reports').filter(function(r){ return r.status === rpTab }).sort(function(a, b){ return b.at - a.at });
     $('rpBody').innerHTML = list.length ? list.map(function(r){
       var about = S.get('members', r.about), by = S.get('members', r.by); if (!about || !by) return '';
@@ -677,10 +702,30 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     var msgs = r.thread ? S.threadMessages(r.thread) : [];
     modal('<h3>Report about ' + esc(S.fullName(about)) + '</h3>' +
       '<dl class="kv"><dt>Reason</dt><dd>' + esc(r.reason) + '</dd><dt>Reported by</dt><dd>' + esc(S.fullName(by)) + '</dd><dt>When</dt><dd>' + new Date(r.at).toLocaleString('en-GB') + '</dd>' + (r.details ? '<dt>Details</dt><dd>' + esc(r.details) + '</dd>' : '') + '</dl>' +
+      partiesBox([[about, 'Reported'], [by, 'Reported by']]) +
       '<div><b>Conversation</b><div class="msgs" style="max-height:260px;border-radius:14px;margin-top:8px;border:1px solid var(--line)">' + (msgs.length ? msgs.map(function(x){ return x.from === 'system' ? '<div class="sys">' + esc(x.body) + '</div>' : '<div class="bub ' + (x.from === r.about ? 'them' : 'me') + '"><span class="from" style="color:inherit;opacity:.8">' + esc(x.from === r.about ? about.profile.first : by.profile.first) + '</span>' + esc(x.body) + '<time>' + S.clock(x.at) + '</time></div>' }).join('') : '<div class="sys">No messages between them.</div>') + '</div></div>' +
       (r.status === 'open' ? '<div class="acts"><button type="button" class="btn btn-ghost" data-rp="dismiss" data-id="' + r.id + '">Dismiss</button><button type="button" class="btn btn-ghost" data-rp="warn" data-id="' + r.id + '">Warn member</button><button type="button" class="btn btn-danger" data-rp="suspend" data-id="' + r.id + '">Pause account</button></div>' : '<div class="acts"><button type="button" class="btn btn-ghost" data-close>Close</button></div>'));
   });
   document.addEventListener('click', function(e){
+    var row = e.target.closest('tr[data-flag]');
+    if (row) {
+      var f = S.get('flags', row.dataset.flag), from = member(f.from), to = flagOther(f), msgs = S.threadMessages(f.thread);
+      modal('<h3>' + esc(f.reason) + '</h3><p class="sub">Flagged automatically ' + S.ago(f.at).toLowerCase() + '. The message was delivered.</p>' +
+        partiesBox([[from, 'Sent it'], [to, 'Received it']]) +
+        '<div><b>Conversation</b><div class="msgs" style="max-height:260px;border-radius:14px;margin-top:8px;border:1px solid var(--line)">' + (msgs.length ? msgs.map(function(x){ var hit = x.id === f.messageId; return x.from === 'system' ? '<div class="sys">' + esc(x.body) + '</div>' : '<div class="bub ' + (x.from === f.from ? 'them' : 'me') + '"' + (hit ? ' style="outline:2px solid var(--err)"' : '') + '><span class="from" style="color:inherit;opacity:.8">' + esc(x.from === f.from ? from.profile.first : to ? to.profile.first : '') + '</span>' + esc(x.body) + '<time>' + S.clock(x.at) + '</time></div>' }).join('') : '<div class="sys">“' + esc(f.excerpt) + '”</div>') + '</div></div>' +
+        (f.status === 'open' ? '<div class="acts"><button type="button" class="btn btn-ghost" data-fl="ok" data-id="' + f.id + '">Nothing wrong</button><button type="button" class="btn btn-ghost" data-fl="warn" data-id="' + f.id + '">Warn ' + esc(from.profile.first) + '</button><button type="button" class="btn btn-danger" data-fl="suspend" data-id="' + f.id + '">Pause account</button></div>' : '<div class="acts"><button type="button" class="btn btn-ghost" data-close>Close</button></div>'));
+      return;
+    }
+    var fb = e.target.closest('[data-fl]');
+    if (fb) {
+      var ff = S.get('flags', fb.dataset.id), sender = member(ff.from), act = fb.dataset.fl;
+      if (act === 'warn') S.send(S.supportThread(sender.id), 'admin', 'Hi ' + sender.profile.first + ', a recent message of yours was flagged by our safety checks. On NSC, members must never ask for or offer money, gifts or financial help, and every conversation should stay respectful. Further concerns may lead to your account being paused.');
+      if (act === 'suspend') { S.update('members', sender.id, { status: 'suspended', adminNote: 'Your account is paused while our team reviews a message you sent.' }); S.send(S.supportThread(sender.id), 'admin', 'Hi ' + sender.profile.first + ', your account has been paused while we review a message you sent. Reply here if you would like to share your side.') }
+      S.update('flags', ff.id, { status: 'resolved', action: { ok:'No action needed', warn:'Warned', suspend:'Account paused' }[act] });
+      S.log('Safety check on ' + S.fullName(sender) + ': ' + { ok:'no action needed', warn:'member warned', suspend:'account paused' }[act]);
+      closeModal(); toast({ ok:'Marked as reviewed', warn:'Warning sent', suspend:'Account paused' }[act]);
+      return;
+    }
     var b = e.target.closest('[data-rp]'); if (!b) return;
     var r = S.get('reports', b.dataset.id), about = S.get('members', r.about), act = b.dataset.rp;
     if (act === 'warn') S.send(S.supportThread(about.id), 'admin', 'Hi ' + about.profile.first + ', we have received a report about a conversation on NSC. Please keep every conversation respectful and never ask other members for money. Further reports may lead to your account being paused.');
@@ -720,7 +765,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
         col = c.length ? c.length + ' messages<br><span class="sub">Last ' + S.ago(last.at).toLowerCase() + '</span>' : '<span class="sub">No messages yet</span>';
       } else col = '<span class="sub">' + (i.respondedAt ? S.ago(i.respondedAt) : '—') + '</span>';
       return '<tr><td><button type="button" class="linkp" data-open="' + a.id + '">' + person(a, a.profile.location || '') + '</button></td><td class="arrow">→</td><td><button type="button" class="linkp" data-open="' + b.id + '">' + person(b, b.profile.location || '') + '</button></td>' +
-        '<td><b>' + pairScore(a, b) + '%</b></td><td>' + date(i.createdAt) + '</td><td>' + col + '</td><td>' + acts + '</td></tr>' }).join('')
+        '<td><b>' + pairScore(a, b) + '%</b>' + (i.kind === 'admin' ? '<br><span class="pill ok">Matched by NSC</span>' : i.kind === 'direct' ? '<br><span class="sub">Started a chat</span>' : '') + '</td><td>' + date(i.createdAt) + '</td><td>' + col + '</td><td>' + acts + '</td></tr>' }).join('')
       : '<tr><td colspan="7"><div class="empty"><b>Nothing here</b><span>' + { pending:'No requests are waiting for an answer.', accepted:'No one has been introduced yet.', declined:'No declined or closed requests.' }[inTab] + '</span></div></td></tr>';
   }
   document.addEventListener('click', function(e){
@@ -756,68 +801,80 @@ window.NSC.ready({ as: 'admin' }).then(function(){
     if (S.genoRisk(A.genotype, B.genotype)) r.push(['w', 'Both genotype carriers']);
     return r;
   }
-  function suggestedAt(a, b){
-    var key = 'Suggested match: ' + S.fullName(b);
-    var n = S.all('notes').filter(function(x){ return x.member === a.id && x.body === key }).sort(function(x, y){ return y.at - x.at })[0];
-    return n ? n.at : null;
-  }
+  /* everyone this member could be paired with: visible, the other gender, same side of the Private Circle,
+     open to each other's background and not blocked. Deal-breakers are shown as warnings, not hidden. */
   function candidates(a){
     var want = a.profile.gender === 'Man' ? 'Woman' : a.profile.gender === 'Woman' ? 'Man' : null;
     return members().filter(function(b){
-      return b.id !== a.id && b.status === 'approved' && (!want || b.profile.gender === want) && S.eligible(a, b) && !S.breaks(a, b) && !S.breaks(b, a) &&
-        !S.introBetween(a.id, b.id) && (a.blocked || []).indexOf(b.id) < 0 && (b.blocked || []).indexOf(a.id) < 0;
-    }).map(function(b){ return { m: b, score: pairScore(a, b), why: reasons(a, b), at: suggestedAt(a, b) } })
-      .sort(function(x, y){ return y.score - x.score });
+      return b.id !== a.id && S.visible(b) && (!want || !b.profile.gender || b.profile.gender === want) && S.eligible(a, b) &&
+        (a.blocked || []).indexOf(b.id) < 0 && (b.blocked || []).indexOf(a.id) < 0;
+    }).map(function(b){
+      var i = S.introBetween(a.id, b.id);
+      return { m: b, score: pairScore(a, b), why: reasons(a, b), clash: S.breaks(a, b) || S.breaks(b, a), linked: i && i.status !== 'declined' ? i : null };
+    }).sort(function(x, y){ return (x.linked ? 1 : 0) - (y.linked ? 1 : 0) || y.score - x.score });
   }
+  var picked = {};
   $('mmSearch').addEventListener('input', render);
-  $('mmList').addEventListener('click', function(e){ var b = e.target.closest('[data-mm]'); if (b) go('#matchmaker/' + b.dataset.mm) });
+  $('mmFind').addEventListener('input', render);
+  $('mmList').addEventListener('click', function(e){ var b = e.target.closest('[data-mm]'); if (b) { picked = {}; go('#matchmaker/' + b.dataset.mm) } });
+  $('mmBody').addEventListener('change', function(e){ var c = e.target.closest('[data-pick]'); if (!c) return; if (c.checked) picked[c.dataset.pick] = 1; else delete picked[c.dataset.pick]; render() });
+  function profileLink(id){ return 'https://naijasinglesconnect.com/dashboard#member/' + id }
   function rMatchmaker(){
     var q = $('mmSearch').value.trim().toLowerCase();
-    var pool = members().filter(S.active);
     if (mmId && !member(mmId)) mmId = null;
-    var list = pool.filter(function(m){ return !q || (S.fullName(m) + ' ' + (m.profile.location || '')).toLowerCase().indexOf(q) >= 0 })
+    var list = members().filter(function(m){ return S.visible(m) && (!q || (S.fullName(m) + ' ' + m.email + ' ' + (m.profile.location || '')).toLowerCase().indexOf(q) >= 0) })
       .sort(function(a, b){ return S.fullName(a).localeCompare(S.fullName(b)) });
-    $('mmList').innerHTML = list.length ? list.map(function(m){
-      return '<button type="button" data-mm="' + m.id + '" aria-current="' + (m.id === mmId) + '">' + av(m) + '<span style="min-width:0"><b>' + esc(S.fullName(m)) + (m.plan === 'platinum' ? ' <span class="pill ok" style="padding:2px 8px">Platinum</span>' : '') + '</b><span>' + esc([m.profile.gender, S.age(m.profile.dob), m.profile.location].filter(Boolean).join(' · ')) + '</span></span></button>' }).join('')
-      : '<p class="sub" style="padding:8px">No active members match.</p>';
-    if (!mmId) { $('mmBody').innerHTML = '<div class="card"><div class="empty"><b>Choose a member</b><span>Their best matches appear here, ranked by compatibility both ways.</span></div></div>'; return; }
-    var a = member(mmId), c = candidates(a), pr = a.profile;
+    $('mmList').innerHTML = list.length ? list.slice(0, 200).map(function(m){
+      return '<button type="button" data-mm="' + m.id + '" aria-current="' + (m.id === mmId) + '">' + av(m) + '<span style="min-width:0"><b>' + esc(S.fullName(m)) + (S.active(m) ? ' <span class="pill ok" style="padding:2px 8px">' + PN[m.plan] + '</span>' : '') + '</b><span>' + esc([m.profile.gender, S.age(m.profile.dob), m.profile.location].filter(Boolean).join(' · ') || m.email) + '</span></span></button>' }).join('')
+      : '<p class="sub" style="padding:8px">No members match.</p>';
+    if (!mmId) { $('mmBody').innerHTML = '<div class="card"><div class="empty"><b>Choose a member</b><span>The people they could be paired with appear here, best matches first. Tick one or more, then connect.</span></div></div>'; $('mmBar').hidden = true; return; }
+    var a = member(mmId), find = $('mmFind').value.trim().toLowerCase(), pr = a.profile;
+    var c = candidates(a).filter(function(x){ return !find || (S.fullName(x.m) + ' ' + (x.m.profile.location || '') + ' ' + (x.m.profile.job || '')).toLowerCase().indexOf(find) >= 0 });
+    Object.keys(picked).forEach(function(id){ if (!c.some(function(x){ return x.m.id === id && !x.linked })) delete picked[id] });
     $('mmBody').innerHTML = '<div class="card" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">' + av(a).replace('class="av"', 'class="av lg"') +
-        '<div style="flex:1;min-width:200px"><b style="font-size:1.1rem">' + esc(S.fullName(a)) + '</b><p class="sub">' + esc([pr.gender, S.age(pr.dob), pr.location, S.religionLabel(pr.religion)].filter(Boolean).join(' · ')) + '</p>' +
+        '<div style="flex:1;min-width:200px"><b style="font-size:1.1rem">' + esc(S.fullName(a)) + '</b> ' + memPill(a) + '<p class="sub">' + esc([pr.gender, S.age(pr.dob), pr.location, S.religionLabel(pr.religion)].filter(Boolean).join(' · ')) + '</p>' +
         '<p class="sub">Looking for ' + esc(pr.agemin || pr.agemax ? 'ages ' + (pr.agemin || '?') + ' to ' + (pr.agemax || '?') : 'any age') + (pr.ploc ? ' · ' + esc(pr.ploc) : '') + ((pr.dealbreakers || []).length ? ' · Deal-breakers: ' + esc(pr.dealbreakers.join(', ')) : '') + '</p></div>' +
         '<button type="button" class="btn btn-ghost btn-sm" data-open="' + a.id + '">Full profile</button></div>' +
-      (pr.circle ? '<div class="banner ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><div><b>Private Circle</b><p>Only other circle members are shown. Never mention the circle in a suggestion.</p></div></div>' : '') +
-      '<p class="sub">' + c.length + ' possible ' + (c.length === 1 ? 'match' : 'matches') + '. Members they already have a request with, have blocked, or rule out with a deal-breaker are left out.</p>' +
-      (c.length ? c.slice(0, 30).map(function(x){
+      (pr.circle ? '<div class="banner ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><div><b>Private Circle</b><p>Only other circle members are shown. Never mention the circle in a message.</p></div></div>' : '') +
+      '<p class="sub">' + c.length + (c.length === 1 ? ' person' : ' people') + ' they could be paired with, best matches first.</p>' +
+      (c.length ? c.slice(0, 80).map(function(x){
         var b = x.m, bp = b.profile;
-        return '<div class="cand">' + av(b) + '<div style="min-width:0"><button type="button" class="linkp" data-open="' + b.id + '"><b>' + esc(S.fullName(b)) + '</b></button> <span class="score">' + x.score + '%</span>' +
+        return '<label class="cand" style="cursor:' + (x.linked ? 'default' : 'pointer') + (picked[b.id] ? ';border-color:var(--green);background:var(--green-tint)' : '') + '">' + av(b) + '<div style="min-width:0"><button type="button" class="linkp" data-open="' + b.id + '"><b>' + esc(S.fullName(b)) + '</b></button> <span class="score">' + x.score + '%</span>' +
           '<p class="sub">' + esc([S.age(bp.dob), bp.location, S.religionLabel(bp.religion), bp.job].filter(Boolean).join(' · ')) + '</p>' +
-          '<div class="chips">' + x.why.map(function(w){ return '<span class="chip ' + w[0] + '">' + w[1] + '</span>' }).join('') + (x.at ? '<span class="chip">Suggested ' + S.ago(x.at).toLowerCase() + '</span>' : '') + '</div></div>' +
-          '<div><button type="button" class="btn ' + (x.at ? 'btn-ghost' : 'btn-primary') + ' btn-sm" data-suggest="' + b.id + '">' + (x.at ? 'Suggest again' : 'Suggest') + '</button></div></div>' }).join('')
-        : '<div class="card"><div class="empty"><b>No possible matches right now</b><span>As more members are approved, they will appear here.</span></div></div>');
+          '<div class="chips">' + (S.active(b) ? '<span class="chip g">' + PN[b.plan] + '</span>' : '<span class="chip">No plan</span>') + x.why.map(function(w){ return '<span class="chip ' + w[0] + '">' + w[1] + '</span>' }).join('') + (x.clash ? '<span class="chip w">Clashes with a deal-breaker</span>' : '') + '</div></div>' +
+          '<div>' + (x.linked ? '<span class="pill ' + (x.linked.kind === 'admin' ? 'ok">Matched by NSC' : x.linked.status === 'accepted' ? 'ok">Already chatting' : 'wait">Request waiting') + '</span>'
+            : '<input type="checkbox" data-pick="' + b.id + '"' + (picked[b.id] ? ' checked' : '') + ' aria-label="Pick ' + esc(S.fullName(b)) + '" style="width:22px;height:22px;accent-color:var(--green)">') + '</div></label>' }).join('')
+        : '<div class="card"><div class="empty"><b>No one to pair with right now</b><span>As more members join, they will appear here.</span></div></div>');
+    var n = Object.keys(picked).length;
+    $('mmBar').hidden = !n; $('mmCount').textContent = n + (n === 1 ? ' person' : ' people') + ' selected';
   }
-  function suggestText(to, other, why){
-    var name = S.view(other, to.id).name, good = why.filter(function(w){ return w[0] === 'g' }).map(function(w){ return w[1].toLowerCase() });
-    return 'Hi ' + to.profile.first + ', our team has been looking at your matches and we think you and ' + name + ' could be a lovely fit' + (good.length ? ' (' + good.join(', ') + ')' : '') + '. You will find ' + name + ' in your Matches. Have a look, and if you like what you see, send an introduction request. No pressure at all.';
+  function connectText(to, other){
+    var nm = S.view(other, to.id).name;
+    return 'Hi ' + (to.profile.first || 'there') + ', the NSC team has matched you with ' + nm + (/\.$/.test(nm) ? '' : '.') + ' We think you could be a lovely fit. ' +
+      'View their profile: ' + profileLink(other.id) + ' . You will find each other in Messages.' +
+      (S.active(to) ? '' : ' Choose a Gold or Platinum plan in Membership to start chatting.');
   }
+  $('mmGo').addEventListener('click', function(){
+    var a = member(mmId), ids = Object.keys(picked), names = ids.map(function(id){ return esc(S.fullName(member(id))) });
+    var b0 = member(ids[0]);
+    modal('<h3>Connect ' + esc(a.profile.first) + ' with ' + (ids.length === 1 ? names[0] : ids.length + ' people') + '?</h3>' +
+      (ids.length > 1 ? '<p class="sub">' + names.join(', ') + '</p>' : '') +
+      '<p class="sub">Each pair is connected straight away and sees "Matched by NSC". Both people get a message with a link to the other\'s profile. Members without a plan are told to choose one to start chatting.</p>' +
+      '<div><b>What ' + esc(a.profile.first) + ' will receive' + (ids.length > 1 ? ' (one per person)' : '') + '</b><div class="msgs" style="border-radius:14px;margin-top:8px;border:1px solid var(--line);min-height:0"><div class="bub them" style="max-width:100%">' + esc(connectText(a, b0)) + '</div></div></div>' +
+      '<div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-primary" id="mmConfirm">Connect</button></div>');
+  });
   document.addEventListener('click', function(e){
-    var s = e.target.closest('[data-suggest]');
-    if (s) {
-      var a = member(mmId), b = member(s.dataset.suggest), why = reasons(a, b);
-      modal('<h3>Suggest ' + esc(S.view(b, a.id).name) + ' to ' + esc(a.profile.first) + '</h3>' +
-        '<div class="field"><label for="sgText">Message to ' + esc(a.profile.first) + '</label><textarea id="sgText">' + esc(suggestText(a, b, why)) + '</textarea><span class="hint">Names follow each member\'s privacy setting.</span></div>' +
-        '<label style="display:flex;gap:10px;align-items:center;font-size:.95rem"><input type="checkbox" id="sgBoth" style="width:18px;height:18px;accent-color:var(--green)">Also suggest ' + esc(S.view(a, b.id).name) + ' to ' + esc(b.profile.first) + '</label>' +
-        '<div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-primary" id="sgGo" data-b="' + b.id + '">Send suggestion</button></div>');
-    }
-    if (e.target.id === 'sgGo') {
-      var A = member(mmId), B = member(e.target.dataset.b), body = $('sgText').value.trim(); if (!body) { $('sgText').focus(); return }
-      var both = $('sgBoth').checked;
-      S.send(S.supportThread(A.id), 'admin', body);
-      addNote(A.id, 'Suggested match: ' + S.fullName(B));
-      if (both) { S.send(S.supportThread(B.id), 'admin', suggestText(B, A, reasons(B, A))); addNote(B.id, 'Suggested match: ' + S.fullName(A)); }
-      S.log('Team suggested ' + S.fullName(B) + ' to ' + S.fullName(A) + (both ? ' (and the other way round)' : ''));
-      closeModal(); toast('Suggestion sent to ' + A.profile.first + (both ? ' and ' + B.profile.first : ''));
-    }
+    if (e.target.id !== 'mmConfirm') return;
+    var a = member(mmId), done = 0;
+    Object.keys(picked).forEach(function(id){
+      var b = member(id); if (!b || S.introBetween(a.id, b.id)) return;
+      S.connect(a.id, b.id, 'Matched by the NSC team');
+      S.send(S.supportThread(a.id), 'admin', connectText(a, b));
+      S.send(S.supportThread(b.id), 'admin', connectText(b, a));
+      addNote(a.id, 'Matched by NSC with ' + S.fullName(b)); addNote(b.id, 'Matched by NSC with ' + S.fullName(a));
+      S.log('Team matched ' + S.fullName(a) + ' with ' + S.fullName(b)); done++;
+    });
+    picked = {}; closeModal(); toast(done ? a.profile.first + ' is connected with ' + done + (done === 1 ? ' person' : ' people') : 'Already connected');
   });
 
   /* ---------- broadcasts ---------- */
@@ -1094,7 +1151,7 @@ window.NSC.ready({ as: 'admin' }).then(function(){
 
   /* ---------- member drawer ---------- */
   document.addEventListener('click', function(e){
-    var o = e.target.closest('[data-open]'); if (!o || e.target.closest('[data-payok],[data-payrej]')) return;
+    var o = e.target.closest('[data-open]'); if (!o || e.target.closest('[data-payok],[data-payrej],[data-payrev]')) return;
     drawerId = o.dataset.open; rDrawer();
   });
   function addNote(id, body){ S.insert('notes', { id: S.uid('n_'), member: id, body: body, by: S.mode === 'cloud' ? '' : 'NSC Team', at: Date.now() }) }
@@ -1184,9 +1241,11 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   });
   /* receipts in Supabase are private: fetch a short-lived link and keep it while the drawer is open */
   var rcptUrls = {};
-  function showReceipt(f, id){
+  /* inModal: the payment review window, which sits above any open drawer */
+  function showReceipt(f, id, inModal){
     var key = f.path || f.dataUrl, paint = function(u){
-      var box = $('rcptBox'); if (!box || drawerId !== id) return;
+      var box = inModal ? document.querySelector('#layer #rcptBox') : document.querySelector('#layer2 #rcptBox');
+      if (!box || (!inModal && drawerId !== id)) return;
       if (!u) { box.innerHTML = '<p class="sub" style="padding:14px">Could not load this receipt.</p>'; return }
       box.innerHTML = /pdf/.test(f.type || '') ? '<p style="padding:14px"><a class="btn btn-ghost btn-sm" href="' + u + '" target="_blank" rel="noopener">Open PDF receipt</a></p>' : '<a href="' + u + '" target="_blank" rel="noopener"><img src="' + u + '" alt="Payment receipt"></a>';
     };
@@ -1270,23 +1329,76 @@ window.NSC.ready({ as: 'admin' }).then(function(){
       S.log({ changes:'Changes requested for ', reject:'Profile rejected for ', suspend:'Account paused for ' }[act] + S.fullName(m));
       closeModal(); toast({ changes:'Changes requested', reject:'Profile rejected', suspend:'Account paused' }[act]);
     }
-    var ok = e.target.closest('[data-payok]'), rj = e.target.closest('[data-payrej]');
-    if (ok) {
-      var cp = S.get('payments', ok.dataset.payok), cm = member(cp.member);
-      modal('<h3>Confirm ' + esc(cm.profile.first) + '\'s payment</h3>' + amountField(cp) + '<div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-primary" id="payGo" data-pid="' + cp.id + '">Confirm payment</button></div>');
-      setTimeout(function(){ $('rcvAmt') && $('rcvAmt').focus() }, 30);
-    }
+    var ok = e.target.closest('[data-payok]'), rj = e.target.closest('[data-payrej]'), rv = e.target.closest('[data-payrev]');
+    if (ok) reviewPayment(ok.dataset.payok);
     if (e.target.id === 'payGo') {
       var gp = S.get('payments', e.target.dataset.pid), amt = readAmount(gp);
       if (amt && confirmPay(gp.id, amt)) closeModal();
     }
     if (e.target.id === 'apPay') { var box = $('apAmtBox'); if (box) box.hidden = !e.target.checked }
-    if (rj) {
-      var rp = S.get('payments', rj.dataset.payrej), who = member(rp.member);
-      modal('<h3>Reject receipt</h3><p class="sub">' + PN[rp.plan] + ', ' + term(rp.months) + ' · ' + naira(rp.amount) + ' due</p><div class="field"><label for="pyNote">Message to ' + esc(who.profile.first) + '</label><textarea id="pyNote">We could not match your receipt to a payment of ' + naira(rp.amount) + ' in our account. Please check the amount and the reference ' + esc(rp.ref || who.payment.ref) + ', then upload the receipt again.</textarea></div><div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-danger" id="pyGo" data-pid="' + rp.id + '">Reject receipt</button></div>');
+    if (rj) rejectModal(rj.dataset.payrej, 'reject');
+    if (rv) rejectModal(rv.dataset.payrev, 'reverse');
+    if (e.target.id === 'pyGo') {
+      var note = $('pyNote').value.trim(); if (!note) { $('pyNote').focus(); return }
+      if (e.target.dataset.mode === 'reverse') reversePay(e.target.dataset.pid, note); else rejectPay(e.target.dataset.pid, note);
+      closeModal();
     }
-    if (e.target.id === 'pyGo') { rejectPay(e.target.dataset.pid, $('pyNote').value.trim()); closeModal() }
   });
+  /* the full review of one receipt: the image, what they chose, what they say they sent, and what arrived */
+  function reviewPayment(pid){
+    var p = S.get('payments', pid), m = member(p.member), f = p.file, waiting = p.status === 'uploaded';
+    var opts = function(sel, list){ return list.map(function(o){ return '<option value="' + o[0] + '"' + (String(o[0]) === String(sel) ? ' selected' : '') + '>' + o[1] + '</option>' }).join('') };
+    modal('<h3>' + (waiting ? 'Review' : PAY[p.status][1] + ':') + ' ' + esc(S.fullName(m)) + '\'s payment</h3>' +
+      '<div class="receipt">' + (f && (f.dataUrl || f.path) ? '<div id="rcptBox"><p class="sub" style="padding:14px">Loading receipt…</p></div>' : '<p class="sub" style="padding:14px">No receipt image stored.</p>') +
+        '<div class="meta"><span>Uploaded ' + date(p.createdAt, true) + ' · Reference <b>' + esc(p.ref || m.payment.ref) + '</b></span>' + pill(PAY, p.status) + '</div></div>' +
+      (waiting ? '<div class="fields"><div class="field"><label for="rvPlan">Plan</label><select id="rvPlan" data-pid="' + p.id + '">' + opts(p.plan, [['gold','Gold'],['platinum','Platinum']]) + '</select></div>' +
+        '<div class="field"><label for="rvMonths">Length</label><select id="rvMonths" data-pid="' + p.id + '">' + opts(p.months, [[1,'1 month'],[3,'3 months'],[12,'12 months']]) + '</select></div></div>' +
+        '<p class="sub" style="margin:0">If they paid for a different plan than they picked, change it here. The price updates.</p>' + amountField(p)
+        : '<dl class="kv" style="margin:0"><dt>Plan</dt><dd>' + PN[p.plan] + ', ' + term(p.months) + '</dd><dt>Price</dt><dd>' + naira(p.amount) + '</dd><dt>They say they sent</dt><dd>' + (p.amountPaid ? naira(p.amountPaid) : '—') + '</dd><dt>Bank statement showed</dt><dd>' + (p.amountReceived ? naira(p.amountReceived) : '—') + '</dd>' + (p.note ? '<dt>Note</dt><dd>' + esc(p.note) + '</dd>' : '') + '</dl>') +
+      '<div class="acts">' + (waiting ? '<button type="button" class="btn btn-danger-ghost" data-payrej="' + p.id + '">Reject</button><button type="button" class="btn btn-ghost" data-close>Later</button><button type="button" class="btn btn-primary" id="payGo" data-pid="' + p.id + '">Confirm payment</button>'
+        : (p.status === 'confirmed' ? '<button type="button" class="btn btn-danger-ghost" data-payrev="' + p.id + '">Reverse this payment</button>' : '') + '<button type="button" class="btn btn-ghost" data-close>Close</button>') + '</div>');
+    if (f && (f.dataUrl || f.path)) showReceipt(f, m.id, true);
+  }
+  document.addEventListener('change', function(e){
+    if (e.target.id !== 'rvPlan' && e.target.id !== 'rvMonths') return;
+    var pid = e.target.dataset.pid; S.changePaymentPlan(pid, $('rvPlan').value, +$('rvMonths').value);
+    S.log('Changed a receipt to ' + PN[$('rvPlan').value] + ', ' + term(+$('rvMonths').value));
+    reviewPayment(pid);
+  });
+  /* ready-made replies; the team can edit any of them before sending */
+  function payTemplates(p, m, received){
+    var cfg = S.settings(), first = m.profile.first || 'there', ref = p.ref || m.payment.ref, price = naira(p.amount);
+    var acct = (cfg.accountName || 'Best of Nature Ventures') + ' (' + (cfg.bank || 'Zenith Bank') + ', ' + (cfg.accountNumber || '') + ')';
+    var bal = received && received < p.amount ? naira(p.amount - received) : 'the remaining balance';
+    var norefund = 'Please note that we\'re unable to offer refunds on membership payments, so do double-check the amount before sending.';
+    return {
+      amount: ['Amount is less than the plan price', 'Thank you for your payment, ' + first + '. The amount we received' + (received ? ' (' + naira(received) + ')' : '') + ' is less than the price of the plan you chose (' + price + '), so we can\'t activate your membership yet. To continue, please transfer ' + bal + ' to ' + acct + ' using your reference ' + ref + ', then upload the new receipt in Membership. ' + norefund + ' We\'re happy to help if you have any questions.'],
+      notfound: ['Payment not found in our account', 'Thank you for your receipt, ' + first + '. We checked our account carefully but couldn\'t find a matching payment, so we\'re unable to confirm it. If you have made the transfer, please upload the bank\'s official receipt showing the amount, date and your reference ' + ref + '. For everyone\'s safety, receipts for payments that weren\'t made may lead to the account being closed.'],
+      unclear: ['Receipt is unclear', 'Thank you, ' + first + '. We couldn\'t read the receipt you uploaded. Please upload a clear screenshot or PDF that shows the amount (' + price + '), the date and your reference ' + ref + '.'],
+      reverse: ['Payment reversed after a second check', 'Hi ' + first + ', on a second check we found that the payment for your ' + PN[p.plan] + ' plan didn\'t reach our account in full, so we have reversed it and your membership has been adjusted. If you believe this is a mistake, reply here with your bank\'s official receipt and we\'ll look again. ' + norefund]
+    };
+  }
+  function rejectModal(pid, mode){
+    var p = S.get('payments', pid), m = member(p.member), t = payTemplates(p, m, 0);
+    var keys = mode === 'reverse' ? ['reverse', 'notfound', 'amount'] : ['amount', 'notfound', 'unclear'];
+    modal('<h3>' + (mode === 'reverse' ? 'Reverse this payment?' : 'Reject this receipt?') + '</h3><p class="sub">' + esc(S.fullName(m)) + ' · ' + PN[p.plan] + ', ' + term(p.months) + ' · ' + naira(p.amount) + '</p>' +
+      (mode === 'reverse' ? '<div class="banner bad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div><b>This takes back ' + term(p.months) + '</b><p>Use it when a confirmed receipt turns out to be fake or short. Their membership end date moves back by ' + term(p.months) + '.</p></div></div>' : '') +
+      '<div class="fields"><div class="field"><label for="pyWhy">Reason</label><select id="pyWhy" data-pid="' + p.id + '">' + keys.map(function(k){ return '<option value="' + k + '">' + t[k][0] + '</option>' }).join('') + '</select></div>' +
+      '<div class="field"><label for="pyGot">Amount received (₦), if any</label><input id="pyGot" inputmode="numeric" data-pid="' + p.id + '" placeholder="e.g. 1000"></div></div>' +
+      '<div class="field"><label for="pyNote">Message to ' + esc(m.profile.first) + '</label><textarea id="pyNote" style="min-height:170px">' + esc(t[keys[0]][1]) + '</textarea><span class="hint">Sent to their support inbox and by email. Edit it if you like.</span></div>' +
+      '<div class="acts"><button type="button" class="btn btn-ghost" data-close>Cancel</button><button type="button" class="btn btn-danger" id="pyGo" data-pid="' + p.id + '" data-mode="' + mode + '">' + (mode === 'reverse' ? 'Reverse payment' : 'Reject receipt') + '</button></div>');
+  }
+  function refillTemplate(){
+    var p = S.get('payments', $('pyWhy').dataset.pid), m = member(p.member), got = parseInt(($('pyGot').value || '').replace(/\D/g, ''), 10) || 0;
+    $('pyNote').value = payTemplates(p, m, got)[$('pyWhy').value][1];
+  }
+  document.addEventListener('change', function(e){ if (e.target.id === 'pyWhy') refillTemplate() });
+  document.addEventListener('input', function(e){ if (e.target.id === 'pyGot') refillTemplate() });
+  function reversePay(pid, note){
+    var p = S.get('payments', pid), m = member(p.member);
+    S.reversePayment(pid, note);
+    S.send(S.supportThread(m.id), 'admin', note); S.log('Payment reversed for ' + S.fullName(m) + ': ' + PN[p.plan] + ', ' + term(p.months)); toast('Payment reversed. ' + m.profile.first + ' has been told why.');
+  }
 
   /* mobile: every section from the "More" tab */
   $('moreBtn').addEventListener('click', function(){

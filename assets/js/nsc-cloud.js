@@ -30,7 +30,7 @@
          is open or asleep. A pass-through lock keeps each tab independent. */
       lock: function (name, acquireTimeout, fn) { return fn(); } }
   });
-  var cache = { members: [], intros: [], messages: [], reports: [], activity: [], reads: {}, notes: [], settings: {}, team: [], payments: [] };
+  var cache = { members: [], intros: [], messages: [], reports: [], activity: [], reads: {}, notes: [], settings: {}, team: [], payments: [], flags: [], threadCounts: {} };
   var st = { user: null, isAdmin: false, as: 'none', loaded: false, channel: null };
   var PROFILE_DEFAULTS = { first: '', last: '', gender: '', dob: '', location: '', nationality: '', heritage: '', openTo: 'both', origin: '', lga: '', qual: '', job: '',
     religion: '', denom: '', worship: '', marital: '', genotype: '', children: '', wantkids: '', intent: '', agemin: '', agemax: '', ploc: '', lookfor: '',
@@ -67,7 +67,8 @@
       payment: {}, plan: null, paidUntil: null, creditMonths: 0, createdAt: 0, privacy: r.privacy || 'full', demo: false, profile: pr };
   }
   function payRow(x) { return { id: x.id, member: x.member_id, plan: x.plan, months: x.months, amount: x.amount, amountPaid: x.amount_paid, amountReceived: x.amount_received, ref: x.ref, file: x.file, status: x.status, note: x.note || '', createdAt: ms(x.created_at), reviewedAt: ms(x.reviewed_at) }; }
-  function introRow(i) { return { id: i.id, from: i.from_id, to: i.to_id, status: i.status, note: i.note || '', createdAt: ms(i.created_at), respondedAt: ms(i.responded_at) }; }
+  function introRow(i) { return { id: i.id, from: i.from_id, to: i.to_id, kind: i.kind || 'request', status: i.status, note: i.note || '', createdAt: ms(i.created_at), respondedAt: ms(i.responded_at) }; }
+  function flagRow(f) { return { id: f.id, messageId: f.message_id, thread: f.thread, from: f.from_id, reason: f.reason, excerpt: f.excerpt, status: f.status, action: f.action, at: ms(f.at) }; }
   function msgRow(x) { return { id: x.id, thread: x.thread, from: x.from_id, body: x.body, at: ms(x.at) }; }
   function reportRow(r) { return { id: r.id, by: r.by_id, about: r.about_id, thread: r.thread, reason: r.reason, details: r.details || '', status: r.status, action: r.action, at: ms(r.at), resolvedAt: ms(r.resolved_at) }; }
   function noteRow(n) { return { id: n.id, member: n.member_id, body: n.body, by: n.by_email, at: ms(n.at) }; }
@@ -95,8 +96,9 @@
       q.reports = sb.from('reports').select('*');
       q.activity = sb.from('activity').select('*').order('at', { ascending: false }).limit(200);
       q.notes = soft(sb.from('team_notes').select('*').order('at'));
+      q.flags = soft(sb.from('message_flags').select('*').order('at', { ascending: false }).limit(300));
       q.team = soft(sb.rpc('team_list'));
-    } else q.matches = sb.rpc('match_profiles');
+    } else { q.matches = sb.rpc('match_profiles'); q.counts = soft(sb.rpc('my_thread_counts')); }
     var names = Object.keys(q);
     loading = Promise.all(names.map(function (k) { return q[k]; })).then(function (list) {
       var r = {}; names.forEach(function (k, i) { r[k] = list[i]; });
@@ -114,9 +116,12 @@
       cache.activity = admin ? check(r.activity, 'activity').map(function (a) { return { at: ms(a.at), text: a.text }; }) : [];
       cache.settings = r.settings.data ? r.settings.data.data || {} : {};
       cache.payments = (r.payments.data || []).map(payRow);
+      var counts = {}; ((r.counts && r.counts.data) || []).forEach(function (c) { counts[c.thread] = { waiting: +c.waiting || 0, lastAt: ms(c.last_at) }; });
+      cache.threadCounts = counts;
       S.needsUpgrade = !!(r.settings.missing || r.payments.missing);
       if (admin) {
         cache.notes = (r.notes.data || []).map(noteRow);
+        cache.flags = (r.flags.data || []).map(flagRow);
         cache.team = r.team.data || [];
         S.needsUpgrade = S.needsUpgrade || !!r.notes.missing || !!r.team.missing;
       }
@@ -158,7 +163,8 @@
     cache[t].push(row); S._emit();
     var undo = function () { cache[t] = cache[t].filter(function (r) { return r !== row; }); S._emit(); };
     if (t === 'messages') remote(sb.from('messages').insert({ id: row.id, thread: row.thread, from_id: row.from, body: row.body }), undo);
-    else if (t === 'intros') remote(sb.from('intros').insert({ id: row.id, from_id: row.from, to_id: row.to, note: row.note || '' }), undo);
+    /* the database decides the status: "direct" and "admin" connections open straight away */
+    else if (t === 'intros') remote(sb.from('intros').insert({ id: row.id, from_id: row.from, to_id: row.to, note: row.note || '', kind: row.kind || 'request' }).then(function (res) { reloadSoon(300); return res; }), undo);
     else if (t === 'reports') remote(sb.from('reports').insert({ id: row.id, by_id: row.by, about_id: row.about, thread: row.thread || null, reason: row.reason, details: row.details || '' }), undo);
     else if (t === 'notes') remote(sb.from('team_notes').insert({ id: row.id, member_id: row.member, body: row.body }), undo);
     /* the database sets the amount, reference and (for members) the status */
@@ -207,7 +213,15 @@
       if (row.status !== before.status) pp.status = row.status;
       if (row.note !== before.note) pp.note = row.note;
       if (row.amountReceived !== before.amountReceived) pp.amount_received = row.amountReceived;
+      /* the team moving a waiting receipt to another plan; the database resets the price */
+      if (row.plan !== before.plan) pp.plan = row.plan;
+      if (row.months !== before.months) pp.months = row.months;
       if (Object.keys(pp).length) jobs.push(function () { return sb.from('payments').update(pp).eq('id', id); });
+    } else if (t === 'flags') {
+      var fp = {};
+      if (row.status !== before.status) fp.status = row.status;
+      if (row.action !== before.action) fp.action = row.action;
+      if (Object.keys(fp).length) jobs.push(function () { return sb.from('message_flags').update(fp).eq('id', id); });
     } else if (t === 'reports') {
       var rp = {};
       if (row.status !== before.status) rp.status = row.status;

@@ -195,6 +195,8 @@ form{display:grid;gap:18px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .pane > *{animation:in .5s cubic-bezier(.2,.7,.2,1) both}
 @keyframes in{from{transform:translateY(10px)}to{transform:none}}
+/* honeypot: hidden from people, filled in by bots */
+.hp{position:absolute!important;left:-10000px!important;top:auto;width:1px;height:1px;overflow:hidden}
 </style>
 </head>
 <body>
@@ -241,6 +243,7 @@ form{display:grid;gap:18px}
           <p>Create your account in under a minute. Your profile stays private until our team approves it.</p>
         </div>
         <form id="f-signup" novalidate>
+          <div class="hp" aria-hidden="true"><label>Leave this field empty<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
           <div class="row">
             <div class="field"><label for="su-first">First name</label><input id="su-first" autocomplete="given-name" placeholder="Chiamaka"></div>
             <div class="field"><label for="su-last">Last name</label><input id="su-last" autocomplete="family-name" placeholder="Okafor"></div>
@@ -269,6 +272,7 @@ form{display:grid;gap:18px}
           <p>Log in to see your matches and introduction requests.</p>
         </div>
         <form id="f-login" novalidate>
+          <div class="hp" aria-hidden="true"><label>Leave this field empty<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
           <div class="field"><label for="li-id">Email or phone number</label><input id="li-id" autocomplete="username" placeholder="you@example.com or 0803 123 4567"></div>
           <div class="field pw"><label for="li-pass">Password</label>
             <div class="wrapin"><input id="li-pass" type="password" autocomplete="current-password" placeholder="Your password">
@@ -312,6 +316,7 @@ form{display:grid;gap:18px}
         <p>Enter the email on your account and we will send you a link to choose a new password.</p>
       </div>
       <form id="f-forgot" novalidate>
+          <div class="hp" aria-hidden="true"><label>Leave this field empty<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
         <div class="field"><label for="fp-email">Email address</label><input id="fp-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
         <p class="err" id="fp-err" style="margin:0;color:var(--err);font-weight:600;font-size:.9rem" hidden></p>
         <button class="btn" type="submit">Send reset link</button>
@@ -394,6 +399,22 @@ window.NSC.ready({ as: 'none' }).then(function(){
 
   var views = {auth:'v-auth', verify:'v-verify', forgot:'v-forgot', done:'v-done', newpw:'v-newpw'};
   function view(v){ Object.keys(views).forEach(function(k){ document.getElementById(views[k]).hidden = k !== v }); window.scrollTo(0,0); }
+
+  /* Bot guard: a hidden "website" field people never see, and forms sent faster than a person
+     could type. Bots get a believable response and nothing is sent to the server. */
+  var opened = Date.now();
+  function looksLikeBot(form){
+    var hp = form.querySelector('input[name="website"]');
+    /* saved passwords can fill the login form instantly, so only new forms get the speed check */
+    return (hp && hp.value.trim() !== '') || (form.id !== 'f-login' && Date.now() - opened < 2500);
+  }
+  document.addEventListener('submit', function(e){
+    var f = e.target; if (['f-signup','f-login','f-forgot'].indexOf(f.id) < 0 || !looksLikeBot(f)) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if (f.id === 'f-signup') { document.getElementById('vEmail').textContent = (document.getElementById('su-email').value || '').trim(); view('verify'); }
+    else if (f.id === 'f-forgot') document.getElementById('fp-sent').hidden = false;
+    else { var er = document.getElementById('li-err'); er.hidden = false; er.textContent = 'That email and password don’t match an account.'; }
+  }, true);
   function tab(t){
     view('auth');
     var su = t === 'signup';

@@ -46,6 +46,14 @@
         {
           "key": "Strict-Transport-Security",
           "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://mnojvwqrlagezgiirbpt.supabase.co; media-src 'self' blob:; connect-src 'self' https://mnojvwqrlagezgiirbpt.supabase.co wss://mnojvwqrlagezgiirbpt.supabase.co; frame-src 'self' https://mnojvwqrlagezgiirbpt.supabase.co; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'; worker-src 'self' blob:; upgrade-insecure-requests"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
         }
       ]
     }
