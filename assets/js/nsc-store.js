@@ -181,7 +181,9 @@
   /* who can see whom: every registered member except rejected or paused accounts, both open to each
      other's background, same side of the Private Circle. Seeing is free; chatting needs an active plan. */
   function visible(mem) { return !!mem && ['rejected', 'suspended'].indexOf(mem.status) < 0; }
-  function eligible(a, b) { return visible(a) && visible(b) && accepts(a, b) && accepts(b, a) && !!a.profile.circle === !!b.profile.circle; }
+  /* men see women and women see men; a member without a gender isn't shown until they add one */
+  function opposite(a, b) { var g = a.profile.gender, h = b.profile.gender; return (g === 'Man' || g === 'Woman') && (h === 'Man' || h === 'Woman') && g !== h; }
+  function eligible(a, b) { return visible(a) && visible(b) && opposite(a, b) && accepts(a, b) && accepts(b, a) && !!a.profile.circle === !!b.profile.circle; }
 
   /* ---------- membership ---------- */
   function active(mem) { return !!mem && mem.status === 'approved' && (mem.paidUntil || 0) > now(); }

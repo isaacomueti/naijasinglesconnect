@@ -315,7 +315,8 @@
                 <select id="religion" name="religion"><option value="">Select</option><option>Christianity</option><option>Islam</option><option>Traditional religion</option><option>Other</option><option>Prefer not to say</option></select></div><div class="field"><label for="denom">Denomination or group</label><input id="denom" name="denom" placeholder="e.g. Anglican, Sunni, RCCG"></div><div class="field full"><label for="worship">Place of worship</label><input id="worship" name="worship" placeholder="Optional"><span class="hint">Only shown to members you accept.</span></div></div>
           </section>
           <section class="wstep" data-step="3" hidden>
-            <div class="whead"><p class="weye">About you <span class="pill off" data-sp="about"></span></p><h3 class="wq">Tell us about yourself</h3><p class="sub">Members see your first name, age and city. Your last name and birthday stay private.</p></div>
+            <div class="whead"><p class="weye">About you <span class="pill off" data-sp="about"></span></p><h3 class="wq">Tell us about yourself</h3><p class="sub">Members see your first name, the first letter of your last name, your age and city. Your full last name and birthday stay private.</p>
+              <div class="banner ok" style="margin-top:4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><div><b>Add your gender and date of birth</b><p>We show men to women and women to men, and profiles with an age and a photo appear first in everyone's matches.</p></div></div></div>
             <div class="fields"><div class="field"><label for="first">First name</label><input id="first" name="first" autocomplete="given-name"></div><div class="field"><label for="last">Last name</label><input id="last" name="last" autocomplete="family-name"><span class="hint">Never shown on your profile.</span></div><div class="field"><span class="lbl" id="l-gender">I am a</span>
                 <div class="seg" role="group" aria-labelledby="l-gender" data-name="gender"><button type="button" aria-pressed="false" data-val="Woman">Woman</button><button type="button" aria-pressed="false" data-val="Man">Man</button></div></div><div class="field"><label for="dob">Date of birth</label><input id="dob" name="dob" type="date"><span class="hint">Members see your age, not your birthday.</span></div><div class="field"><label for="location">Where you live</label><input id="location" name="location" placeholder="City, State or Country"></div><div class="field"><label for="nationality">Nationality</label><select id="nationality" name="nationality"><option value="">Select</option></select></div><div class="field full" id="heritageField" hidden><span class="lbl" id="l-her">Do you have Nigerian heritage?</span>
                 <div class="seg" role="group" aria-labelledby="l-her" data-name="heritage"><button type="button" aria-pressed="false" data-val="Yes">Yes, a parent or grandparent is Nigerian</button><button type="button" aria-pressed="false" data-val="No">No</button></div></div><div class="field ng-only"><label for="origin">State of origin</label><select id="origin" name="origin"><option value="">Select</option></select></div><div class="field ng-only"><label for="lga">LGA</label><input id="lga" name="lga" placeholder="e.g. Nsukka"></div></div>
@@ -354,7 +355,8 @@
                 <span class="hint">Anyone who fails one of these never appears in your matches.</span></div></div>
           </section>
           <section class="wstep" data-step="7" hidden>
-            <div class="whead"><p class="weye">Photos <span class="pill off" data-sp="photos"></span></p><h3 class="wq">Add your photos</h3><p class="sub">Two or three clear, recent photos of yourself. The first one is your main photo.</p></div>
+            <div class="whead"><p class="weye">Photos <span class="pill off" data-sp="photos"></span></p><h3 class="wq">Add your photos</h3><p class="sub">Two or three clear, recent photos of yourself. The first one is your main photo.</p>
+              <div class="banner ok" style="margin-top:4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3.5"/></svg><div><b>Profiles with a photo are shown first</b><p>Members with a clear photo and their age appear at the top of everyone's matches, so you'll be seen far more often.</p></div></div></div>
             <div class="photos" id="photos"></div>
           </section>
           <section class="wstep" data-step="8" hidden>
@@ -509,12 +511,21 @@ window.NSC.ready({ as: 'member' }).then(function(){
   }
 
   /* ---------- matching ---------- */
+  /* men see women and women see men (the database enforces this too). Profiles with a photo and an
+     age come first, then the best matches. A photo hidden by privacy still counts as a photo. */
+  function noGender(m){
+    return m.profile.gender === 'Man' || m.profile.gender === 'Woman' ? ''
+      : '<div class="empty"><b>Tell us whether you are a man or a woman</b><span>We show men to women and women to men, so we need this to find your matches.</span><a class="btn btn-primary btn-sm" href="#profile">Add it to my profile</a></div>';
+  }
+  function complete(x){ return ((x.profile.photos || []).length ? 1 : 0) + (S.age(x.profile.dob) != null ? 1 : 0) }
   function candidates(){
     var m = me(), want = m.profile.gender === 'Man' ? 'Woman' : m.profile.gender === 'Woman' ? 'Man' : null;
+    if (!want) return [];
     return S.all('members').filter(function(x){
-      return x.id !== ME && S.visible(x) && (!want || !x.profile.gender || x.profile.gender === want) &&
+      return x.id !== ME && S.visible(x) && x.profile.gender === want &&
         (m.blocked || []).indexOf(x.id) < 0 && (x.blocked || []).indexOf(ME) < 0 && S.eligible(m, x) && !S.breaks(m, x);
-    }).map(function(x){ return { m: x, score: S.compat(m, x) } }).sort(function(a, b){ return b.score - a.score });
+    }).map(function(x){ return { m: x, score: S.compat(m, x), full: complete(x) } })
+      .sort(function(a, b){ return b.full - a.full || b.score - a.score });
   }
   function relation(otherId){
     var i = S.introBetween(ME, otherId);
@@ -634,7 +645,7 @@ window.NSC.ready({ as: 'member' }).then(function(){
 
     var list = candidates();
     $('topSub').textContent = see ? list.length + ' members match what you are looking for' : 'Not available while your account is paused';
-    var top = list.slice(0, 3).map(function(c){ return card(c, true) }).join('') || '<div class="empty"><b>No matches yet</b><span>New members are approved every day.</span></div>';
+    var top = list.slice(0, 3).map(function(c){ return card(c, true) }).join('') || (noGender(m) || '<div class="empty"><b>No matches yet</b><span>New members join every day.</span></div>');
     $('topMatches').innerHTML = see ? '<div class="mgrid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">' + top + '</div>'
       : '<div class="locked" style="min-height:300px"><div class="mgrid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr))">' + top + '</div>' + lockMsg(m, true) + '</div>';
     if (see) {
@@ -688,7 +699,7 @@ window.NSC.ready({ as: 'member' }).then(function(){
       return true;
     });
     if (filter === 'new') list.sort(function(a, b){ return (b.m.approvedAt || 0) - (a.m.approvedAt || 0) });
-    var grid = '<div class="mgrid">' + (list.length ? list.map(function(c){ return card(c) }).join('') : '<div class="empty card" style="grid-column:1/-1"><b>' + (filter === 'new' ? 'No new members in the last two weeks' : 'No matches for this filter yet') + '</b><span>Try another filter. New members are approved every day.</span></div>') + '</div>';
+    var grid = '<div class="mgrid">' + (list.length ? list.map(function(c){ return card(c) }).join('') : noGender(m) ? '<div class="card" style="grid-column:1/-1">' + noGender(m) + '</div>' : '<div class="empty card" style="grid-column:1/-1"><b>' + (filter === 'new' ? 'No new members in the last two weeks' : 'No matches for this filter yet') + '</b><span>Try another filter. New members join every day.</span></div>') + '</div>';
     var left = S.introsLeft(m), ms = S.membership(m), note = '';
     if (on && left !== Infinity) note = '<div class="banner" style="margin-bottom:18px">' + ICON.info + '<div><b>' + left + ' of ' + (+S.settings().goldIntroLimit || 5) + ' new conversations left this month</b><p>Gold includes a set number each month. <a class="textbtn" href="#membership">Upgrade to Platinum</a> for unlimited conversations.</p></div></div>';
     else if (see && !on) note = '<div class="banner" style="margin-bottom:18px">' + ICON.lock + '<div><b>' + (ms.pending ? 'Your receipt is being checked' : ms.paid ? 'Your membership has ended' : 'Like someone? Choose a plan to say hello') + '</b><p>' + (ms.pending ? 'You can browse now. Chat opens as soon as our team confirms your payment.' : 'Seeing members is free. Gold or Platinum lets you message them and read their replies.') + (ms.pending ? '' : ' <a class="textbtn" href="#membership">See plans</a>') + '</p></div></div>';

@@ -185,6 +185,10 @@ language sql stable security definer set search_path = public as $$
      and exists (
        select 1 from public.profiles pa, public.profiles pb
        where pa.id = a and pb.id = b
+         -- men see women and women see men; anyone who hasn't set a gender isn't shown yet
+         and coalesce(pa.profile->>'gender', '') in ('Man','Woman')
+         and coalesce(pb.profile->>'gender', '') in ('Man','Woman')
+         and pa.profile->>'gender' <> pb.profile->>'gender'
          and (coalesce(pa.profile->>'openTo','both') in ('both', private.nat_group(pb.profile)))
          and (coalesce(pb.profile->>'openTo','both') in ('both', private.nat_group(pa.profile)))
      )

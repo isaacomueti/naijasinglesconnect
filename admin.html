@@ -804,14 +804,17 @@ window.NSC.ready({ as: 'admin' }).then(function(){
   /* everyone this member could be paired with: visible, the other gender, same side of the Private Circle,
      open to each other's background and not blocked. Deal-breakers are shown as warnings, not hidden. */
   function candidates(a){
+    /* men are paired with women only; profiles with a photo and an age come first */
     var want = a.profile.gender === 'Man' ? 'Woman' : a.profile.gender === 'Woman' ? 'Man' : null;
+    if (!want) return [];
+    var full = function(b){ return ((b.profile.photos || []).length ? 1 : 0) + (S.age(b.profile.dob) != null ? 1 : 0) };
     return members().filter(function(b){
-      return b.id !== a.id && S.visible(b) && (!want || !b.profile.gender || b.profile.gender === want) && S.eligible(a, b) &&
+      return b.id !== a.id && S.visible(b) && b.profile.gender === want && S.eligible(a, b) &&
         (a.blocked || []).indexOf(b.id) < 0 && (b.blocked || []).indexOf(a.id) < 0;
     }).map(function(b){
       var i = S.introBetween(a.id, b.id);
-      return { m: b, score: pairScore(a, b), why: reasons(a, b), clash: S.breaks(a, b) || S.breaks(b, a), linked: i && i.status !== 'declined' ? i : null };
-    }).sort(function(x, y){ return (x.linked ? 1 : 0) - (y.linked ? 1 : 0) || y.score - x.score });
+      return { m: b, score: pairScore(a, b), full: full(b), why: reasons(a, b), clash: S.breaks(a, b) || S.breaks(b, a), linked: i && i.status !== 'declined' ? i : null };
+    }).sort(function(x, y){ return (x.linked ? 1 : 0) - (y.linked ? 1 : 0) || y.full - x.full || y.score - x.score });
   }
   var picked = {};
   $('mmSearch').addEventListener('input', render);
@@ -836,7 +839,8 @@ window.NSC.ready({ as: 'admin' }).then(function(){
         '<p class="sub">Looking for ' + esc(pr.agemin || pr.agemax ? 'ages ' + (pr.agemin || '?') + ' to ' + (pr.agemax || '?') : 'any age') + (pr.ploc ? ' · ' + esc(pr.ploc) : '') + ((pr.dealbreakers || []).length ? ' · Deal-breakers: ' + esc(pr.dealbreakers.join(', ')) : '') + '</p></div>' +
         '<button type="button" class="btn btn-ghost btn-sm" data-open="' + a.id + '">Full profile</button></div>' +
       (pr.circle ? '<div class="banner ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><div><b>Private Circle</b><p>Only other circle members are shown. Never mention the circle in a message.</p></div></div>' : '') +
-      '<p class="sub">' + c.length + (c.length === 1 ? ' person' : ' people') + ' they could be paired with, best matches first.</p>' +
+      (pr.gender === 'Man' || pr.gender === 'Woman' ? '<p class="sub">' + c.length + (c.length === 1 ? ' person' : ' people') + ' they could be paired with. Profiles with a photo and an age come first, then the best matches.</p>'
+        : '<div class="banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><div><b>' + esc(pr.first || 'This member') + ' hasn\'t set their gender</b><p>Men are only paired with women, so ask them to add it in their profile first.</p></div></div>') +
       (c.length ? c.slice(0, 80).map(function(x){
         var b = x.m, bp = b.profile;
         return '<label class="cand" style="cursor:' + (x.linked ? 'default' : 'pointer') + (picked[b.id] ? ';border-color:var(--green);background:var(--green-tint)' : '') + '">' + av(b) + '<div style="min-width:0"><button type="button" class="linkp" data-open="' + b.id + '"><b>' + esc(S.fullName(b)) + '</b></button> <span class="score">' + x.score + '%</span>' +
